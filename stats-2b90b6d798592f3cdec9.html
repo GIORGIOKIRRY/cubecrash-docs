@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<!--
+  ==========================================================================
+  CUBE CRASH — Super Statistics Dashboard (single self-contained static HTML)
+  ==========================================================================
+  HOSTING NOTE (kept out of the visible page on purpose):
+  - Once committed on the MAIN branch under /docs (GitHub Pages from /docs),
+    this file is served at:
+        https://giorgiokirry.github.io/CUBE-CRASH/stats-2b90b6d798592f3cdec9.html
+  - To serve it at the BARE ROOT https://giorgiokirry.github.io/ you need a
+    SEPARATE repository named EXACTLY "giorgiokirry.github.io" with this file
+    committed as index.html (Pages then serves it at the root).
+  - LOGIN reads dashboard_auth/{key} from Firebase RTDB and verifies a
+    SHA-256 hash via crypto.subtle. NO password or hash is stored in source.
+    Access is also protected by the SECRET URL of this page.
+  ==========================================================================
+-->
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>Cube Crash · Super Stats</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a1a3a;
+    --bg2:#08132c;
+    --panel:#0e2350;
+    --panel2:#122a5e;
+    --ink:#eaf2ff;
+    --dim:#8fb0e6;
+    --faint:#5f7fc0;
+    --gold:#ffcf3f;
+    --gold-d:#c99a12;
+    --cyan:#37e6d8;
+    --green:#5df06e;
+    --green2:#4be86a;
+    --red:#ff5468;
+    --purple:#b98cff;
+    --orange:#ff9f43;
+    --classic:#37a0ff;
+    --speedrun:#ff9f43;
+    --story:#b98cff;
+    --ranked:#4be86a;
+    --border:#2a4fa0;
+    --border-lo:#1d3b7a;
+    --shadow:6px 6px 0 rgba(0,0,0,.55);
+    --shadow-sm:4px 4px 0 rgba(0,0,0,.5);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:
+      repeating-linear-gradient(0deg, rgba(0,0,0,.14) 0 2px, transparent 2px 4px),
+      radial-gradient(1100px 620px at 82% -10%, rgba(185,140,255,.12), transparent 60%),
+      radial-gradient(900px 500px at -8% 8%, rgba(55,160,255,.12), transparent 55%),
+      var(--bg);
+    background-attachment:fixed;
+    color:var(--ink);
+    font-family:'VT323','Courier New',monospace;
+    font-size:19px;
+    line-height:1.35;
+    min-height:100vh;
+    image-rendering:pixelated;
+    -webkit-font-smoothing:none;
+  }
+  h1,h2,h3,.pixel,.kpi .val,.tab,.btn,.chip{
+    font-family:'Press Start 2P','Courier New',monospace;
+  }
+  a{color:var(--gold)}
+  .hidden{display:none !important}
+  .mono{font-variant-numeric:tabular-nums}
+
+  /* scanline overlay */
+  .scan{position:fixed;inset:0;pointer-events:none;z-index:5;
+    background:repeating-linear-gradient(0deg, rgba(0,0,0,.05) 0 2px, transparent 2px 3px);
+    mix-blend-mode:multiply;opacity:.5}
+
+  /* ---------------- LOGIN ---------------- */
+  .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  .login-card{
+    width:100%;max-width:440px;background:var(--panel);
+    border:4px solid var(--gold);box-shadow:var(--shadow);padding:26px 24px 28px;
+  }
+  .brand{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+  .cube{
+    width:38px;height:38px;flex:none;background:var(--gold);
+    border:3px solid #1a1a1a;box-shadow:inset -6px -6px 0 var(--gold-d), 4px 4px 0 rgba(0,0,0,.5);
+    image-rendering:pixelated;position:relative;
+  }
+  .cube::after{content:"";position:absolute;inset:6px;background:repeating-linear-gradient(45deg,rgba(0,0,0,.12) 0 4px,transparent 4px 8px)}
+  .game-logo{width:56px;height:56px;flex:none;border:3px solid #1a1a1a;border-radius:6px;
+    box-shadow:4px 4px 0 rgba(0,0,0,.5);image-rendering:pixelated;object-fit:cover}
+  .brand h1{font-size:16px;margin:0;color:var(--gold);letter-spacing:1px;text-shadow:3px 3px 0 #000;line-height:1.5}
+  .login-sub{color:var(--dim);font-size:18px;margin:0 0 18px}
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:16px;color:var(--cyan);margin-bottom:6px;letter-spacing:1px;text-transform:uppercase}
+  .field input{
+    width:100%;padding:11px 12px;border:3px solid var(--border);
+    background:var(--bg2);color:var(--ink);font-family:'VT323',monospace;font-size:20px;outline:none;
+  }
+  .field input:focus{border-color:var(--gold)}
+  .btn{
+    display:inline-block;width:100%;padding:13px 14px;border:3px solid #1a1a1a;cursor:pointer;
+    background:var(--gold);color:#20160a;font-size:12px;letter-spacing:1px;
+    box-shadow:var(--shadow-sm);transition:transform .04s;text-transform:uppercase;
+  }
+  .btn:hover{filter:brightness(1.06)}
+  .btn:active{transform:translate(4px,4px);box-shadow:none}
+  .login-err{color:var(--red);font-size:18px;margin-top:12px;min-height:22px}
+  .login-note{
+    margin-top:18px;padding:11px 12px;font-size:16px;line-height:1.5;
+    background:rgba(255,207,63,.09);border:3px solid rgba(255,207,63,.4);color:#f0d98c;
+  }
+
+  /* ---------------- SHELL ---------------- */
+  .app{max-width:1280px;margin:0 auto;padding:20px 16px 70px}
+  .topbar{
+    display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+    margin-bottom:18px;padding:14px 16px;background:var(--panel);
+    border:4px solid var(--gold);box-shadow:var(--shadow-sm);
+  }
+  .topbar h1{font-size:14px;margin:0;color:var(--gold);text-shadow:3px 3px 0 #000;letter-spacing:1px;line-height:1.6}
+  .topbar .spacer{flex:1}
+  .ctl{display:flex;align-items:center;gap:8px;color:var(--dim);font-size:17px}
+  select{
+    padding:9px 10px;border:3px solid var(--border);background:var(--bg2);color:var(--ink);
+    font-family:'VT323',monospace;font-size:19px;outline:none;cursor:pointer;
+  }
+  select:focus{border-color:var(--gold)}
+  .btn-ghost{
+    background:var(--panel2);color:var(--cyan);border:3px solid var(--border);
+    padding:9px 13px;cursor:pointer;font-family:'Press Start 2P',monospace;font-size:9px;
+    letter-spacing:1px;transition:.1s;text-transform:uppercase;
+  }
+  .btn-ghost:hover{color:#fff;border-color:var(--gold)}
+  .btn-ghost:active{transform:translate(2px,2px)}
+
+  .notice{
+    margin-bottom:18px;padding:14px 16px;font-size:18px;line-height:1.45;
+    background:rgba(255,84,104,.1);border:3px dashed var(--red);color:#ffb3bd;
+  }
+  .notice strong{color:var(--gold)}
+  .disclaimer{
+    margin-bottom:18px;padding:10px 14px;font-size:16px;line-height:1.45;
+    background:rgba(55,230,216,.07);border:3px solid rgba(55,230,216,.28);color:#a9ede6;
+  }
+
+  /* ---------------- SUPPORTERS (sezione H) ---------------- */
+  .supp-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+  .supp-toolbar input[type=text]{
+    flex:1;min-width:200px;padding:10px 12px;border:3px solid var(--border);
+    background:var(--bg2);color:var(--ink);font-family:'VT323',monospace;font-size:20px;outline:none;
+  }
+  .supp-toolbar input[type=text]:focus{border-color:var(--gold)}
+  .supp-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border:2px solid var(--border-lo);
+    background:var(--bg2);margin-bottom:6px}
+  .supp-row .nm{flex:1;font-size:19px;word-break:break-word}
+  .supp-row .nm small{color:var(--faint);font-size:15px}
+  .supp-row mark{background:var(--gold);color:#20160a;padding:0 2px}
+  .supp-btn{border:2px solid #1a1a1a;cursor:pointer;padding:7px 10px;font-family:'Press Start 2P',monospace;
+    font-size:9px;color:#fff;box-shadow:2px 2px 0 rgba(0,0,0,.5)}
+  .supp-btn:active{transform:translate(2px,2px);box-shadow:none}
+  .supp-ok{background:var(--green2);color:#0a2a12}
+  .supp-no{background:var(--red)}
+  .supp-rm{background:var(--panel2);color:var(--cyan);border-color:var(--border)}
+  .supp-add{display:flex;gap:8px;margin-top:10px}
+  .supp-add input{flex:1;padding:9px 11px;border:3px solid var(--border);background:var(--bg2);
+    color:var(--ink);font-family:'VT323',monospace;font-size:19px;outline:none}
+  .chip{background:var(--panel2);border:2px solid var(--border);color:var(--cyan);
+    font-size:9px;padding:4px 8px;margin-left:6px}
+  .supp-empty{color:var(--faint);font-size:17px;padding:4px 2px}
+  #suppGrid .panel{margin-bottom:0}
+  @media(max-width:760px){ .grid-2{grid-template-columns:1fr} }
+
+  /* ---------------- SECTION ---------------- */
+  .section-h{
+    display:flex;align-items:center;gap:12px;margin:28px 0 14px;
+  }
+  .section-h .tag{
+    background:var(--gold);color:#20160a;font-family:'Press Start 2P',monospace;font-size:10px;
+    padding:7px 10px;border:3px solid #1a1a1a;box-shadow:3px 3px 0 rgba(0,0,0,.5);letter-spacing:1px;
+  }
+  .section-h h2{font-size:12px;margin:0;color:var(--ink);letter-spacing:1px;text-shadow:2px 2px 0 #000}
+  .section-h .line{flex:1;height:4px;background:repeating-linear-gradient(90deg,var(--border) 0 8px,transparent 8px 12px)}
+
+  /* ---------------- KPI ---------------- */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .kpi{
+    background:var(--panel);border:3px solid var(--border);box-shadow:var(--shadow-sm);
+    padding:14px 14px 13px;position:relative;overflow:hidden;
+  }
+  .kpi::before{content:"";position:absolute;top:0;left:0;right:0;height:5px;
+    background:repeating-linear-gradient(90deg,var(--gold) 0 6px,var(--gold-d) 6px 12px)}
+  .kpi .lbl{font-size:15px;color:var(--cyan);text-transform:uppercase;letter-spacing:1px;margin-top:4px}
+  .kpi .val{font-size:22px;margin-top:12px;line-height:1.1;color:var(--gold);text-shadow:2px 2px 0 #000;word-break:break-word}
+  .kpi .val.sm{font-size:15px}
+  .kpi .sub{font-size:15px;color:var(--faint);margin-top:9px;line-height:1.35}
+  .pos{color:var(--green2) !important}
+  .neg{color:var(--red) !important}
+  .flat{color:var(--dim) !important}
+
+  /* ---------------- PANEL ---------------- */
+  .panel{
+    background:var(--panel);border:3px solid var(--border);box-shadow:var(--shadow-sm);
+    padding:16px;margin-bottom:18px;
+  }
+  .panel > h3{font-size:11px;margin:0 0 4px;color:var(--gold);letter-spacing:1px;line-height:1.5;text-shadow:2px 2px 0 #000}
+  .panel .desc{font-size:16px;color:var(--faint);margin:0 0 14px;line-height:1.4}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .grid-2 .panel{margin-bottom:0}
+
+  /* legends */
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px;font-size:16px;color:var(--dim)}
+  .legend span{display:inline-flex;align-items:center;gap:7px}
+  .legend i{width:13px;height:13px;display:inline-block;border:2px solid rgba(0,0,0,.5)}
+
+  /* charts */
+  .chart-wrap{overflow-x:auto}
+  svg.chart{display:block;width:100%;height:auto}
+  .chart text{fill:var(--dim);font-family:'VT323',monospace;font-size:14px}
+  .chart .axlbl{fill:var(--faint);font-size:13px}
+  .grid-line{stroke:var(--border-lo);stroke-width:1}
+
+  /* bars list (horizontal) */
+  .hbars{display:flex;flex-direction:column;gap:11px}
+  .hbar{display:grid;grid-template-columns:130px 1fr auto;align-items:center;gap:10px;font-size:17px}
+  .hbar .hlbl{color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hbar .htrack{background:var(--bg2);border:2px solid var(--border-lo);height:22px;position:relative;overflow:hidden}
+  .hbar .hfill{height:100%;border-right:2px solid rgba(0,0,0,.4);image-rendering:pixelated}
+  .hbar .hval{color:var(--ink);min-width:74px;text-align:right;font-variant-numeric:tabular-nums}
+
+  /* ---------------- TABS ---------------- */
+  .tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+  .tab{
+    padding:10px 14px;border:3px solid var(--border);background:var(--bg2);color:var(--dim);
+    cursor:pointer;font-size:9px;letter-spacing:1px;display:flex;align-items:center;gap:8px;text-transform:uppercase;
+  }
+  .tab .dot{width:10px;height:10px;flex:none;border:2px solid rgba(0,0,0,.5)}
+  .tab.active{color:#20160a;background:var(--gold);border-color:#1a1a1a;box-shadow:3px 3px 0 rgba(0,0,0,.5)}
+
+  /* ---------------- TABLE ---------------- */
+  .table-wrap{overflow-x:auto;border:3px solid var(--border-lo)}
+  table{width:100%;border-collapse:collapse;font-size:18px;min-width:460px}
+  thead th{
+    text-align:left;padding:10px 12px;background:var(--panel2);color:var(--cyan);
+    font-family:'Press Start 2P',monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;
+    position:sticky;top:0;border-bottom:3px solid var(--border);
+  }
+  tbody td{padding:8px 12px;border-top:2px solid var(--border-lo)}
+  tbody tr:nth-child(even){background:rgba(55,160,255,.05)}
+  tbody tr:hover{background:rgba(255,207,63,.09)}
+  .rank{color:var(--faint);font-variant-numeric:tabular-nums;width:60px;font-family:'Press Start 2P',monospace;font-size:12px}
+  .rank.t1{color:#ffd24a}.rank.t2{color:#dfe7f3}.rank.t3{color:#e0975a}
+  .medal{font-size:20px}
+  .score{text-align:right;font-variant-numeric:tabular-nums;color:var(--gold);font-weight:bold}
+  .nick{display:flex;align-items:center;gap:9px}
+  .icon-badge{
+    width:26px;height:26px;flex:none;font-size:14px;border:2px solid rgba(0,0,0,.55);
+    display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Press Start 2P',monospace;
+    box-shadow:inset -4px -4px 0 rgba(0,0,0,.25);
+  }
+  .glo-tag{
+    font-family:'Press Start 2P',monospace;font-size:8px;padding:3px 6px;letter-spacing:1px;
+    background:rgba(185,140,255,.2);color:var(--purple);border:2px solid rgba(185,140,255,.5);
+  }
+
+  /* toplist rows */
+  .toplist{display:flex;flex-direction:column;gap:8px}
+  .toprow{display:grid;grid-template-columns:36px 1fr auto;align-items:center;gap:10px;
+    padding:8px 10px;background:var(--bg2);border:2px solid var(--border-lo);font-size:17px}
+  .toprow .n{font-family:'Press Start 2P',monospace;font-size:11px;color:var(--gold)}
+  .toprow .who{color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .toprow .v{color:var(--cyan);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+
+  /* funnel */
+  .funnel{display:flex;flex-direction:column;gap:5px}
+  .frow{display:grid;grid-template-columns:78px 1fr auto;align-items:center;gap:9px;font-size:16px}
+  .frow .fl{color:var(--dim);white-space:nowrap}
+  .frow .ft{background:var(--bg2);border:2px solid var(--border-lo);height:18px;overflow:hidden}
+  .frow .ff{height:100%;background:repeating-linear-gradient(90deg,var(--story) 0 6px,#9a6ee0 6px 12px)}
+  .frow .fv{color:var(--ink);min-width:96px;text-align:right;font-variant-numeric:tabular-nums}
+
+  /* stars */
+  .stars{color:var(--gold);letter-spacing:2px;font-size:20px}
+
+  /* ---------------- STATES ---------------- */
+  .spinner{
+    width:30px;height:30px;background:var(--gold);margin:0 auto;
+    animation:blink 1s steps(2,end) infinite;image-rendering:pixelated;
+    box-shadow:inset -6px -6px 0 var(--gold-d);
+  }
+  @keyframes blink{50%{opacity:.25;transform:rotate(45deg)}}
+  .state{padding:34px 16px;text-align:center;color:var(--dim);font-size:18px}
+  .state.err{color:var(--red)}
+  .state .big{font-size:12px;font-family:'Press Start 2P',monospace;color:var(--ink);margin-bottom:12px;line-height:1.6}
+  .foot{margin-top:10px;font-size:15px;color:var(--faint);text-align:center;line-height:1.6}
+  .footer{margin-top:26px;font-size:15px;color:var(--faint);text-align:center;line-height:1.8}
+
+  @media(max-width:900px){
+    .kpis{grid-template-columns:repeat(2,1fr)}
+    .grid-2{grid-template-columns:1fr}
+  }
+  @media(max-width:520px){
+    body{font-size:18px}
+    .kpis{grid-template-columns:1fr}
+    .topbar h1{font-size:11px}
+    .hbar{grid-template-columns:96px 1fr auto}
+  }
+</style>
+</head>
+<body>
+<div class="scan"></div>
+
+<!-- =============================== LOGIN =============================== -->
+<div id="loginScreen" class="login-wrap">
+  <div class="login-card">
+    <div class="brand"><img class="game-logo" src="cc_logo.jpg" alt="Cube Crash"><h1>CUBE&nbsp;CRASH</h1></div>
+    <p class="login-sub">&gt; Super statistiche · area riservata</p>
+    <form id="loginForm" autocomplete="off">
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" type="email" autocomplete="username" placeholder="tua@email.com">
+      </div>
+      <div class="field">
+        <label for="pass">Password</label>
+        <input id="pass" type="password" autocomplete="current-password" placeholder="********">
+      </div>
+      <button class="btn" type="submit">&gt; Accedi</button>
+      <div id="loginErr" class="login-err"></div>
+    </form>
+  </div>
+</div>
+
+<!-- =============================== DASHBOARD =============================== -->
+<div id="dashboard" class="app hidden">
+  <div class="topbar">
+    <div class="cube"></div>
+    <h1>CUBE CRASH · STATS</h1>
+    <div class="spacer"></div>
+    <div class="ctl"><span>MESE:</span><select id="monthSelect"></select></div>
+    <div class="ctl"><span>PIATTAFORMA:</span><select id="platformSelect"><option value="">Tutte</option><option value="iOS">iOS</option><option value="Android">Android</option></select></div>
+    <button id="refreshBtn" class="btn-ghost">Aggiorna</button>
+    <button id="logoutBtn" class="btn-ghost">Esci</button>
+  </div>
+
+  <div class="disclaimer">
+    Dati anonimi aggregati da Firebase RTDB: nickname scelti dai giocatori, punteggi, id anonimi,
+    telemetria di gioco. Nessun dato personale identificabile. Sola lettura.
+  </div>
+
+  <!-- telemetry notice (shown only if stats node denied) -->
+  <div id="teleNotice" class="notice hidden">
+    <strong>Telemetria in attesa dei primi dati:</strong> compariranno quando i giocatori useranno
+    la versione aggiornata dell'app. Le sezioni classifica restano disponibili qui sotto.
+  </div>
+
+  <!-- ===== HERO: numero grosso prima della panoramica ===== -->
+  <div class="panel" style="text-align:center;padding:26px 18px;margin-bottom:18px">
+    <div id="heroNum" style="font-size:clamp(56px,14vw,120px);line-height:1;color:var(--ink);text-shadow:3px 3px 0 rgba(0,0,0,.5)">—</div>
+    <div style="font-size:20px;color:var(--dim);margin-top:8px;letter-spacing:1px">PERSONE HANNO GIOCATO</div>
+    <div id="heroBreak" style="font-size:16px;color:var(--faint);margin-top:10px">&nbsp;</div>
+    <div class="foot" style="margin-top:8px">I download reali si vedono su App Store Connect / Google Play Console (non sono in Firebase).</div>
+  </div>
+
+  <!-- ===== A. PANORAMICA ===== -->
+  <div class="section-h"><span class="tag">A</span><h2>PANORAMICA</h2><div class="line"></div></div>
+  <div class="kpis" id="kpisA">
+    <div class="kpi"><div class="lbl">Giocatori totali</div><div class="val" id="kTotPlayers">—</div><div class="sub">telemetria (stats/players)</div></div>
+    <div class="kpi"><div class="lbl">Attivi questo mese</div><div class="val" id="kActive">—</div><div class="sub" id="kActiveSub">stima unione modalit&agrave;</div></div>
+    <div class="kpi"><div class="lbl">Crescita M/M</div><div class="val sm" id="kGrowth">—</div><div class="sub" id="kGrowthSub">vs mese precedente</div></div>
+    <div class="kpi"><div class="lbl">Tempo di gioco totale</div><div class="val sm" id="kPlaytime">—</div><div class="sub" id="kPlaytimeSub">somma pt_total</div></div>
+  </div>
+  <div class="kpis" id="kpisA2" style="margin-top:14px">
+    <div class="kpi"><div class="lbl">Tempo medio / giocatore</div><div class="val sm" id="kAvgPlayer">—</div><div class="sub">pt_total / giocatori</div></div>
+    <div class="kpi"><div class="lbl">Sessione media</div><div class="val sm" id="kAvgSession">—</div><div class="sub">pt_total / g_total</div></div>
+    <div class="kpi"><div class="lbl">Partite totali</div><div class="val" id="kTotGames">—</div><div class="sub">somma g_total</div></div>
+    <div class="kpi"><div class="lbl">Classic / Speedrun (mese)</div><div class="val sm" id="kModeNow">—</div><div class="sub">partecipanti classifica</div></div>
+  </div>
+
+  <!-- ===== attivita' giornaliera (grafico a linee) ===== -->
+  <div class="panel" style="margin-top:16px">
+    <h3>Attivit&agrave; giornaliera <span style="color:var(--faint);font-size:14px">&middot; ultimi 30 giorni</span></h3>
+    <div style="display:flex;gap:18px;font-size:15px;margin:2px 0 6px">
+      <span style="color:var(--classic)">&#9679; Nuovi giocatori</span>
+      <span style="color:var(--speedrun)">&#9679; Attivi (ultimo accesso)</span>
+    </div>
+    <div id="activityChart"><div class="state"><div class="spinner"></div></div></div>
+    <div class="foot">Nuovi = primo avvio (first_seen) per giorno &middot; Attivi = ultimo accesso (updated) per giorno. La telemetria salva l'ultimo stato per giocatore: sono stime derivate.</div>
+  </div>
+
+  <!-- ===== B. TEMPO DI GIOCO PER MODALITA' ===== -->
+  <div class="section-h"><span class="tag">B</span><h2>TEMPO PER MODALIT&Agrave;</h2><div class="line"></div></div>
+  <div class="grid-2">
+    <div class="panel">
+      <h3>Tempo di gioco per modalit&agrave;</h3>
+      <p class="desc">Ripartizione di pt_classic / pt_speedrun / pt_story / pt_ranked.</p>
+      <div id="playByMode"><div class="state"><div class="spinner"></div></div></div>
+    </div>
+    <div class="panel">
+      <h3>Partite per modalit&agrave;</h3>
+      <p class="desc">Ripartizione di g_classic / g_speedrun / g_story / g_ranked.</p>
+      <div id="gamesByMode"><div class="state"><div class="spinner"></div></div></div>
+    </div>
+  </div>
+
+  <!-- ===== C. STORIA ===== -->
+  <div class="section-h"><span class="tag">C</span><h2>STORIA</h2><div class="line"></div></div>
+  <div class="grid-2">
+    <div class="panel">
+      <h3>Funnel livello massimo (0..30)</h3>
+      <p class="desc">Giocatori che hanno raggiunto almeno il livello indicato.</p>
+      <div id="storyFunnel"><div class="state"><div class="spinner"></div></div></div>
+    </div>
+    <div class="panel">
+      <h3>Completamento &amp; stelle</h3>
+      <p class="desc">% storia completata (livello &ge; 30), media stelle e distribuzione.</p>
+      <div id="storyStats"><div class="state"><div class="spinner"></div></div></div>
+    </div>
+  </div>
+
+  <!-- ===== D. PROGRESSIONE ===== -->
+  <div class="section-h"><span class="tag">D</span><h2>PROGRESSIONE</h2><div class="line"></div></div>
+  <div class="grid-2">
+    <div class="panel">
+      <h3>Distribuzione Pass Level</h3>
+      <p class="desc">Livelli del pass raggiunti dai giocatori.</p>
+      <div id="passDist"><div class="state"><div class="spinner"></div></div></div>
+    </div>
+    <div class="panel">
+      <h3>Distribuzione Rank (Ranked)</h3>
+      <p class="desc">Rank dei giocatori in modalit&agrave; competitiva.</p>
+      <div id="rankDist"><div class="state"><div class="spinner"></div></div></div>
+    </div>
+  </div>
+  <div class="panel" style="margin-top:18px">
+    <h3>Record &amp; monete</h3>
+    <p class="desc">Medie e massimi di hs_classic / hs_speedrun e media monete.</p>
+    <div id="recordsCoins"><div class="state"><div class="spinner"></div></div></div>
+  </div>
+
+  <!-- ===== E. CLASSIFICA ===== -->
+  <div class="section-h"><span class="tag">E</span><h2>CLASSIFICA TOP 100</h2><div class="line"></div></div>
+  <div class="panel">
+    <h3>Migliori punteggi &middot; <span id="lbMonthLabel">—</span></h3>
+    <p class="desc">Top 100 del mese selezionato. Cambia modalit&agrave; con le schede.</p>
+    <div class="tabs">
+      <div class="tab active" data-mode="classic"><span class="dot" style="background:var(--classic)"></span>Classic</div>
+      <div class="tab" data-mode="speedrun"><span class="dot" style="background:var(--speedrun)"></span>Speedrun</div>
+    </div>
+    <div id="tableArea"></div>
+  </div>
+
+  <!-- ===== F. ANDAMENTO 12 MESI ===== -->
+  <div class="section-h"><span class="tag">F</span><h2>ANDAMENTO 12 MESI</h2><div class="line"></div></div>
+  <div class="panel">
+    <h3>Partecipanti per mese</h3>
+    <p class="desc">Serie Classic, Speedrun e Storia. Conteggio rapido via <code>shallow=true</code>.</p>
+    <div class="legend">
+      <span><i style="background:var(--classic)"></i>Classic</span>
+      <span><i style="background:var(--speedrun)"></i>Speedrun</span>
+      <span><i style="background:var(--story)"></i>Storia</span>
+    </div>
+    <div id="chartArea"><div class="state"><div class="spinner"></div><div style="margin-top:14px">Caricamento andamento…</div></div></div>
+    <div id="storyTrendNote" class="foot"></div>
+  </div>
+
+  <!-- ===== G. TOP GIOCATORI ===== -->
+  <div class="section-h"><span class="tag">G</span><h2>TOP GIOCATORI</h2><div class="line"></div></div>
+  <div class="grid-2">
+    <div class="panel">
+      <h3>Per tempo di gioco</h3>
+      <p class="desc">Giocatori con pt_total pi&ugrave; alto.</p>
+      <div id="topPlaytime"><div class="state"><div class="spinner"></div></div></div>
+    </div>
+    <div class="panel">
+      <h3>Per avanzamento storia</h3>
+      <p class="desc">Giocatori pi&ugrave; avanti (story_level, poi stelle).</p>
+      <div id="topStory"><div class="state"><div class="spinner"></div></div></div>
+    </div>
+  </div>
+
+  <!-- ===== H. SUPPORTERS & CREATOR ===== -->
+  <div class="section-h"><span class="tag">H</span><h2>SUPPORTERS &amp; CREATOR</h2><div class="line"></div></div>
+  <div class="panel">
+    <h3>Gestione OG Supporters e Creator</h3>
+    <p class="desc">Le stesse liste della pagina admin: richieste in arrivo, OG approvati e richieste Creator. Le modifiche sono salvate subito.</p>
+    <div class="supp-toolbar">
+      <input id="suppSearch" type="text" placeholder="🔎 Cerca un nome…">
+      <select id="suppFilter">
+        <option value="all">Tutte le liste</option>
+        <option value="pending">Richieste OG</option>
+        <option value="og">OG approvati</option>
+        <option value="creq">Richieste Creator</option>
+        <option value="cok">Creator approvati</option>
+      </select>
+      <button id="suppReload" class="btn-ghost">Aggiorna</button>
+    </div>
+    <div id="suppStatus" class="foot" style="min-height:20px"></div>
+    <div class="grid-2" id="suppGrid">
+      <div class="panel" id="suppPanelPending">
+        <h3>📥 Richieste OG <span class="chip" id="suppPendCount">0</span></h3>
+        <div id="suppPending"></div>
+        <button class="btn-ghost" id="suppApproveAll" style="margin-top:10px">✓ Approva tutte</button>
+      </div>
+      <div class="panel" id="suppPanelOg">
+        <h3>⭐ OG approvati <span class="chip" id="suppOgCount">0</span></h3>
+        <div id="suppOg"></div>
+        <div class="supp-add">
+          <input id="suppNewName" type="text" placeholder="Aggiungi un nome…">
+          <button class="btn-ghost" id="suppAddBtn">Aggiungi</button>
+        </div>
+      </div>
+      <div class="panel" id="suppPanelCreq">
+        <h3>🎬 Richieste Creator <span class="chip" id="suppCreqCount">0</span></h3>
+        <div id="suppCreq"></div>
+      </div>
+      <div class="panel" id="suppPanelCok">
+        <h3>✅ Creator approvati <span class="chip" id="suppCokCount">0</span></h3>
+        <div id="suppCok"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    CUBE CRASH · SUPER STATS · file statico self-contained · sola lettura<br>
+    Accesso protetto da login Firebase e dall'URL segreto della pagina.
+  </div>
+</div>
+
+<script>
+/* ==========================================================================
+   CONFIG
+   ========================================================================== */
+const BASE = "https://cube-80594-default-rtdb.europe-west1.firebasedatabase.app";
+const MODES = ["classic","speedrun"];
+const MONTHS_BACK = 12;
+const STORY_MAX = 30;
+const LS_KEY = "cc_stats_auth";       // stores email when logged in
+const MONTH_NAMES = ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno",
+  "Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
+const ICON_COLORS = ["#37a0ff","#ff9f43","#4be86a","#ff5468","#ffcf3f",
+  "#b98cff","#37e6d8","#ec6fa1","#8bc34a","#ff7043","#9575cd","#4dd0e1"];
+const MODE_COLORS = { classic:"#37a0ff", speedrun:"#ff9f43", story:"#b98cff", ranked:"#4be86a" };
+
+/* ==========================================================================
+   HELPERS
+   ========================================================================== */
+function periodFor(y,m){ return y*12 + m; }
+function currentPeriodUTC(){ const n=new Date(); return periodFor(n.getUTCFullYear(), n.getUTCMonth()+1); }
+function decodePeriod(p){ let m=p%12, y=Math.floor(p/12); if(m===0){m=12;y-=1;} return {year:y,month:m,label:MONTH_NAMES[m-1]+" "+y}; }
+function lastPeriods(n){ const cur=currentPeriodUTC(); const a=[]; for(let i=0;i<n;i++)a.push(cur-i); return a; }
+
+function fmtInt(n){ if(n===null||n===undefined||isNaN(n))return "—"; return Number(n).toLocaleString("it-IT"); }
+function fmtNum(n,d){ if(n===null||n===undefined||isNaN(n))return "—"; return Number(n).toLocaleString("it-IT",{minimumFractionDigits:d,maximumFractionDigits:d}); }
+function pct(n){ if(!isFinite(n))return "—"; return fmtNum(n,1)+"%"; }
+
+/* seconds -> "Xg Yh" or "Xh Ym" or "Xm Ys" */
+function fmtDur(sec){
+  if(sec===null||sec===undefined||isNaN(sec)) return "—";
+  sec = Math.max(0, Math.round(sec));
+  const d = Math.floor(sec/86400);
+  const h = Math.floor((sec%86400)/3600);
+  const m = Math.floor((sec%3600)/60);
+  const s = sec%60;
+  if(d>0) return d+"g "+h+"h";
+  if(h>0) return h+"h "+m+"m";
+  if(m>0) return m+"m "+s+"s";
+  return s+"s";
+}
+/* long form for KPI: hours + days context */
+function fmtDurLong(sec){
+  if(sec===null||sec===undefined||isNaN(sec)) return "—";
+  const hours = sec/3600;
+  return fmtNum(hours,1)+"h";
+}
+
+function esc(s){
+  if(s===null||s===undefined) return "";
+  return String(s).replace(/[<>&"']/g, c => ({"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+async function fetchJSON(url){
+  const res = await fetch(url,{method:"GET",cache:"no-store"});
+  if(!res.ok) throw new Error("HTTP "+res.status);
+  return await res.json();
+}
+async function fetchJSONSafe(url){
+  try{ return await fetchJSON(url); }catch(e){ return {__error:e.message||"errore"}; }
+}
+async function countParticipants(mode,period){
+  const url = BASE+"/leaderboards/"+mode+"/"+period+".json?shallow=true";
+  try{ const d=await fetchJSON(url); if(!d||typeof d!=="object")return 0; return Object.keys(d).length; }
+  catch(e){ return null; }
+}
+async function fetchTop(mode,period,limit){
+  const url = BASE+"/leaderboards/"+mode+"/"+period+".json?orderBy=%22score%22&limitToLast="+(limit||100);
+  const d = await fetchJSON(url);
+  if(!d||typeof d!=="object") return [];
+  const rows = Object.keys(d).map(id=>{
+    const r=d[id]||{};
+    return {
+      id,
+      name:(r.name!=null && String(r.name).trim()!=="")?String(r.name):"Anonimo",
+      score:Number(r.score)||0,
+      icon:(typeof r.icon==="number")?r.icon:0,
+      glo:r.glo===true
+    };
+  });
+  rows.sort((a,b)=>b.score-a.score);
+  return rows;
+}
+
+/* ==========================================================================
+   LOGIN (Firebase dashboard_auth)
+   ========================================================================== */
+const loginScreen=document.getElementById("loginScreen");
+const dashboard=document.getElementById("dashboard");
+
+function slugify(email){ return String(email).trim().toLowerCase().replace(/[^a-z0-9]/g,"_"); }
+async function sha256Hex(str){
+  const buf=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+function getSavedEmail(){ try{ return localStorage.getItem(LS_KEY); }catch(e){ return null; } }
+function setSavedEmail(v){ try{ v?localStorage.setItem(LS_KEY,v):localStorage.removeItem(LS_KEY); }catch(e){} }
+
+function showDashboard(){
+  loginScreen.classList.add("hidden");
+  dashboard.classList.remove("hidden");
+  if(!window.__ccInit){ window.__ccInit=true; initDashboard(); }
+}
+
+document.getElementById("loginForm").addEventListener("submit", async function(e){
+  e.preventDefault();
+  const email=document.getElementById("email").value;
+  const pass=document.getElementById("pass").value;
+  const err=document.getElementById("loginErr");
+  err.textContent="Verifica in corso…";
+  if(!email||!pass){ err.textContent="Inserisci email e password."; return; }
+  try{
+    const key=slugify(email);
+    const rec=await fetchJSON(BASE+"/dashboard_auth/"+key+".json");
+    if(!rec || typeof rec!=="object" || !rec.hash){ err.textContent="Credenziali non valide."; return; }
+    const h=await sha256Hex(pass);
+    if(String(rec.hash).toLowerCase()===h.toLowerCase()){
+      err.textContent="";
+      setSavedEmail(email.trim().toLowerCase());
+      showDashboard();
+    }else{
+      err.textContent="Credenziali non valide.";
+    }
+  }catch(ex){
+    err.textContent="Errore di verifica (serve HTTPS/connessione).";
+  }
+});
+document.getElementById("logoutBtn").addEventListener("click", function(){
+  setSavedEmail(null);
+  dashboard.classList.add("hidden");
+  loginScreen.classList.remove("hidden");
+  document.getElementById("pass").value="";
+});
+
+/* ==========================================================================
+   DASHBOARD STATE
+   ========================================================================== */
+let CURRENT_MODE="classic";
+let SELECTED_PERIOD=currentPeriodUTC();
+let CHART_CACHE=null;
+let TABLE_CACHE={};
+let STATS_PLAYERS=null;     // array of player objects, or null if denied
+let STATS_DENIED=false;
+
+function initDashboard(){
+  const sel=document.getElementById("monthSelect");
+  sel.innerHTML="";
+  lastPeriods(MONTHS_BACK).forEach(p=>{
+    const o=document.createElement("option");
+    o.value=String(p); o.textContent=decodePeriod(p).label;
+    sel.appendChild(o);
+  });
+  sel.value=String(SELECTED_PERIOD);
+  sel.addEventListener("change",function(){ SELECTED_PERIOD=parseInt(this.value,10); loadMonth(); });
+
+  document.querySelectorAll(".tab").forEach(t=>{
+    t.addEventListener("click",function(){
+      document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+      this.classList.add("active");
+      CURRENT_MODE=this.dataset.mode;
+      renderTable();
+    });
+  });
+  document.getElementById("refreshBtn").addEventListener("click",function(){
+    CHART_CACHE=null; TABLE_CACHE={}; STATS_PLAYERS=null; STATS_DENIED=false;
+    loadAll();
+  });
+  // filtro PIATTAFORMA: ri-renderizza le sezioni (senza ricaricare da Firebase)
+  var ps=document.getElementById("platformSelect");
+  if(ps) ps.addEventListener("change",function(){
+    if(STATS_PLAYERS) renderTelemetry(STATS_PLAYERS);
+  });
+  loadAll();
+}
+
+function loadAll(){
+  updateHeroReal();      // numero grosso: giocatori REALI dalla classifica
+  loadTelemetry();       // A,B,C,D,G
+  loadChart();           // F (+ A active KPIs from leaderboard)
+  loadMonth();           // E
+  suppLoad();            // H (supporters & creator)
+}
+
+/* ==========================================================================
+   H. SUPPORTERS & CREATOR — stesse liste npoint della pagina admin
+   ========================================================================== */
+const SUPP_URL    = "https://api.npoint.io/c0e50f85707a48094b11";
+const PEND_URL    = "https://api.npoint.io/d580adb16f1a8cd182d6";
+const CREATOR_URL = "https://api.npoint.io/d307da3a533b2dd1bafa";
+let suppOg=[], suppPending=[], suppCreq=[], suppCok=[];
+
+function suppStatus(msg,col){ const el=document.getElementById("suppStatus");
+  if(el){ el.textContent=msg||""; el.style.color=col||"var(--faint)"; } }
+
+async function suppLoad(){
+  suppStatus("Carico le liste…");
+  try{
+    const [s,p,c]=await Promise.all([
+      fetch(SUPP_URL,{cache:"no-store"}).then(r=>r.json()),
+      fetch(PEND_URL,{cache:"no-store"}).then(r=>r.json()),
+      fetch(CREATOR_URL,{cache:"no-store"}).then(r=>r.json())
+    ]);
+    suppOg      = Array.isArray(s.og_supporters)    ? s.og_supporters    : [];
+    suppPending = Array.isArray(p.pending)          ? p.pending          : [];
+    suppCreq    = Array.isArray(c.creator_requests) ? c.creator_requests : [];
+    suppCok     = Array.isArray(c.creator_approved) ? c.creator_approved : [];
+    suppRender();
+    suppStatus("Liste aggiornate ✓","var(--green2)");
+  }catch(e){ suppStatus("Errore di rete: "+e.message,"var(--red)"); }
+}
+async function suppSaveOg(){ await fetch(SUPP_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({og_supporters:suppOg})}); }
+async function suppSavePending(){ await fetch(PEND_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({pending:suppPending})}); }
+async function suppSaveCreators(){ await fetch(CREATOR_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({creator_requests:suppCreq,creator_approved:suppCok})}); }
+
+// le richieste creator possono essere oggetti {player, info} (nuovo) o stringhe (vecchio)
+function suppCPlayer(c){ return (c&&typeof c==="object")?(c.player||"?"):String(c); }
+function suppCInfo(c){ return (c&&typeof c==="object")?(c.info||""):""; }
+
+function suppMatch(name,q){ return !q || String(name).toLowerCase().includes(q); }
+function suppHi(name,q){
+  const s=esc(name);
+  if(!q) return s;
+  const i=String(name).toLowerCase().indexOf(q);
+  if(i<0) return s;
+  return esc(name.slice(0,i))+"<mark>"+esc(name.slice(i,i+q.length))+"</mark>"+esc(name.slice(i+q.length));
+}
+function suppRow(html,btns){ return '<div class="supp-row"><div class="nm">'+html+'</div>'+btns+'</div>'; }
+
+function suppRender(){
+  const q=(document.getElementById("suppSearch").value||"").trim().toLowerCase();
+  const flt=document.getElementById("suppFilter").value;
+  const show={pending:flt==="all"||flt==="pending", og:flt==="all"||flt==="og",
+              creq:flt==="all"||flt==="creq",       cok:flt==="all"||flt==="cok"};
+  document.getElementById("suppPanelPending").classList.toggle("hidden",!show.pending);
+  document.getElementById("suppPanelOg").classList.toggle("hidden",!show.og);
+  document.getElementById("suppPanelCreq").classList.toggle("hidden",!show.creq);
+  document.getElementById("suppPanelCok").classList.toggle("hidden",!show.cok);
+
+  document.getElementById("suppPendCount").textContent=suppPending.length;
+  document.getElementById("suppOgCount").textContent=suppOg.length;
+  document.getElementById("suppCreqCount").textContent=suppCreq.length;
+  document.getElementById("suppCokCount").textContent=suppCok.length;
+
+  let h="";
+  suppPending.forEach((n,i)=>{ if(suppMatch(n,q)) h+=suppRow(suppHi(n,q),
+    '<button class="supp-btn supp-ok" onclick="suppApprove('+i+')">✓</button>'+
+    '<button class="supp-btn supp-no" onclick="suppReject('+i+')">✗</button>'); });
+  document.getElementById("suppPending").innerHTML=h||'<div class="supp-empty">'+(q?"Nessun risultato.":"Nessuna richiesta.")+'</div>';
+
+  h="";
+  suppOg.forEach((n,i)=>{ if(suppMatch(n,q)) h+=suppRow(suppHi(n,q),
+    '<button class="supp-btn supp-rm" onclick="suppRemoveOg('+i+')">✕</button>'); });
+  document.getElementById("suppOg").innerHTML=h||'<div class="supp-empty">'+(q?"Nessun risultato.":"Lista vuota.")+'</div>';
+
+  h="";
+  suppCreq.forEach((c,i)=>{ const pl=suppCPlayer(c); if(suppMatch(pl,q)){
+    const info=suppCInfo(c);
+    h+=suppRow("👤 <b>"+suppHi(pl,q)+"</b>"+(info?'<br><small>'+esc(info)+'</small>':""),
+      '<button class="supp-btn supp-ok" onclick="suppApproveCreator('+i+')" title="assegna l\'icona Creator">✓</button>'+
+      '<button class="supp-btn supp-no" onclick="suppRejectCreator('+i+')">✗</button>'); } });
+  document.getElementById("suppCreq").innerHTML=h||'<div class="supp-empty">'+(q?"Nessun risultato.":"Nessuna richiesta.")+'</div>';
+
+  h="";
+  suppCok.forEach((n,i)=>{ if(suppMatch(n,q)) h+=suppRow("🎬 "+suppHi(n,q),
+    '<button class="supp-btn supp-rm" onclick="suppRemoveCok('+i+')" title="revoca l\'icona Creator">✕</button>'); });
+  document.getElementById("suppCok").innerHTML=h||'<div class="supp-empty">'+(q?"Nessun risultato.":"Nessuno approvato.")+'</div>';
+}
+
+async function suppApprove(i){ const n=suppPending[i]; if(n==null)return;
+  if(!suppOg.includes(n)) suppOg.push(n);
+  suppPending.splice(i,1); suppRender(); suppStatus("Salvo…");
+  try{ await Promise.all([suppSaveOg(),suppSavePending()]); suppStatus("Approvato: "+n+" ✓","var(--green2)"); }
+  catch(e){ suppStatus("Errore salvataggio: "+e.message,"var(--red)"); } }
+async function suppReject(i){ const n=suppPending[i];
+  suppPending.splice(i,1); suppRender(); suppStatus("Salvo…");
+  try{ await suppSavePending(); suppStatus("Rifiutato: "+n); }
+  catch(e){ suppStatus("Errore salvataggio: "+e.message,"var(--red)"); } }
+async function suppApproveAllFn(){ if(!suppPending.length){ suppStatus("Nessuna richiesta."); return; }
+  suppPending.forEach(n=>{ if(!suppOg.includes(n)) suppOg.push(n); });
+  const n=suppPending.length; suppPending=[]; suppRender(); suppStatus("Salvo…");
+  try{ await Promise.all([suppSaveOg(),suppSavePending()]); suppStatus("Approvate "+n+" richieste ✓","var(--green2)"); }
+  catch(e){ suppStatus("Errore salvataggio: "+e.message,"var(--red)"); } }
+async function suppAddName(){ const el=document.getElementById("suppNewName");
+  const v=(el.value||"").trim(); if(!v)return;
+  if(!suppOg.includes(v)) suppOg.push(v);
+  el.value=""; suppRender(); suppStatus("Salvo…");
+  try{ await suppSaveOg(); suppStatus("Aggiunto: "+v+" ✓","var(--green2)"); }
+  catch(e){ suppStatus("Errore salvataggio: "+e.message,"var(--red)"); } }
+async function suppRemoveOg(i){ const n=suppOg[i];
+  suppOg.splice(i,1); suppRender(); suppStatus("Salvo…");
+  try{ await suppSaveOg(); suppStatus("Rimosso: "+n); }
+  catch(e){ suppStatus("Errore salvataggio: "+e.message,"var(--red)"); } }
+async function suppApproveCreator(i){ const pl=suppCPlayer(suppCreq[i]);
+  if(!suppCok.includes(pl)) suppCok.push(pl);
+  suppCreq.splice(i,1); suppRender(); suppStatus("Salvo…");
+  try{ await suppSaveCreators(); suppStatus("Creator approvato: "+pl+" — icona assegnata ✓","var(--green2)"); }
+  catch(e){ suppStatus("Errore salvataggio: "+e.message,"var(--red)"); } }
+async function suppRejectCreator(i){ const pl=suppCPlayer(suppCreq[i]);
+  suppCreq.splice(i,1); suppRender(); suppStatus("Salvo…");
+  try{ await suppSaveCreators(); suppStatus("Rifiutato: "+pl); }
+  catch(e){ suppStatus("Errore salvataggio: "+e.message,"var(--red)"); } }
+async function suppRemoveCok(i){ const pl=suppCok[i];
+  suppCok.splice(i,1); suppRender(); suppStatus("Salvo…");
+  try{ await suppSaveCreators(); suppStatus("Icona Creator revocata: "+pl); }
+  catch(e){ suppStatus("Errore salvataggio: "+e.message,"var(--red)"); } }
+
+(function(){
+  const s=document.getElementById("suppSearch"), f=document.getElementById("suppFilter");
+  if(s) s.addEventListener("input",suppRender);
+  if(f) f.addEventListener("change",suppRender);
+  const r=document.getElementById("suppReload"); if(r) r.addEventListener("click",suppLoad);
+  const a=document.getElementById("suppApproveAll"); if(a) a.addEventListener("click",suppApproveAllFn);
+  const ab=document.getElementById("suppAddBtn"); if(ab) ab.addEventListener("click",suppAddName);
+  const ni=document.getElementById("suppNewName");
+  if(ni) ni.addEventListener("keydown",e=>{ if(e.key==="Enter") suppAddName(); });
+})();
+
+/* NUMERO GROSSO: quante persone hanno DAVVERO giocato = giocatori unici presenti
+   nelle classifiche (unione degli ID su tutte le modalita' e gli ultimi mesi).
+   E' il dato reale: la telemetria stats/players ce l'hanno solo i device aggiornati. */
+async function updateHeroReal(){
+  const hn=document.getElementById("heroNum");
+  const periods=lastPeriods(18);            // fino a 18 mesi indietro
+  const ids=new Set();
+  const tasks=[];
+  for(const m of MODES) for(const p of periods){
+    tasks.push(
+      fetchJSON(BASE+"/leaderboards/"+m+"/"+p+".json?shallow=true")
+        .then(d=>{ if(d&&typeof d==="object") Object.keys(d).forEach(id=>ids.add(id)); })
+        .catch(()=>{})
+    );
+  }
+  await Promise.all(tasks);
+  if(hn) hn.textContent = ids.size>0 ? fmtInt(ids.size) : "—";
+}
+
+/* ==========================================================================
+   TELEMETRY (stats/players) -> sections A,B,C,D,G
+   ========================================================================== */
+async function loadTelemetry(){
+  const raw = await fetchJSONSafe(BASE+"/stats/players.json");
+  const notice = document.getElementById("teleNotice");
+  const denied = !!(raw && (raw.__error !== undefined || raw.__denied));
+  if(denied || raw===null || typeof raw!=="object"){
+    // denied = regole non OK; null/vuoto = nessun dato ancora (NON un errore)
+    STATS_DENIED = denied;
+    STATS_PLAYERS = null;
+    notice.innerHTML = denied
+      ? '<strong>Telemetria non leggibile:</strong> verifica le regole Firebase sul nodo <code>stats</code>.'
+      : '<strong>Telemetria in attesa dei primi dati:</strong> compariranno quando i giocatori useranno la versione aggiornata dell\'app. Le sezioni classifica qui sotto sono gi&agrave; disponibili.';
+    notice.classList.remove("hidden");
+    renderTelemetryEmpty();
+    return;
+  }
+  const players = Object.keys(raw).map(id=>{
+    const p=raw[id]||{};
+    const num = k => Number(p[k])||0;
+    return {
+      id,
+      name:(p.name!=null && String(p.name).trim()!=="")?String(p.name):"Anonimo",
+      icon:(typeof p.icon==="number")?p.icon:0,
+      pt_classic:num("pt_classic"), pt_speedrun:num("pt_speedrun"),
+      pt_story:num("pt_story"), pt_ranked:num("pt_ranked"), pt_total:num("pt_total"),
+      g_classic:num("g_classic"), g_speedrun:num("g_speedrun"),
+      g_story:num("g_story"), g_ranked:num("g_ranked"), g_total:num("g_total"),
+      hs_classic:num("hs_classic"), hs_speedrun:num("hs_speedrun"),
+      story_level:num("story_level"), story_stars:num("story_stars"),
+      coins:num("coins"), pass_level:num("pass_level"), rank:num("rank"),
+      first_seen:num("first_seen"), updated:num("updated"),
+      platform:(typeof p.platform==="string" && p.platform.trim()!=="")?p.platform:"—"
+    };
+  });
+  STATS_PLAYERS = players;
+  STATS_DENIED=false;
+  document.getElementById("teleNotice").classList.add("hidden");
+  renderTelemetry(players);
+}
+
+function renderTelemetryEmpty(){
+  // NB: il numero grosso (heroNum) viene dalla classifica (updateHeroReal), non da qui
+  var hb=document.getElementById("heroBreak"); if(hb) hb.innerHTML="Con telemetria (0)";
+  // KPIs that come from telemetry
+  ["kTotPlayers","kPlaytime","kAvgPlayer","kAvgSession","kTotGames"].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.textContent="—";
+  });
+  const teleMsg = '<div class="state"><div class="big">In attesa di dati</div>'
+    + 'La telemetria comparir&agrave; quando i giocatori useranno la versione aggiornata dell\'app.</div>';
+  ["activityChart","playByMode","gamesByMode","storyFunnel","storyStats","passDist","rankDist","recordsCoins","topPlaytime","topStory"]
+    .forEach(id=>{ const el=document.getElementById(id); if(el) el.innerHTML=teleMsg; });
+}
+
+function renderTelemetry(playersAll){
+  /* HERO: il NUMERO GROSSO viene dai giocatori REALI in classifica (updateHeroReal).
+     Qui riempio solo il breakdown piattaforma, che pero' e' noto SOLO per chi ha la
+     telemetria (versione aggiornata) -> lo etichetto come sottoinsieme. */
+  const byPlat={}; playersAll.forEach(p=>{ byPlat[p.platform]=(byPlat[p.platform]||0)+1; });
+  const niOS=byPlat["iOS"]||0, nAnd=byPlat["Android"]||0, nOth=playersAll.length-niOS-nAnd;
+  document.getElementById("heroBreak").innerHTML =
+    'Con telemetria ('+fmtInt(playersAll.length)+') &mdash; iOS: <b style="color:var(--ink)">'+fmtInt(niOS)+'</b> &nbsp;&middot;&nbsp; Android: <b style="color:var(--ink)">'+fmtInt(nAnd)+'</b>'
+    +(nOth>0?' &nbsp;&middot;&nbsp; Altro: '+fmtInt(nOth):'');
+
+  /* filtro PIATTAFORMA: le sezioni sotto usano solo i giocatori filtrati */
+  const pf=(document.getElementById("platformSelect")||{}).value||"";
+  const players = pf ? playersAll.filter(p=>p.platform===pf) : playersAll;
+
+  const N = players.length;
+  const sum = k => players.reduce((a,p)=>a+p[k],0);
+
+  /* ---- A: KPIs ---- */
+  const ptTotal = sum("pt_total");
+  const gTotal  = sum("g_total");
+  document.getElementById("kTotPlayers").textContent = fmtInt(N);
+  document.getElementById("kPlaytime").textContent = fmtDurLong(ptTotal);
+  document.getElementById("kPlaytimeSub").textContent = "≈ "+fmtDur(ptTotal)+" · "+fmtInt(Math.round(ptTotal/3600))+" ore";
+  document.getElementById("kAvgPlayer").textContent = N?fmtDur(ptTotal/N):"—";
+  document.getElementById("kAvgSession").textContent = gTotal?fmtDur(ptTotal/gTotal):"—";
+  document.getElementById("kTotGames").textContent = fmtInt(gTotal);
+
+  /* ---- attività giornaliera (grafico a linee) ---- */
+  renderActivityChart(players);
+
+  /* ---- B: play time & games by mode ---- */
+  const modes=["classic","speedrun","story","ranked"];
+  const ptByMode = modes.map(m=>({key:m,val:sum("pt_"+m),color:MODE_COLORS[m]}));
+  const gByMode  = modes.map(m=>({key:m,val:sum("g_"+m),color:MODE_COLORS[m]}));
+  renderHBars("playByMode", ptByMode, {fmt:fmtDur, showPct:true});
+  renderHBars("gamesByMode", gByMode, {fmt:fmtInt, showPct:true});
+
+  /* ---- C: story funnel + stats ---- */
+  renderStoryFunnel(players);
+  renderStoryStats(players);
+
+  /* ---- D: progression ---- */
+  renderPassDist(players);
+  renderRankDist(players);
+  renderRecordsCoins(players);
+
+  /* ---- G: top players ---- */
+  renderTopPlaytime(players);
+  renderTopStory(players);
+
+  /* refresh chart's story series if chart already drawn */
+  if(CHART_CACHE){ decorateStoryTrend(players.filter(p=>p.story_level>0).length); }
+}
+
+/* labels for modes */
+const MODE_LABEL={classic:"Classic",speedrun:"Speedrun",story:"Storia",ranked:"Ranked"};
+
+function renderHBars(elId, items, opts){
+  opts=opts||{};
+  const total = items.reduce((a,x)=>a+x.val,0);
+  const max = Math.max(1, ...items.map(x=>x.val));
+  if(total===0){
+    document.getElementById(elId).innerHTML='<div class="state">Nessun dato registrato.</div>';
+    return;
+  }
+  let html='<div class="hbars">';
+  items.forEach(x=>{
+    const w = (x.val/max)*100;
+    const p = total?(x.val/total)*100:0;
+    const valTxt = opts.fmt?opts.fmt(x.val):fmtInt(x.val);
+    const pctTxt = opts.showPct?(' <span style="color:var(--faint)">('+pct(p)+')</span>'):'';
+    html += '<div class="hbar">'
+      + '<span class="hlbl">'+esc(MODE_LABEL[x.key]||x.key)+'</span>'
+      + '<span class="htrack"><span class="hfill" style="width:'+w.toFixed(1)+'%;background:'+x.color+'"></span></span>'
+      + '<span class="hval">'+valTxt+pctTxt+'</span>'
+      + '</div>';
+  });
+  html+='</div>';
+  document.getElementById(elId).innerHTML=html;
+}
+
+/* ---- Story funnel (levels 0..30, reached at least L) ---- */
+function renderStoryFunnel(players){
+  const N=players.length;
+  // buckets at 0,5,10,...,30 for compact funnel
+  const steps=[0,5,10,15,20,25,30];
+  let html='<div class="funnel">';
+  const base = Math.max(1, players.filter(p=>p.story_level>=0).length);
+  steps.forEach(L=>{
+    const reached = players.filter(p=>p.story_level>=L).length;
+    const w = (reached/Math.max(1,N))*100;
+    html += '<div class="frow">'
+      + '<span class="fl">Liv &ge; '+L+'</span>'
+      + '<span class="ft"><span class="ff" style="width:'+w.toFixed(1)+'%"></span></span>'
+      + '<span class="fv">'+fmtInt(reached)+' · '+pct((reached/Math.max(1,N))*100)+'</span>'
+      + '</div>';
+  });
+  html+='</div>';
+  if(N===0) html='<div class="state">Nessun dato storia.</div>';
+  document.getElementById("storyFunnel").innerHTML=html;
+}
+
+function renderStoryStats(players){
+  const withStory = players.filter(p=>p.story_level>0);
+  const N=players.length;
+  const completed = players.filter(p=>p.story_level>=STORY_MAX).length;
+  const pctComplete = N?(completed/N)*100:0;
+  const avgStars = withStory.length? withStory.reduce((a,p)=>a+p.story_stars,0)/withStory.length : 0;
+  const avgLevel = withStory.length? withStory.reduce((a,p)=>a+p.story_level,0)/withStory.length : 0;
+  // stars distribution: max stars per level = 3 -> total possible 90; show buckets by average stars per completed level
+  // distribution of story_stars in ranges
+  const maxStars = STORY_MAX*3;
+  const buckets = [
+    {lbl:"0", lo:0, hi:0},
+    {lbl:"1-15", lo:1, hi:15},
+    {lbl:"16-30", lo:16, hi:30},
+    {lbl:"31-60", lo:31, hi:60},
+    {lbl:"61-90", lo:61, hi:maxStars}
+  ];
+  const counts = buckets.map(b=>players.filter(p=>p.story_stars>=b.lo && p.story_stars<=b.hi).length);
+  const maxC = Math.max(1,...counts);
+
+  let html = '<div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px">'
+    + '<div style="flex:1;min-width:120px"><div style="color:var(--cyan);font-size:15px">STORIA COMPLETATA</div>'
+      + '<div style="font-family:\'Press Start 2P\',monospace;font-size:16px;color:var(--gold);margin-top:8px;text-shadow:2px 2px 0 #000">'+pct(pctComplete)+'</div>'
+      + '<div style="color:var(--faint);font-size:14px;margin-top:6px">'+fmtInt(completed)+' su '+fmtInt(N)+' (liv &ge; '+STORY_MAX+')</div></div>'
+    + '<div style="flex:1;min-width:120px"><div style="color:var(--cyan);font-size:15px">MEDIA STELLE</div>'
+      + '<div style="font-family:\'Press Start 2P\',monospace;font-size:16px;color:var(--gold);margin-top:8px;text-shadow:2px 2px 0 #000">'+fmtNum(avgStars,1)+'</div>'
+      + '<div style="color:var(--faint);font-size:14px;margin-top:6px">liv. medio '+fmtNum(avgLevel,1)+'</div></div>'
+    + '</div>';
+  html += '<div style="color:var(--dim);font-size:15px;margin-bottom:8px">Distribuzione stelle totali</div><div class="hbars">';
+  buckets.forEach((b,i)=>{
+    const w=(counts[i]/maxC)*100;
+    html += '<div class="hbar"><span class="hlbl">'+esc(b.lbl)+'</span>'
+      + '<span class="htrack"><span class="hfill" style="width:'+w.toFixed(1)+'%;background:var(--gold)"></span></span>'
+      + '<span class="hval">'+fmtInt(counts[i])+'</span></div>';
+  });
+  html+='</div>';
+  if(N===0) html='<div class="state">Nessun dato storia.</div>';
+  document.getElementById("storyStats").innerHTML=html;
+}
+
+/* ---- D: distributions ---- */
+function distByField(players, field){
+  const map={};
+  players.forEach(p=>{ const v=p[field]; map[v]=(map[v]||0)+1; });
+  const keys=Object.keys(map).map(Number).sort((a,b)=>a-b);
+  return keys.map(k=>({k, c:map[k]}));
+}
+function renderDist(elId, players, field, color, labelPrefix){
+  const dist=distByField(players, field);
+  if(dist.length===0 || players.length===0){
+    document.getElementById(elId).innerHTML='<div class="state">Nessun dato.</div>'; return;
+  }
+  const maxC=Math.max(1,...dist.map(d=>d.c));
+  let html='<div class="hbars">';
+  dist.forEach(d=>{
+    const w=(d.c/maxC)*100;
+    html+='<div class="hbar"><span class="hlbl">'+esc(labelPrefix)+' '+d.k+'</span>'
+      +'<span class="htrack"><span class="hfill" style="width:'+w.toFixed(1)+'%;background:'+color+'"></span></span>'
+      +'<span class="hval">'+fmtInt(d.c)+'</span></div>';
+  });
+  html+='</div>';
+  document.getElementById(elId).innerHTML=html;
+}
+function renderPassDist(players){ renderDist("passDist", players, "pass_level", "var(--gold)", "Pass"); }
+function renderRankDist(players){ renderDist("rankDist", players, "rank", "var(--ranked)", "Rank"); }
+
+function renderRecordsCoins(players){
+  const N=players.length;
+  if(N===0){ document.getElementById("recordsCoins").innerHTML='<div class="state">Nessun dato.</div>'; return; }
+  const avg = k => players.reduce((a,p)=>a+p[k],0)/N;
+  const max = k => players.reduce((a,p)=>Math.max(a,p[k]),0);
+  const cards = [
+    {lbl:"HS Classic (media)", val:fmtInt(Math.round(avg("hs_classic")))},
+    {lbl:"HS Classic (max)", val:fmtInt(max("hs_classic"))},
+    {lbl:"HS Speedrun (media)", val:fmtInt(Math.round(avg("hs_speedrun")))},
+    {lbl:"HS Speedrun (max)", val:fmtInt(max("hs_speedrun"))},
+    {lbl:"Monete (media)", val:fmtInt(Math.round(avg("coins")))},
+    {lbl:"Monete (max)", val:fmtInt(max("coins"))}
+  ];
+  let html='<div class="kpis" style="grid-template-columns:repeat(3,1fr)">';
+  cards.forEach(c=>{
+    html+='<div class="kpi"><div class="lbl">'+esc(c.lbl)+'</div><div class="val sm">'+c.val+'</div></div>';
+  });
+  html+='</div>';
+  document.getElementById("recordsCoins").innerHTML=html;
+}
+
+/* ---- G: top lists ---- */
+function iconColor(i){ return ICON_COLORS[(i|0)%ICON_COLORS.length]; }
+function renderTopList(elId, players, sortFn, valFn){
+  if(players.length===0){ document.getElementById(elId).innerHTML='<div class="state">Nessun dato.</div>'; return; }
+  const top=players.slice().sort(sortFn).slice(0,10);
+  let html='<div class="toplist">';
+  top.forEach((p,i)=>{
+    html+='<div class="toprow"><span class="n">'+(i+1)+'</span>'
+      +'<span class="who"><span class="icon-badge" style="background:'+iconColor(p.icon)+';width:22px;height:22px;font-size:10px;display:inline-flex;vertical-align:middle;margin-right:7px">'+(p.icon|0)+'</span>'+esc(p.name)+'</span>'
+      +'<span class="v">'+valFn(p)+'</span></div>';
+  });
+  html+='</div>';
+  document.getElementById(elId).innerHTML=html;
+}
+function renderTopPlaytime(players){
+  renderTopList("topPlaytime", players, (a,b)=>b.pt_total-a.pt_total, p=>fmtDur(p.pt_total));
+}
+function renderTopStory(players){
+  renderTopList("topStory", players,
+    (a,b)=> (b.story_level-a.story_level)||(b.story_stars-a.story_stars),
+    p=>"Liv "+p.story_level+" · "+p.story_stars+"★");
+}
+
+/* ==========================================================================
+   CHART (12 months participants: classic, speedrun, story) — section F
+   ========================================================================== */
+async function loadChart(){
+  const chartArea=document.getElementById("chartArea");
+  const periods=lastPeriods(MONTHS_BACK).slice().reverse(); // oldest -> newest
+  try{
+    const results=await Promise.all(periods.map(async p=>{
+      const [c,s,st]=await Promise.all([
+        countParticipants("classic",p),
+        countParticipants("speedrun",p),
+        countParticipants("story",p)   // story bucket may not exist -> null
+      ]);
+      return {p,c,s,st};
+    }));
+    const classic=results.map(r=>r.c===null?0:r.c);
+    const speedrun=results.map(r=>r.s===null?0:r.s);
+    const storyBucketExists = results.some(r=>r.st!==null && r.st>0);
+    const story=results.map(r=>r.st===null?0:r.st);
+    CHART_CACHE={periods, classic, speedrun, story, storyBucketExists};
+    drawChart(CHART_CACHE);
+    updateActiveKpis(CHART_CACHE);
+    // story trend note / fallback
+    if(!storyBucketExists){
+      const fallback = (STATS_PLAYERS? STATS_PLAYERS.filter(p=>p.story_level>0).length : null);
+      decorateStoryTrend(fallback);
+    }else{
+      document.getElementById("storyTrendNote").textContent="";
+    }
+  }catch(e){
+    chartArea.innerHTML='<div class="state err"><div class="big">Errore andamento</div>'+esc(e.message)+'</div>';
+  }
+}
+
+/* set the "attivi questo mese" + growth + mode-now KPIs from leaderboard counts */
+function updateActiveKpis(cache){
+  const n=cache.periods.length;
+  const curC=cache.classic[n-1]||0, curS=cache.speedrun[n-1]||0;
+  const prvC=n>=2?(cache.classic[n-2]||0):0, prvS=n>=2?(cache.speedrun[n-2]||0):0;
+  const curEst=Math.max(curC,curS), prvEst=Math.max(prvC,prvS);
+
+  document.getElementById("kActive").textContent=fmtInt(curEst);
+  document.getElementById("kActiveSub").textContent="Classic "+fmtInt(curC)+" · Speedrun "+fmtInt(curS);
+  document.getElementById("kModeNow").textContent=fmtInt(curC)+" / "+fmtInt(curS);
+
+  const gEl=document.getElementById("kGrowth"), gSub=document.getElementById("kGrowthSub");
+  if(prvEst===0){
+    gEl.textContent=curEst>0?"+∞%":"—";
+    gEl.className="val sm "+(curEst>0?"pos":"flat");
+    gSub.textContent="mese prec.: "+fmtInt(prvEst);
+  }else{
+    const p=((curEst-prvEst)/prvEst)*100, r=Math.round(p*10)/10;
+    gEl.textContent=(r>=0?"+":"")+fmtNum(r,1)+"%";
+    gEl.className="val sm "+(r>0?"pos":(r<0?"neg":"flat"));
+    gSub.textContent="mese prec.: "+fmtInt(prvEst)+" (stima)";
+  }
+}
+
+function decorateStoryTrend(currentStoryPlayers){
+  const note=document.getElementById("storyTrendNote");
+  if(currentStoryPlayers===null || currentStoryPlayers===undefined){
+    note.textContent="Storia: nessun bucket mensile; abilita la telemetria per il valore corrente.";
+    return;
+  }
+  note.textContent="Storia: nessun bucket mensile disponibile. La barra Storia usa i giocatori con story_level>0 (valore corrente: "+fmtInt(currentStoryPlayers)+").";
+  if(CHART_CACHE){
+    const n=CHART_CACHE.periods.length;
+    const st=CHART_CACHE.story.slice();
+    st[n-1]=currentStoryPlayers;
+    CHART_CACHE.story=st;
+    drawChart(CHART_CACHE);
+  }
+}
+
+/* grouped bar chart, dependency-free SVG */
+/* Grafico a LINEE: attività giornaliera (ultimi 30 giorni).
+   Nuovi giocatori/giorno (first_seen) e Attivi/giorno (updated = ultimo accesso). */
+function renderActivityChart(players){
+  const el=document.getElementById("activityChart");
+  if(!el) return;
+  const DAY=86400, DAYS=30;
+  const nowDay=Math.floor(Date.now()/1000/DAY);
+  const days=[]; for(let i=DAYS-1;i>=0;i--) days.push(nowDay-i);
+  const idx={}; days.forEach((d,i)=>{idx[d]=i;});
+  const nw=new Array(DAYS).fill(0), ac=new Array(DAYS).fill(0);
+  (players||[]).forEach(p=>{
+    const fd=Math.floor((p.first_seen||0)/DAY), ud=Math.floor((p.updated||0)/DAY);
+    if(idx[fd]!==undefined) nw[idx[fd]]++;
+    if(idx[ud]!==undefined) ac[idx[ud]]++;
+  });
+  const maxVal=Math.max(1, ...nw, ...ac);
+  const W=Math.max(720, DAYS*24), H=260, padL=40, padR=14, padT=14, padB=46;
+  const plotW=W-padL-padR, plotH=H-padT-padB;
+  const x=i=>padL+(DAYS<=1?plotW/2:plotW*i/(DAYS-1));
+  const y=v=>padT+plotH-(v/maxVal)*plotH;
+  let grid="";
+  for(let i=0;i<=4;i++){ const gv=Math.round(maxVal/4*i), gy=y(gv);
+    grid+='<line class="grid-line" x1="'+padL+'" y1="'+gy+'" x2="'+(W-padR)+'" y2="'+gy+'"/>';
+    grid+='<text class="axlbl" x="'+(padL-7)+'" y="'+(gy+4)+'" text-anchor="end">'+fmtInt(gv)+'</text>';
+  }
+  const pts=arr=>arr.map((v,i)=>x(i).toFixed(1)+','+y(v).toFixed(1)).join(' ');
+  const dayLbl=i=>{ const d=new Date(days[i]*DAY*1000); return d.getUTCDate()+'/'+(d.getUTCMonth()+1); };
+  const dots=(arr,col,name)=>arr.map((v,i)=>'<circle cx="'+x(i).toFixed(1)+'" cy="'+y(v).toFixed(1)+'" r="2.6" fill="'+col+'"><title>'+dayLbl(i)+' — '+name+': '+fmtInt(v)+'</title></circle>').join('');
+  let xlab=""; days.forEach((dd,i)=>{ if(i%5===0||i===DAYS-1) xlab+='<text x="'+x(i).toFixed(1)+'" y="'+(H-padB+18)+'" text-anchor="middle">'+dayLbl(i)+'</text>'; });
+  const svg='<div class="chart-wrap"><svg class="chart" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Attivita giornaliera">'
+    +grid
+    +'<polyline fill="none" stroke="var(--classic)" stroke-width="2.5" points="'+pts(nw)+'"/>'
+    +'<polyline fill="none" stroke="var(--speedrun)" stroke-width="2.5" points="'+pts(ac)+'"/>'
+    +dots(nw,'var(--classic)','Nuovi')+dots(ac,'var(--speedrun)','Attivi')+xlab
+    +'</svg></div>';
+  const allZero=nw.every(v=>!v)&&ac.every(v=>!v);
+  el.innerHTML=svg+(allZero?'<div class="foot">Nessun dato negli ultimi 30 giorni.</div>':'');
+}
+
+function drawChart(cache){
+  const {periods, classic, speedrun, story}=cache;
+  const maxVal=Math.max(1, ...classic, ...speedrun, ...story);
+  const W=Math.max(720, periods.length*66);
+  const H=290, padL=44, padR=14, padT=14, padB=52;
+  const plotW=W-padL-padR, plotH=H-padT-padB;
+  const groups=periods.length, groupW=plotW/groups;
+  const barW=Math.min(13, groupW*0.22), gap=2;
+  const y=v=>padT+plotH-(v/maxVal)*plotH;
+
+  let grid="";
+  for(let i=0;i<=4;i++){
+    const gv=Math.round((maxVal/4)*i), gy=y(gv);
+    grid+='<line class="grid-line" x1="'+padL+'" y1="'+gy+'" x2="'+(W-padR)+'" y2="'+gy+'"/>';
+    grid+='<text class="axlbl" x="'+(padL-7)+'" y="'+(gy+4)+'" text-anchor="end">'+fmtInt(gv)+'</text>';
+  }
+  let bars="";
+  periods.forEach((p,i)=>{
+    const gx=padL+groupW*i+groupW/2;
+    const c=classic[i]||0, s=speedrun[i]||0, st=story[i]||0;
+    const x0=gx-(barW*1.5+gap);
+    const series=[{v:c,col:"var(--classic)",lab:"Classic"},{v:s,col:"var(--speedrun)",lab:"Speedrun"},{v:st,col:"var(--story)",lab:"Storia"}];
+    series.forEach((se,k)=>{
+      const bx=x0+k*(barW+gap);
+      bars+='<rect x="'+bx.toFixed(1)+'" y="'+y(se.v).toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+(padT+plotH-y(se.v)).toFixed(1)+'" fill="'+se.col+'">'
+        +'<title>'+decodePeriod(p).label+' — '+se.lab+': '+fmtInt(se.v)+'</title></rect>';
+    });
+    const d=decodePeriod(p);
+    const lbl=MONTH_NAMES[d.month-1].slice(0,3)+" "+String(d.year).slice(2);
+    bars+='<text x="'+gx.toFixed(1)+'" y="'+(H-padB+18)+'" text-anchor="middle">'+lbl+'</text>';
+  });
+  const svg='<div class="chart-wrap"><svg class="chart" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Partecipanti per mese">'
+    +grid+bars+'</svg></div>';
+  const allZero=classic.every(v=>v===0)&&speedrun.every(v=>v===0)&&story.every(v=>v===0);
+  document.getElementById("chartArea").innerHTML=svg+(allZero?'<div class="foot">Nessun dato per i periodi recenti.</div>':'');
+}
+
+/* ==========================================================================
+   LEADERBOARD TABLE — section E
+   ========================================================================== */
+async function loadMonth(){
+  document.getElementById("lbMonthLabel").textContent=decodePeriod(SELECTED_PERIOD).label;
+  document.getElementById("tableArea").innerHTML='<div class="state"><div class="spinner"></div><div style="margin-top:14px">Caricamento classifica…</div></div>';
+  await Promise.all(MODES.map(m=>ensureTable(m,SELECTED_PERIOD)));
+  renderTable();
+}
+async function ensureTable(mode,period){
+  const key=mode+":"+period;
+  if(TABLE_CACHE[key]!==undefined) return TABLE_CACHE[key];
+  try{ const rows=await fetchTop(mode,period,100); TABLE_CACHE[key]=rows; return rows; }
+  catch(e){ TABLE_CACHE[key]={__error:e.message||"errore"}; return TABLE_CACHE[key]; }
+}
+const MEDALS=["🥇","🥈","🥉"];
+function renderTable(){
+  const area=document.getElementById("tableArea");
+  const key=CURRENT_MODE+":"+SELECTED_PERIOD;
+  const cached=TABLE_CACHE[key];
+  if(cached===undefined){
+    area.innerHTML='<div class="state"><div class="spinner"></div><div style="margin-top:14px">Caricamento…</div></div>';
+    ensureTable(CURRENT_MODE,SELECTED_PERIOD).then(renderTable); return;
+  }
+  if(cached && cached.__error){
+    area.innerHTML='<div class="state err"><div class="big">Errore classifica</div>'+esc(cached.__error)+'</div>'; return;
+  }
+  const rows=cached;
+  if(!rows||rows.length===0){
+    area.innerHTML='<div class="state"><div class="big">Nessun giocatore</div>'
+      +'Nessun punteggio per '+esc(decodePeriod(SELECTED_PERIOD).label)+' in '+esc(MODE_LABEL[CURRENT_MODE])+'.</div>';
+    return;
+  }
+  let body="";
+  rows.slice(0,100).forEach((r,i)=>{
+    const rank=i+1;
+    const cls=rank===1?"t1":rank===2?"t2":rank===3?"t3":"";
+    const medal=rank<=3?'<span class="medal">'+MEDALS[rank-1]+'</span> ':'';
+    const col=iconColor(r.icon);
+    const glo=r.glo?' <span class="glo-tag" title="Global / verificato">GLO</span>':"";
+    body+='<tr>'
+      +'<td class="rank '+cls+'">'+medal+rank+'</td>'
+      +'<td><div class="nick"><span class="icon-badge" style="background:'+col+'">'+(r.icon|0)+'</span><span>'+esc(r.name)+'</span>'+glo+'</div></td>'
+      +'<td class="score">'+fmtInt(r.score)+'</td></tr>';
+  });
+  area.innerHTML='<div class="table-wrap"><table>'
+    +'<thead><tr><th>#</th><th>Nickname</th><th style="text-align:right">Punteggio</th></tr></thead>'
+    +'<tbody>'+body+'</tbody></table></div>'
+    +'<div class="foot">'+fmtInt(rows.length)+' giocatori mostrati (max 100).</div>';
+}
+
+/* ==========================================================================
+   BOOT
+   ========================================================================== */
+(function(){ if(getSavedEmail()){ showDashboard(); } })();
+</script>
+</body>
+</html>
