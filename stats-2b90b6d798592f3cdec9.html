@@ -3,16 +3,15 @@
   ==========================================================================
   CUBE CRASH — Super Statistics Dashboard (single self-contained static HTML)
   ==========================================================================
-  HOSTING NOTE (kept out of the visible page on purpose):
-  - Once committed on the MAIN branch under /docs (GitHub Pages from /docs),
-    this file is served at:
-        https://giorgiokirry.github.io/CUBE-CRASH/stats-2b90b6d798592f3cdec9.html
-  - LOGIN reads dashboard_auth/{key} from Firebase RTDB and verifies a
-    SHA-256 hash via crypto.subtle. NO password or hash is stored in source.
-    Access is also protected by the SECRET URL of this page.
-  - IMPOSTAZIONI DASHBOARD (download store inseriti a mano) sono salvate in
-    stats/players/_dash — l'unico ramo scrivibile dalle regole RTDB. Tutte le
-    chiavi che iniziano con "_" sono ESCLUSE dalle statistiche dei giocatori.
+  - LOGIN: legge dashboard_auth/{key} dal Realtime Database e verifica un hash
+    SHA-256 con crypto.subtle. In sorgente non c'e' nessuna password.
+  - CLASSIFICHE: periodi SETTIMANALI, come leaderboard.gd
+    (period = (unix + 259200) / 604800, lunedi' 00:00 UTC).
+  - IMPOSTAZIONI (download store scritti a mano): stats/players/_dash, l'unico
+    ramo scrivibile dalle regole. Le chiavi che iniziano con "_" sono escluse
+    da tutti i conteggi dei giocatori.
+  - DIAGNOSI: ogni sezione che mostra un dato negativo stampa sotto un blocco
+    "SOLUZIONE" con le azioni consigliate (vedi runDiagnostics()).
   ==========================================================================
 -->
 <html lang="it">
@@ -23,307 +22,372 @@
 <title>Cube Crash · Super Stats</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#0a1a3a;
-    --bg2:#08132c;
-    --panel:#0e2350;
-    --panel2:#122a5e;
-    --ink:#eaf2ff;
-    --dim:#8fb0e6;
-    --faint:#5f7fc0;
-    --gold:#ffcf3f;
-    --gold-d:#c99a12;
-    --cyan:#37e6d8;
-    --green:#5df06e;
-    --green2:#4be86a;
-    --red:#ff5468;
-    --purple:#b98cff;
-    --orange:#ff9f43;
-    --pink:#ec6fa1;
-    --classic:#37a0ff;
-    --speedrun:#ff9f43;
-    --story:#b98cff;
-    --ranked:#4be86a;
-    --border:#2a4fa0;
-    --border-lo:#1d3b7a;
-    --shadow:6px 6px 0 rgba(0,0,0,.55);
-    --shadow-sm:4px 4px 0 rgba(0,0,0,.5);
+    --bg:#070e1f;
+    --bg2:#0a1529;
+    --panel:#0e1a33;
+    --panel2:#132340;
+    --raise:#18294a;
+    --ink:#eef4ff;
+    --dim:#9fb4d8;
+    --faint:#6b82ac;
+    --line:#1e3157;
+    --line-soft:#182749;
+    --gold:#ffc53d;
+    --gold-d:#d99a10;
+    --cyan:#3ddcd0;
+    --green:#46d17f;
+    --green2:#46d17f;
+    --red:#ff5d6e;
+    --amber:#ffa53d;
+    --purple:#a98bff;
+    --orange:#ff9245;
+    --pink:#f472a8;
+    --classic:#3d9bff;
+    --speedrun:#ff9245;
+    --story:#a98bff;
+    --ranked:#46d17f;
+    --border:#1e3157;
+    --border-lo:#182749;
+    --shadow:0 18px 40px -22px rgba(0,0,0,.95), 0 2px 0 rgba(255,255,255,.02) inset;
+    --radius:14px;
+    --radius-sm:10px;
+    --f-head:'Space Grotesk','Inter',system-ui,sans-serif;
+    --f-body:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
   }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0}
   body{
     background:
-      repeating-linear-gradient(0deg, rgba(0,0,0,.14) 0 2px, transparent 2px 4px),
-      radial-gradient(1100px 620px at 82% -10%, rgba(185,140,255,.12), transparent 60%),
-      radial-gradient(900px 500px at -8% 8%, rgba(55,160,255,.12), transparent 55%),
-      var(--bg);
+      radial-gradient(1200px 700px at 78% -12%, rgba(169,139,255,.11), transparent 62%),
+      radial-gradient(900px 560px at -6% 4%, rgba(61,155,255,.11), transparent 58%),
+      linear-gradient(180deg, #081124 0%, var(--bg) 42%, #060c1b 100%);
     background-attachment:fixed;
     color:var(--ink);
-    font-family:'VT323','Courier New',monospace;
-    font-size:19px;
-    line-height:1.35;
+    font-family:var(--f-body);
+    font-size:15px;
+    line-height:1.5;
     min-height:100vh;
-    image-rendering:pixelated;
-    -webkit-font-smoothing:none;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
   }
-  h1,h2,h3,.pixel,.kpi .val,.tab,.btn,.chip{
-    font-family:'Press Start 2P','Courier New',monospace;
-  }
-  a{color:var(--gold)}
+  h1,h2,h3,h4,.num,.kpi .val,.tab,.btn{font-family:var(--f-head);letter-spacing:-.01em}
+  .num,.mono,td.score,td.dur,.kpi .val{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+  a{color:var(--cyan);text-decoration:none}
+  a:hover{color:var(--gold)}
   .hidden{display:none !important}
-  .mono{font-variant-numeric:tabular-nums}
-
-  /* scanline overlay */
-  .scan{position:fixed;inset:0;pointer-events:none;z-index:5;
-    background:repeating-linear-gradient(0deg, rgba(0,0,0,.05) 0 2px, transparent 2px 3px);
-    mix-blend-mode:multiply;opacity:.5}
+  ::selection{background:rgba(61,155,255,.35)}
+  ::-webkit-scrollbar{height:10px;width:10px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:#1e3157;border-radius:10px}
+  ::-webkit-scrollbar-thumb:hover{background:#2b4577}
 
   /* ---------------- LOGIN ---------------- */
-  .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
   .login-card{
-    width:100%;max-width:440px;background:var(--panel);
-    border:4px solid var(--gold);box-shadow:var(--shadow);padding:26px 24px 28px;
+    width:100%;max-width:410px;background:linear-gradient(180deg,var(--panel2),var(--panel));
+    border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:30px 28px 32px;
   }
-  .brand{display:flex;align-items:center;gap:14px;margin-bottom:14px}
-  .cube{
-    width:38px;height:38px;flex:none;background:var(--gold);
-    border:3px solid #1a1a1a;box-shadow:inset -6px -6px 0 var(--gold-d), 4px 4px 0 rgba(0,0,0,.5);
-    image-rendering:pixelated;position:relative;
-  }
-  .cube::after{content:"";position:absolute;inset:6px;background:repeating-linear-gradient(45deg,rgba(0,0,0,.12) 0 4px,transparent 4px 8px)}
-  .game-logo{width:56px;height:56px;flex:none;border:3px solid #1a1a1a;border-radius:6px;
-    box-shadow:4px 4px 0 rgba(0,0,0,.5);image-rendering:pixelated;object-fit:cover}
-  .brand h1{font-size:16px;margin:0;color:var(--gold);letter-spacing:1px;text-shadow:3px 3px 0 #000;line-height:1.5}
-  .login-sub{color:var(--dim);font-size:18px;margin:0 0 18px}
+  .brand{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+  .game-logo{width:52px;height:52px;flex:none;border-radius:12px;object-fit:cover;
+    box-shadow:0 8px 20px -10px rgba(0,0,0,.9)}
+  .brand h1{font-size:19px;margin:0;color:var(--ink);font-weight:700}
+  .brand .sub{font-size:12.5px;color:var(--faint);letter-spacing:.09em;text-transform:uppercase;margin-top:2px}
+  .login-sub{color:var(--dim);font-size:14px;margin:0 0 22px}
   .field{margin-bottom:14px}
-  .field label{display:block;font-size:16px;color:var(--cyan);margin-bottom:6px;letter-spacing:1px;text-transform:uppercase}
+  .field label{display:block;font-size:11.5px;color:var(--faint);margin-bottom:7px;
+    letter-spacing:.11em;text-transform:uppercase;font-weight:600}
   .field input{
-    width:100%;padding:11px 12px;border:3px solid var(--border);
-    background:var(--bg2);color:var(--ink);font-family:'VT323',monospace;font-size:20px;outline:none;
+    width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:var(--radius-sm);
+    background:rgba(7,14,31,.7);color:var(--ink);font-family:var(--f-body);font-size:15px;outline:none;
+    transition:border-color .15s, box-shadow .15s;
   }
-  .field input:focus{border-color:var(--gold)}
+  .field input:focus{border-color:var(--classic);box-shadow:0 0 0 3px rgba(61,155,255,.16)}
   .btn{
-    display:inline-block;width:100%;padding:13px 14px;border:3px solid #1a1a1a;cursor:pointer;
-    background:var(--gold);color:#20160a;font-size:12px;letter-spacing:1px;
-    box-shadow:var(--shadow-sm);transition:transform .04s;text-transform:uppercase;
+    display:block;width:100%;padding:12px 14px;border:0;border-radius:var(--radius-sm);cursor:pointer;
+    background:linear-gradient(180deg,#ffd45f,var(--gold));color:#2a1d02;font-size:14px;font-weight:700;
+    font-family:var(--f-head);transition:filter .15s, transform .06s;
   }
-  .btn:hover{filter:brightness(1.06)}
-  .btn:active{transform:translate(4px,4px);box-shadow:none}
-  .login-err{color:var(--red);font-size:18px;margin-top:12px;min-height:22px}
+  .btn:hover{filter:brightness(1.07)}
+  .btn:active{transform:translateY(1px)}
+  .login-err{color:var(--red);font-size:13px;margin-top:12px;min-height:20px}
 
   /* ---------------- SHELL ---------------- */
-  .app{max-width:1280px;margin:0 auto;padding:20px 16px 70px}
+  .app{max-width:1320px;margin:0 auto;padding:22px 20px 80px}
   .topbar{
     display:flex;align-items:center;gap:12px;flex-wrap:wrap;
-    background:var(--panel);border:3px solid var(--border);box-shadow:var(--shadow-sm);
-    padding:12px 14px;margin-bottom:16px;position:sticky;top:0;z-index:4;
+    background:rgba(14,26,51,.82);backdrop-filter:blur(14px);
+    border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
+    padding:11px 14px;margin-bottom:20px;position:sticky;top:12px;z-index:20;
   }
-  .topbar h1{font-size:13px;margin:0;color:var(--gold);letter-spacing:1px;text-shadow:2px 2px 0 #000}
+  .topbar .logo{width:30px;height:30px;border-radius:8px;flex:none;
+    background:linear-gradient(145deg,#ffd45f,var(--gold-d));box-shadow:0 4px 12px -5px rgba(255,197,61,.8)}
+  .topbar h1{font-size:15px;margin:0;color:var(--ink);font-weight:700}
   .topbar .spacer{flex:1}
-  .ctl{display:flex;align-items:center;gap:7px;font-size:16px;color:var(--dim)}
-  .ctl select,.ctl input{
-    background:var(--bg2);color:var(--ink);border:3px solid var(--border);
-    font-family:'VT323',monospace;font-size:18px;padding:5px 8px;outline:none
+  .ctl{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--faint);
+    letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+  select,input[type=text],input[type=number],input[type=email],input[type=password]{
+    background:rgba(7,14,31,.75);color:var(--ink);border:1px solid var(--line);border-radius:9px;
+    font-family:var(--f-body);font-size:13.5px;padding:7px 10px;outline:none;transition:border-color .15s;
   }
-  .ctl select:focus,.ctl input:focus{border-color:var(--gold)}
+  select:focus,input:focus{border-color:var(--classic)}
   .btn-ghost{
-    background:var(--panel2);color:var(--ink);border:3px solid var(--border);cursor:pointer;
-    font-family:'VT323',monospace;font-size:18px;padding:6px 12px;
+    background:var(--panel2);color:var(--dim);border:1px solid var(--line);border-radius:9px;cursor:pointer;
+    font-family:var(--f-body);font-size:13.5px;font-weight:500;padding:7px 13px;transition:all .15s;
   }
-  .btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
-  .btn-ghost:active{transform:translate(2px,2px)}
-  .btn-ghost.on{border-color:var(--gold);color:var(--gold);background:#16336f}
+  .btn-ghost:hover{border-color:var(--classic);color:var(--ink);background:var(--raise)}
+  .btn-ghost.on{border-color:var(--classic);color:#fff;background:rgba(61,155,255,.18)}
 
-  .disclaimer{
-    font-size:16px;color:var(--faint);border-left:4px solid var(--border);
-    padding:6px 0 6px 12px;margin-bottom:16px;line-height:1.45
-  }
+  .disclaimer{font-size:12.5px;color:var(--faint);border-left:2px solid var(--line);
+    padding:2px 0 2px 12px;margin-bottom:18px;line-height:1.55}
   .notice{
-    background:rgba(255,207,63,.08);border:3px solid rgba(255,207,63,.45);
-    color:#f2dd97;padding:11px 13px;margin-bottom:16px;font-size:17px;line-height:1.5
+    background:linear-gradient(180deg,rgba(255,197,61,.1),rgba(255,197,61,.05));
+    border:1px solid rgba(255,197,61,.32);border-radius:var(--radius);
+    color:#f6e3a8;padding:13px 16px;margin-bottom:18px;font-size:13.5px;line-height:1.6
   }
-  .notice.bad{background:rgba(255,84,104,.08);border-color:rgba(255,84,104,.5);color:#ffb3bd}
+  .notice.bad{background:linear-gradient(180deg,rgba(255,93,110,.1),rgba(255,93,110,.04));
+    border-color:rgba(255,93,110,.35);color:#ffc0c7}
 
-  .section-h{display:flex;align-items:center;gap:12px;margin:30px 0 14px}
+  .section-h{display:flex;align-items:center;gap:13px;margin:38px 0 16px;scroll-margin-top:86px}
   .section-h .tag{
-    background:var(--gold);color:#20160a;font-family:'Press Start 2P',monospace;font-size:11px;
-    padding:6px 8px;border:3px solid #1a1a1a;box-shadow:3px 3px 0 rgba(0,0,0,.5)
+    background:linear-gradient(145deg,#ffd45f,var(--gold-d));color:#2a1d02;font-family:var(--f-head);
+    font-size:12px;font-weight:700;width:26px;height:26px;border-radius:8px;
+    display:flex;align-items:center;justify-content:center;flex:none;
   }
-  .section-h h2{font-size:13px;margin:0;color:var(--ink);letter-spacing:1px;text-shadow:2px 2px 0 #000}
-  .section-h .line{flex:1;height:3px;background:var(--border-lo)}
+  .section-h h2{font-size:14px;margin:0;color:var(--ink);letter-spacing:.1em;text-transform:uppercase;font-weight:600}
+  .section-h .line{flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
 
   .panel{
-    background:var(--panel);border:3px solid var(--border);box-shadow:var(--shadow-sm);
-    padding:15px 15px 17px;margin-bottom:16px
+    background:linear-gradient(180deg,rgba(19,35,64,.62),rgba(14,26,51,.62));
+    border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
+    padding:18px 18px 20px;margin-bottom:18px
   }
-  .panel h3{font-size:12px;margin:0 0 9px;color:var(--cyan);letter-spacing:1px;line-height:1.55}
-  .panel .desc{font-size:16px;color:var(--faint);margin:0 0 12px;line-height:1.4}
-  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-  @media(max-width:900px){.grid-2,.grid-3{grid-template-columns:1fr}}
+  .panel h3{font-size:14.5px;margin:0 0 4px;color:var(--ink);font-weight:600}
+  .panel .desc{font-size:12.8px;color:var(--faint);margin:0 0 15px;line-height:1.55}
+  .panel h3+.desc{margin-top:2px}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;align-items:start}
+  @media(max-width:920px){.grid-2,.grid-3{grid-template-columns:1fr}}
 
   .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-  @media(max-width:1000px){.kpis{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:1040px){.kpis{grid-template-columns:repeat(2,1fr)}}
   @media(max-width:560px){.kpis{grid-template-columns:1fr}}
-  .kpi{background:var(--panel2);border:3px solid var(--border-lo);padding:12px 13px 13px}
-  .kpi .lbl{font-size:15px;color:var(--cyan);text-transform:uppercase;letter-spacing:1px;line-height:1.3;min-height:38px}
-  .kpi .val{font-size:22px;color:var(--gold);text-shadow:2px 2px 0 #000;margin:4px 0 5px;word-break:break-word}
-  .kpi .val.sm{font-size:15px}
-  .kpi .val.xs{font-size:12px;line-height:1.5}
+  .kpi{
+    background:linear-gradient(180deg,var(--panel2),rgba(14,26,51,.9));
+    border:1px solid var(--line);border-radius:var(--radius-sm);padding:14px 15px 15px;
+    position:relative;overflow:hidden;
+  }
+  .kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
+    background:linear-gradient(180deg,var(--classic),transparent)}
+  .kpi.warn::before{background:linear-gradient(180deg,var(--red),transparent)}
+  .kpi.good::before{background:linear-gradient(180deg,var(--green),transparent)}
+  .kpi .lbl{font-size:10.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.11em;
+    font-weight:700;line-height:1.35;min-height:28px}
+  .kpi .val{font-size:27px;color:var(--ink);margin:6px 0 3px;font-weight:700;line-height:1.1;word-break:break-word}
+  .kpi .val.sm{font-size:20px}
   .kpi .val.pos{color:var(--green)}
   .kpi .val.neg{color:var(--red)}
   .kpi .val.flat{color:var(--dim)}
-  .kpi .sub{font-size:15px;color:var(--faint);line-height:1.35}
+  .kpi .sub{font-size:12px;color:var(--faint);line-height:1.45}
 
-  .state{padding:34px 12px;text-align:center;color:var(--faint);font-size:18px}
-  .state .big{font-size:22px;color:var(--dim);margin-bottom:8px}
+  .state{padding:38px 14px;text-align:center;color:var(--faint);font-size:13.5px;line-height:1.6}
+  .state .big{font-size:16px;color:var(--dim);margin-bottom:7px;font-weight:600;font-family:var(--f-head)}
   .state.err{color:#ffb3bd}
   .spinner{
-    width:26px;height:26px;margin:0 auto 6px;background:var(--gold);
-    animation:sp 1s steps(8) infinite
+    width:22px;height:22px;margin:0 auto 12px;border-radius:50%;
+    border:2px solid var(--line);border-top-color:var(--classic);animation:sp .8s linear infinite
   }
   @keyframes sp{to{transform:rotate(360deg)}}
 
-  /* charts */
+  /* ---------------- BLOCCO SOLUZIONE ---------------- */
+  .fix{
+    margin-top:16px;border-radius:var(--radius-sm);border:1px solid rgba(255,93,110,.3);
+    background:linear-gradient(180deg,rgba(255,93,110,.09),rgba(255,93,110,.035));
+    padding:14px 16px 15px;font-size:13.3px;line-height:1.62
+  }
+  .fix.med{border-color:rgba(255,165,61,.32);background:linear-gradient(180deg,rgba(255,165,61,.09),rgba(255,165,61,.035))}
+  .fix.low{border-color:rgba(61,155,255,.3);background:linear-gradient(180deg,rgba(61,155,255,.09),rgba(61,155,255,.035))}
+  .fix-head{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:9px}
+  .fix-badge{font-family:var(--f-head);font-size:10px;font-weight:700;letter-spacing:.11em;
+    text-transform:uppercase;padding:4px 8px;border-radius:6px;background:var(--red);color:#2a0409}
+  .fix.med .fix-badge{background:var(--amber);color:#2b1802}
+  .fix.low .fix-badge{background:var(--classic);color:#04162b}
+  .fix-title{font-family:var(--f-head);font-size:14px;font-weight:600;color:var(--ink)}
+  .fix p{margin:0 0 9px;color:var(--dim)}
+  .fix p b,.fix li b{color:var(--ink)}
+  .fix .why{color:var(--faint);font-size:12.7px}
+  .fix h5{margin:11px 0 6px;font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
+    color:var(--cyan);font-weight:700;font-family:var(--f-head)}
+  .fix ol{margin:0;padding-left:19px;color:var(--dim)}
+  .fix ol li{margin-bottom:6px}
+  .fix ol li::marker{color:var(--faint);font-weight:700}
+  .fix .impact{margin-top:11px;padding-top:10px;border-top:1px solid rgba(255,255,255,.07);
+    font-size:12.5px;color:var(--faint)}
+  .fix .impact b{color:var(--green)}
+
+  /* indice dei problemi */
+  .diag-list{display:flex;flex-direction:column;gap:9px}
+  .diag-item{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:var(--radius-sm);
+    background:var(--panel2);border:1px solid var(--line);cursor:pointer;transition:all .15s}
+  .diag-item:hover{border-color:var(--classic);background:var(--raise)}
+  .diag-item .dot{width:9px;height:9px;border-radius:50%;flex:none;margin-top:6px;background:var(--red)}
+  .diag-item.med .dot{background:var(--amber)}
+  .diag-item.low .dot{background:var(--classic)}
+  .diag-item .txt{flex:1;min-width:0}
+  .diag-item .t{font-family:var(--f-head);font-weight:600;font-size:13.8px;color:var(--ink)}
+  .diag-item .d{font-size:12.6px;color:var(--faint);margin-top:2px}
+  .diag-item .go{font-size:12px;color:var(--faint);white-space:nowrap;align-self:center}
+  .diag-empty{padding:26px;text-align:center;color:var(--green);font-size:14px}
+  .sevbar{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:15px}
+  .sevchip{font-size:11.5px;padding:5px 11px;border-radius:20px;border:1px solid var(--line);
+    color:var(--dim);background:var(--panel2);font-weight:600}
+  .sevchip b{color:var(--ink)}
+
+  /* ---------------- GRAFICI ---------------- */
   .chart-wrap{width:100%;overflow-x:auto}
-  svg.chart{display:block;width:100%;height:auto;min-width:0}
-  svg.chart text{font-family:'VT323',monospace;font-size:15px;fill:var(--dim)}
-  svg.chart text.axlbl{fill:var(--faint);font-size:14px}
-  svg.chart .grid-line{stroke:var(--border-lo);stroke-width:1;stroke-dasharray:3 4}
-  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:16px;color:var(--dim);margin:2px 0 8px}
-  .legend span{display:flex;align-items:center;gap:7px;cursor:default}
-  .legend i{width:13px;height:13px;display:inline-block;border:2px solid #0a1730}
-  .rangebar{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px}
+  svg.chart{display:block;width:100%;height:auto}
+  svg.chart text{font-family:var(--f-body);font-size:11px;fill:var(--dim)}
+  svg.chart text.axlbl{fill:var(--faint);font-size:10.5px}
+  svg.chart .grid-line{stroke:var(--line-soft);stroke-width:1}
+  svg.chart .axis{stroke:var(--line);stroke-width:1}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--dim);margin:0 0 12px}
+  .legend span{display:flex;align-items:center;gap:7px}
+  .legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+  .rangebar{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 13px}
 
-  /* horizontal bars */
-  .hbars{display:flex;flex-direction:column;gap:9px}
-  .hbar{display:grid;grid-template-columns:118px 1fr 150px;align-items:center;gap:10px;font-size:17px}
+  .hbars{display:flex;flex-direction:column;gap:10px}
+  .hbar{display:grid;grid-template-columns:120px 1fr 138px;align-items:center;gap:12px;font-size:13px}
   .hbar .hlbl{color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .hbar .htrack{height:16px;background:var(--bg2);border:2px solid var(--border-lo);position:relative}
-  .hbar .hfill{position:absolute;left:0;top:0;bottom:0;background:var(--classic)}
-  .hbar .hval{text-align:right;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
-  .hbars.wide .hbar{grid-template-columns:190px 1fr 132px}
-  @media(max-width:560px){.hbar{grid-template-columns:86px 1fr 104px;font-size:15px}
-    .hbars.wide .hbar{grid-template-columns:120px 1fr 104px}}
+  .hbar .htrack{height:9px;background:rgba(7,14,31,.8);border-radius:6px;position:relative;overflow:hidden}
+  .hbar .hfill{position:absolute;left:0;top:0;bottom:0;border-radius:6px;background:var(--classic);
+    transition:width .5s cubic-bezier(.2,.7,.3,1)}
+  .hbar .hval{text-align:right;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap;font-size:13px}
+  .hbars.wide .hbar{grid-template-columns:196px 1fr 124px}
+  @media(max-width:560px){.hbar{grid-template-columns:88px 1fr 100px;font-size:12px}
+    .hbars.wide .hbar{grid-template-columns:118px 1fr 100px}}
 
-  /* funnel */
-  .funnel{display:flex;flex-direction:column;gap:7px}
-  .frow{display:grid;grid-template-columns:86px 1fr 132px;align-items:center;gap:10px;font-size:17px}
+  .funnel{display:flex;flex-direction:column;gap:8px}
+  .frow{display:grid;grid-template-columns:82px 1fr 126px;align-items:center;gap:12px;font-size:13px}
   .frow .fl{color:var(--dim)}
-  .frow .ft{height:15px;background:var(--bg2);border:2px solid var(--border-lo);position:relative}
-  .frow .ff{position:absolute;left:0;top:0;bottom:0;background:var(--purple)}
+  .frow .ft{height:9px;background:rgba(7,14,31,.8);border-radius:6px;position:relative;overflow:hidden}
+  .frow .ff{position:absolute;left:0;top:0;bottom:0;border-radius:6px;background:var(--story)}
   .frow .fv{text-align:right;color:var(--ink);font-variant-numeric:tabular-nums}
 
-  /* table */
-  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  /* ---------------- TABELLE ---------------- */
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
   .tab{
-    font-size:11px;padding:9px 12px;border:3px solid var(--border);background:var(--panel2);
-    color:var(--dim);cursor:pointer;display:flex;align-items:center;gap:7px
+    font-size:13px;padding:7px 14px;border:1px solid var(--line);border-radius:20px;background:var(--panel2);
+    color:var(--dim);cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .15s;font-weight:500
   }
-  .tab.active{border-color:var(--gold);color:var(--gold);background:#16336f}
-  .tab .dot{width:11px;height:11px;display:inline-block;border:2px solid #0a1730}
-  .table-wrap{overflow-x:auto;border:3px solid var(--border-lo)}
-  table{width:100%;border-collapse:collapse;font-size:18px;min-width:520px}
-  thead th.on{color:var(--gold)}
+  .tab:hover{border-color:var(--classic);color:var(--ink)}
+  .tab.active{border-color:transparent;color:#fff;background:rgba(61,155,255,.22)}
+  .tab .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+  .table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius-sm)}
+  table{width:100%;border-collapse:collapse;font-size:13.4px;min-width:520px}
   thead th{
-    background:var(--panel2);color:var(--cyan);text-align:left;padding:9px 11px;
-    font-size:15px;text-transform:uppercase;letter-spacing:1px;border-bottom:3px solid var(--border);
-    position:sticky;top:0
+    background:var(--panel2);color:var(--faint);text-align:left;padding:10px 13px;
+    font-size:10.5px;text-transform:uppercase;letter-spacing:.1em;font-weight:700;
+    border-bottom:1px solid var(--line);position:sticky;top:0;z-index:2;white-space:nowrap
   }
-  tbody td{padding:8px 11px;border-bottom:2px solid rgba(29,59,122,.55)}
-  tbody tr:nth-child(odd){background:rgba(18,42,94,.42)}
-  tbody tr:hover{background:#16336f}
-  td.rank{width:74px;color:var(--faint);font-variant-numeric:tabular-nums}
-  td.rank.t1{color:var(--gold)}td.rank.t2{color:#d8e2f5}td.rank.t3{color:#e0a46a}
-  td.score{text-align:right;font-variant-numeric:tabular-nums;color:var(--gold);white-space:nowrap}
+  thead th.on{color:var(--classic)}
+  tbody td{padding:9px 13px;border-bottom:1px solid var(--line-soft);color:var(--dim)}
+  tbody tr:last-child td{border-bottom:0}
+  tbody tr:hover td{background:rgba(61,155,255,.07)}
+  td.rank{width:68px;color:var(--faint);font-variant-numeric:tabular-nums}
+  td.rank.t1{color:var(--gold);font-weight:700}
+  td.rank.t2{color:#cfd9ec;font-weight:700}
+  td.rank.t3{color:#dc9a63;font-weight:700}
+  td.score{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink);white-space:nowrap;font-weight:600}
   td.dur{text-align:right;font-variant-numeric:tabular-nums;color:var(--dim);white-space:nowrap}
-  td.arena{white-space:nowrap;line-height:1.25}
-  td.arena small{color:var(--faint);font-size:15px}
-  .medal{font-size:17px;margin-right:4px}
+  td.arena{white-space:nowrap;line-height:1.3}
+  td.arena small{color:var(--faint);font-size:11.5px}
+  .medal{margin-right:5px}
   .nick{display:flex;align-items:center;gap:9px;min-width:0}
-  .nick span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .nick span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink)}
   .icon-badge{
-    width:26px;height:26px;flex:none;border:2px solid #0a1730;display:flex;
-    align-items:center;justify-content:center;font-size:12px;color:#0a1730;
-    font-family:'Press Start 2P',monospace
+    width:24px;height:24px;flex:none;border-radius:7px;display:flex;align-items:center;justify-content:center;
+    font-size:10.5px;color:rgba(0,0,0,.72);font-family:var(--f-head);font-weight:700
   }
   .glo-tag{
-    font-size:12px;padding:2px 5px;border:2px solid var(--gold);color:var(--gold);
-    font-family:'Press Start 2P',monospace;flex:none
+    font-size:9.5px;padding:2px 6px;border-radius:5px;border:1px solid rgba(255,197,61,.5);
+    color:var(--gold);font-weight:700;letter-spacing:.06em;flex:none
   }
-  .foot{font-size:15px;color:var(--faint);margin-top:10px;line-height:1.45}
+  .foot{font-size:12.3px;color:var(--faint);margin-top:12px;line-height:1.6}
+  .foot b{color:var(--dim)}
 
-  /* top lists */
-  .toplist{display:flex;flex-direction:column;gap:2px}
-  .toprow{display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:10px;
-    padding:7px 8px;font-size:17px;border-bottom:2px solid rgba(29,59,122,.5)}
-  .toprow:nth-child(odd){background:rgba(18,42,94,.35)}
-  .toprow .n{color:var(--faint);font-variant-numeric:tabular-nums}
-  .toprow .who{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .toprow .v{color:var(--gold);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .toplist{display:flex;flex-direction:column}
+  .toprow{display:grid;grid-template-columns:26px 1fr auto;align-items:center;gap:12px;
+    padding:9px 6px;font-size:13.4px;border-bottom:1px solid var(--line-soft)}
+  .toprow:last-child{border-bottom:0}
+  .toprow:hover{background:rgba(61,155,255,.06)}
+  .toprow .n{color:var(--faint);font-variant-numeric:tabular-nums;font-size:12px}
+  .toprow .who{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink);
+    display:flex;align-items:center;gap:8px;min-width:0}
+  .toprow .v{color:var(--gold);font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:600}
 
-  /* record cards */
-  .recgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-  @media(max-width:900px){.recgrid{grid-template-columns:1fr}}
-  .reccard{background:var(--panel2);border:3px solid var(--border-lo);padding:15px}
-  .reccard.classic{border-color:var(--classic)}
-  .reccard.speedrun{border-color:var(--speedrun)}
-  .reccard .rl{font-size:15px;color:var(--cyan);text-transform:uppercase;letter-spacing:1px}
-  .reccard .rs{font-family:'Press Start 2P',monospace;font-size:26px;color:var(--gold);
-    text-shadow:3px 3px 0 #000;margin:10px 0 8px;word-break:break-all}
-  .reccard .rw{font-size:19px;color:var(--ink);display:flex;align-items:center;gap:9px;flex-wrap:wrap}
-  .recmeta{display:flex;gap:10px;flex-wrap:wrap;margin-top:11px}
-  .recmeta div{background:var(--bg2);border:2px solid var(--border-lo);padding:6px 9px;font-size:16px;color:var(--dim)}
+  /* record */
+  .recgrid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:920px){.recgrid{grid-template-columns:1fr}}
+  .reccard{background:linear-gradient(180deg,var(--panel2),rgba(14,26,51,.85));
+    border:1px solid var(--line);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
+  .reccard.classic{border-color:rgba(61,155,255,.42)}
+  .reccard.speedrun{border-color:rgba(255,146,69,.42)}
+  .reccard .rl{font-size:10.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.12em;font-weight:700}
+  .reccard .rs{font-family:var(--f-head);font-size:38px;font-weight:700;color:var(--ink);
+    margin:10px 0 10px;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .reccard .rw{font-size:15px;color:var(--ink);display:flex;align-items:center;gap:9px;flex-wrap:wrap;font-weight:600}
+  .recmeta{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+  .recmeta div{background:rgba(7,14,31,.6);border:1px solid var(--line-soft);border-radius:8px;
+    padding:7px 11px;font-size:12.4px;color:var(--faint)}
   .recmeta b{color:var(--ink)}
 
   /* supporters */
-  .supp-toolbar{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-bottom:11px}
-  .supp-toolbar input,.supp-toolbar select{
-    background:var(--bg2);color:var(--ink);border:3px solid var(--border);
-    font-family:'VT323',monospace;font-size:18px;padding:6px 9px;outline:none
-  }
-  .supp-toolbar input{flex:1;min-width:170px}
-  .supp-toolbar input:focus,.supp-toolbar select:focus{border-color:var(--gold)}
-  .supp-row{display:flex;align-items:flex-start;gap:9px;padding:7px 8px;font-size:18px;
-    border-bottom:2px solid rgba(29,59,122,.5)}
-  .supp-row:nth-child(odd){background:rgba(18,42,94,.35)}
-  .supp-row .nm{flex:1;min-width:0;word-break:break-word}
-  .supp-row .nm small{color:var(--faint);font-size:16px;line-height:1.4}
-  .supp-row .nm a{color:var(--cyan);text-decoration:none;border-bottom:1px dotted var(--cyan)}
-  .supp-row .nm a:hover{color:var(--gold);border-color:var(--gold)}
-  .supp-btn{border:3px solid var(--border);background:var(--panel2);color:var(--ink);
-    cursor:pointer;font-family:'VT323',monospace;font-size:17px;padding:2px 9px;flex:none}
-  .supp-ok{border-color:var(--green2);color:var(--green2)}
-  .supp-no{border-color:var(--red);color:var(--red)}
-  .supp-rm{border-color:var(--orange);color:var(--orange)}
-  .supp-btn:hover{filter:brightness(1.25)}
-  .supp-empty{color:var(--faint);font-size:17px;padding:10px 4px}
-  .supp-add{display:flex;gap:9px;margin-top:11px}
-  .supp-add input{flex:1;background:var(--bg2);color:var(--ink);border:3px solid var(--border);
-    font-family:'VT323',monospace;font-size:18px;padding:6px 9px;outline:none}
-  .chip{font-size:10px;background:var(--border);color:var(--ink);padding:4px 7px;margin-left:7px;
-    border:2px solid var(--border-lo)}
-  mark{background:var(--gold);color:#20160a}
-  .more-btn{width:100%;margin-top:9px;text-align:center}
+  .supp-toolbar{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+  .supp-toolbar input{flex:1;min-width:180px}
+  .supp-row{display:flex;align-items:flex-start;gap:10px;padding:9px 10px;font-size:13.4px;
+    border-bottom:1px solid var(--line-soft)}
+  .supp-row:last-child{border-bottom:0}
+  .supp-row:hover{background:rgba(61,155,255,.06)}
+  .supp-row .nm{flex:1;min-width:0;word-break:break-word;color:var(--ink)}
+  .supp-row .nm small{color:var(--faint);font-size:12.3px;line-height:1.5}
+  .supp-row .nm a{color:var(--cyan);border-bottom:1px solid rgba(61,220,208,.35)}
+  .supp-row .nm a:hover{color:var(--gold);border-color:rgba(255,197,61,.5)}
+  .supp-btn{border:1px solid var(--line);border-radius:7px;background:var(--panel2);color:var(--dim);
+    cursor:pointer;font-family:var(--f-body);font-size:13px;padding:3px 10px;flex:none;transition:all .15s}
+  .supp-ok{border-color:rgba(70,209,127,.45);color:var(--green)}
+  .supp-no{border-color:rgba(255,93,110,.45);color:var(--red)}
+  .supp-rm{border-color:rgba(255,165,61,.45);color:var(--amber)}
+  .supp-btn:hover{filter:brightness(1.3)}
+  .supp-empty{color:var(--faint);font-size:13px;padding:14px 4px}
+  .supp-add{display:flex;gap:9px;margin-top:12px}
+  .supp-add input{flex:1}
+  .chip{font-size:11px;background:var(--raise);color:var(--dim);padding:2px 8px;margin-left:8px;
+    border-radius:20px;border:1px solid var(--line);font-weight:600;vertical-align:middle}
+  mark{background:rgba(255,197,61,.28);color:var(--ink);border-radius:3px;padding:0 2px}
+  .more-btn{width:100%;margin-top:10px;text-align:center}
 
-  .footer{margin-top:34px;text-align:center;color:var(--faint);font-size:15px;line-height:1.7}
-  .editrow{display:flex;gap:9px;flex-wrap:wrap;align-items:center;justify-content:center;margin-top:12px}
-  .editrow input{width:130px;background:var(--bg2);color:var(--ink);border:3px solid var(--border);
-    font-family:'VT323',monospace;font-size:19px;padding:5px 9px;outline:none;text-align:right}
-  .editrow input:focus{border-color:var(--gold)}
-  .editrow label{font-size:16px;color:var(--cyan);text-transform:uppercase;letter-spacing:1px}
+  .footer{margin-top:44px;text-align:center;color:var(--faint);font-size:12.3px;line-height:1.8}
+  .editrow{display:flex;gap:9px;flex-wrap:wrap;align-items:center;justify-content:center;margin-top:16px}
+  .editrow input{width:118px;text-align:right}
+  .editrow label{font-size:10.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.11em;font-weight:700}
+  .hero-num{font-family:var(--f-head);font-size:clamp(52px,11vw,104px);font-weight:700;
+    line-height:1;letter-spacing:-.035em;
+    background:linear-gradient(180deg,#fff,#a9c4f0);-webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent;font-variant-numeric:tabular-nums}
+  .hero-lbl{font-size:11.5px;color:var(--faint);letter-spacing:.2em;text-transform:uppercase;
+    margin-top:10px;font-weight:700}
 </style>
 </head>
 <body>
-<div class="scan"></div>
 
 <!-- =============================== LOGIN =============================== -->
 <div id="loginScreen" class="login-wrap">
   <div class="login-card">
-    <div class="brand"><img class="game-logo" src="cc_logo.jpg" alt="Cube Crash"><h1>CUBE&nbsp;CRASH</h1></div>
-    <p class="login-sub">&gt; Super statistiche · area riservata</p>
+    <div class="brand"><img class="game-logo" src="cc_logo.jpg" alt="Cube Crash">
+      <div><h1>Cube Crash</h1><div class="sub">Super Stats</div></div></div>
+    <p class="login-sub">Area riservata. Accedi con le credenziali della dashboard.</p>
     <form id="loginForm" autocomplete="off">
       <div class="field">
         <label for="email">Email</label>
@@ -333,7 +397,7 @@
         <label for="pass">Password</label>
         <input id="pass" type="password" autocomplete="current-password" placeholder="********">
       </div>
-      <button class="btn" type="submit">&gt; Accedi</button>
+      <button class="btn" type="submit">Accedi</button>
       <div id="loginErr" class="login-err"></div>
     </form>
   </div>
@@ -342,8 +406,8 @@
 <!-- =============================== DASHBOARD =============================== -->
 <div id="dashboard" class="app hidden">
   <div class="topbar">
-    <div class="cube"></div>
-    <h1>CUBE CRASH · STATS</h1>
+    <div class="logo"></div>
+    <h1>Cube Crash · Stats</h1>
     <div class="spacer"></div>
     <div class="ctl"><span>SETTIMANA:</span><select id="monthSelect"></select></div>
     <div class="ctl"><span>PIATTAFORMA:</span><select id="platformSelect"><option value="">Tutte</option><option value="iOS">iOS</option><option value="Android">Android</option></select></div>
@@ -360,10 +424,10 @@
   <div id="syncNotice" class="notice bad hidden"></div>
 
   <!-- ===== HERO ===== -->
-  <div class="panel" style="text-align:center;padding:24px 18px 20px;margin-bottom:18px">
-    <div id="heroNum" style="font-size:clamp(56px,14vw,120px);line-height:1;color:var(--ink);text-shadow:3px 3px 0 rgba(0,0,0,.5)">—</div>
-    <div style="font-size:20px;color:var(--dim);margin-top:8px;letter-spacing:1px">PERSONE HANNO GIOCATO</div>
-    <div id="heroBreak" style="font-size:17px;color:var(--faint);margin-top:10px">&nbsp;</div>
+  <div class="panel" style="text-align:center;padding:30px 20px 24px;margin-bottom:18px">
+    <div id="heroNum" class="hero-num">—</div>
+    <div class="hero-lbl">Persone hanno giocato</div>
+    <div id="heroBreak" style="font-size:13px;color:var(--faint);margin-top:14px">&nbsp;</div>
     <div class="kpis" style="margin-top:18px">
       <div class="kpi"><div class="lbl">Download iOS (store)</div><div class="val sm" id="kDlIos">—</div><div class="sub">App Store Connect</div></div>
       <div class="kpi"><div class="lbl">Download Android (store)</div><div class="val sm" id="kDlAnd">—</div><div class="sub">Google Play Console</div></div>
@@ -379,8 +443,18 @@
     <div class="foot">I download reali esistono solo su App Store Connect / Google Play Console: inseriscili qui una volta a settimana e restano salvati per tutti.</div>
   </div>
 
+  <!-- ===== PROBLEMI & SOLUZIONI ===== -->
+  <div class="section-h" id="sec-diag"><span class="tag">!</span><h2>Problemi &amp; soluzioni</h2><div class="line"></div></div>
+  <div class="panel">
+    <h3>Cosa non va e cosa fare</h3>
+    <p class="desc">Ogni voce nasce da un numero reale di questa dashboard. Clicca per saltare al grafico
+      corrispondente, dove trovi la spiegazione estesa e le azioni consigliate.</p>
+    <div class="sevbar" id="diagBar"></div>
+    <div id="diagList"><div class="state"><div class="spinner"></div></div></div>
+  </div>
+
   <!-- ===== A. PANORAMICA ===== -->
-  <div class="section-h"><span class="tag">A</span><h2>PANORAMICA</h2><div class="line"></div></div>
+  <div class="section-h" id="sec-a"><span class="tag">A</span><h2>Panoramica</h2><div class="line"></div></div>
   <div class="kpis" id="kpisA">
     <div class="kpi"><div class="lbl">Giocatori totali (unici)</div><div class="val" id="kTotPlayers">—</div><div class="sub" id="kTotPlayersSub">telemetria + classifica</div></div>
     <div class="kpi"><div class="lbl">Nuovi ultimi 7 giorni</div><div class="val" id="kNew7">—</div><div class="sub" id="kNew7Sub">primo avvio</div></div>
@@ -393,6 +467,8 @@
     <div class="kpi"><div class="lbl">Durata media partita</div><div class="val sm" id="kAvgSession">—</div><div class="sub" id="kAvgSessionSub">tempo totale / partite</div></div>
     <div class="kpi"><div class="lbl">Fedelt&agrave; (DAU/MAU)</div><div class="val sm" id="kSticky">—</div><div class="sub">quanto spesso tornano</div></div>
   </div>
+
+  <div id="fix-sticky"></div>
 
   <div class="panel" style="margin-top:16px">
     <h3>Attivit&agrave; giornaliera</h3>
@@ -407,6 +483,7 @@
       <span><i style="background:var(--cyan)"></i>Media mobile 7 giorni (attivi)</span>
     </div>
     <div id="activityChart"><div class="state"><div class="spinner"></div></div></div>
+    <div id="fix-growth"></div>
     <div class="foot">Nuovi = primo avvio del giocatore. Attivi = giorno dell'ultimo accesso registrato: la telemetria tiene solo l'ultimo stato, quindi chi ha giocato pi&ugrave; giorni conta solo nell'ultimo. &Egrave; una stima per difetto sui giorni passati.</div>
   </div>
 
@@ -424,7 +501,7 @@
   </div>
 
   <!-- ===== B. VERSIONI / AGGIORNAMENTI ===== -->
-  <div class="section-h"><span class="tag">B</span><h2>AGGIORNAMENTI &amp; VERSIONI</h2><div class="line"></div></div>
+  <div class="section-h" id="sec-b"><span class="tag">B</span><h2>Aggiornamenti &amp; versioni</h2><div class="line"></div></div>
   <div class="kpis">
     <div class="kpi"><div class="lbl">Build pi&ugrave; diffusa</div><div class="val sm" id="kVerLast">—</div><div class="sub">quella che manda pi&ugrave; dati</div></div>
     <div class="kpi"><div class="lbl">Hanno la build recente</div><div class="val" id="kVerAdopt">—</div><div class="sub" id="kVerAdoptSub">&nbsp;</div></div>
@@ -443,9 +520,10 @@
       <div id="verAdoptChart"><div class="state"><div class="spinner"></div></div></div>
     </div>
   </div>
+  <div id="fix-update"></div>
 
   <!-- ===== C. RECORD ===== -->
-  <div class="section-h"><span class="tag">C</span><h2>RECORD ASSOLUTI</h2><div class="line"></div></div>
+  <div class="section-h" id="sec-c"><span class="tag">C</span><h2>Record assoluti</h2><div class="line"></div></div>
   <div class="recgrid">
     <div class="reccard classic" id="recClassic"><div class="state"><div class="spinner"></div></div></div>
     <div class="reccard speedrun" id="recSpeedrun"><div class="state"><div class="spinner"></div></div></div>
@@ -470,7 +548,7 @@
   </div>
 
   <!-- ===== D. CLASSIFICA ===== -->
-  <div class="section-h"><span class="tag">D</span><h2>CLASSIFICA TOP 100</h2><div class="line"></div></div>
+  <div class="section-h" id="sec-d"><span class="tag">D</span><h2>Classifica top 100</h2><div class="line"></div></div>
   <div class="panel">
     <h3>Migliori punteggi &middot; settimana <span id="lbMonthLabel">—</span></h3>
     <p class="desc">La classifica del gioco si azzera ogni luned&igrave;: qui vedi la top 100 della settimana scelta, con la durata della partita che ha fatto quel punteggio.</p>
@@ -492,9 +570,10 @@
       <div id="durDist"><div class="state"><div class="spinner"></div></div></div>
     </div>
   </div>
+  <div id="fix-scoregap"></div>
 
   <!-- ===== E. COINVOLGIMENTO ===== -->
-  <div class="section-h"><span class="tag">E</span><h2>COINVOLGIMENTO</h2><div class="line"></div></div>
+  <div class="section-h" id="sec-e"><span class="tag">E</span><h2>Coinvolgimento</h2><div class="line"></div></div>
   <div class="grid-2">
     <div class="panel">
       <h3>Tempo di gioco per modalit&agrave;</h3>
@@ -507,6 +586,7 @@
       <div id="gamesByMode"><div class="state"><div class="spinner"></div></div></div>
     </div>
   </div>
+  <div id="fix-speedrun"></div>
   <div class="grid-3">
     <div class="panel">
       <h3>Partite per giocatore</h3>
@@ -524,15 +604,17 @@
       <div id="lifeHist"><div class="state"><div class="spinner"></div></div></div>
     </div>
   </div>
+  <div id="fix-firstsession"></div>
   <div class="panel">
     <h3>Ritenzione per coorte</h3>
     <p class="desc">Per ogni giorno di installazione: quanti erano ancora attivi dopo 1, 3, 7, 14 e 30 giorni.</p>
     <div id="retChart"><div class="state"><div class="spinner"></div></div></div>
+    <div id="fix-retention"></div>
     <div class="foot">Basata sull'ultimo accesso registrato: chi &egrave; tornato pi&ugrave; volte conta solo per l'ultima. Le coorte troppo recenti per un traguardo non vengono conteggiate.</div>
   </div>
 
   <!-- ===== F. STORIA ===== -->
-  <div class="section-h"><span class="tag">F</span><h2>STORIA</h2><div class="line"></div></div>
+  <div class="section-h" id="sec-f"><span class="tag">F</span><h2>Storia</h2><div class="line"></div></div>
   <div class="grid-2">
     <div class="panel">
       <h3>Dove si fermano i giocatori</h3>
@@ -545,14 +627,16 @@
       <div id="storyStats"><div class="state"><div class="spinner"></div></div></div>
     </div>
   </div>
+  <div id="fix-story"></div>
   <div class="panel">
     <h3>Funnel a tappe</h3>
     <p class="desc">Giocatori che hanno raggiunto almeno il livello indicato.</p>
     <div id="storyFunnel"><div class="state"><div class="spinner"></div></div></div>
+    <div id="fix-storystart"></div>
   </div>
 
   <!-- ===== G. PROGRESSIONE ===== -->
-  <div class="section-h"><span class="tag">G</span><h2>PROGRESSIONE &amp; ECONOMIA</h2><div class="line"></div></div>
+  <div class="section-h" id="sec-g"><span class="tag">G</span><h2>Progressione &amp; economia</h2><div class="line"></div></div>
   <div class="grid-3">
     <div class="panel">
       <h3>Season Pass</h3>
@@ -570,9 +654,12 @@
       <div id="coinDist"><div class="state"><div class="spinner"></div></div></div>
     </div>
   </div>
+  <div id="fix-pass"></div>
+  <div id="fix-ranked"></div>
+  <div id="fix-coins"></div>
 
   <!-- ===== H. ANDAMENTO MENSILE ===== -->
-  <div class="section-h"><span class="tag">H</span><h2>ANDAMENTO SETTIMANALE</h2><div class="line"></div></div>
+  <div class="section-h" id="sec-h"><span class="tag">H</span><h2>Andamento settimanale</h2><div class="line"></div></div>
   <div class="panel">
     <h3>Partecipanti alla classifica per settimana</h3>
     <div class="legend">
@@ -585,7 +672,7 @@
   </div>
 
   <!-- ===== I. TOP GIOCATORI ===== -->
-  <div class="section-h"><span class="tag">I</span><h2>TOP GIOCATORI</h2><div class="line"></div></div>
+  <div class="section-h" id="sec-i"><span class="tag">I</span><h2>Top giocatori</h2><div class="line"></div></div>
   <div class="grid-2">
     <div class="panel">
       <h3>Per tempo di gioco</h3>
@@ -608,7 +695,7 @@
   </div>
 
   <!-- ===== J. SCHEDA GIOCATORI ===== -->
-  <div class="section-h"><span class="tag">J</span><h2>SCHEDA GIOCATORI</h2><div class="line"></div></div>
+  <div class="section-h" id="sec-j"><span class="tag">J</span><h2>Scheda giocatori</h2><div class="line"></div></div>
   <div class="grid-2">
     <div class="panel">
       <h3>A che griglia sono &middot; Classic</h3>
@@ -643,7 +730,7 @@
   </div>
 
   <!-- ===== J. SUPPORTERS & CREATOR ===== -->
-  <div class="section-h"><span class="tag">K</span><h2>SUPPORTERS &amp; CREATOR</h2><div class="line"></div></div>
+  <div class="section-h" id="sec-k"><span class="tag">K</span><h2>Supporters &amp; creator</h2><div class="line"></div></div>
   <div class="panel">
     <h3>Gestione OG Supporters e Creator</h3>
     <p class="desc">Le stesse liste della pagina admin. Le modifiche sono salvate subito. Le liste mostrano i primi 10 nomi: usa &laquo;Mostra tutti&raquo; per aprirle.</p>
@@ -689,8 +776,8 @@
   </div>
 
   <div class="footer">
-    CUBE CRASH · SUPER STATS · file statico self-contained<br>
-    Accesso protetto da login Firebase e dall'URL segreto della pagina.
+Cube Crash · Super Stats — pagina statica, sola lettura sui dati di gioco<br>
+    Accesso protetto da login Firebase e dall'indirizzo riservato di questa pagina.
   </div>
 </div>
 <script>
@@ -886,7 +973,9 @@ function verNum(v){
 /* ==========================================================================
    GRAFICI — SVG senza dipendenze
    ========================================================================== */
-const CH = {W:860, H:280, padL:48, padR:16, padT:14, padB:44};
+const CH = {W:860, H:280, padL:52, padR:18, padT:16, padB:42};
+let __gid=0;
+function gradId(){ return "g"+(++__gid); }
 
 function chartFrame(inner, opts){
   opts=opts||{};
@@ -899,8 +988,9 @@ function yGrid(maxVal, geo, fmt){
   let g="";
   for(let i=0;i<=4;i++){
     const gv=maxVal/4*i, gy=geo.y(gv);
-    g+='<line class="grid-line" x1="'+geo.padL+'" y1="'+gy.toFixed(1)+'" x2="'+(geo.W-geo.padR)+'" y2="'+gy.toFixed(1)+'"/>';
-    g+='<text class="axlbl" x="'+(geo.padL-7)+'" y="'+(gy+5).toFixed(1)+'" text-anchor="end">'+(fmt?fmt(gv):fmtCompact(Math.round(gv)))+'</text>';
+    g+='<line class="grid-line" x1="'+geo.padL+'" y1="'+gy.toFixed(1)+'" x2="'+(geo.W-geo.padR)+'" y2="'+gy.toFixed(1)+'"'
+      +(i===0?' stroke-opacity=".9"':' stroke-dasharray="2 5"')+'/>';
+    g+='<text class="axlbl" x="'+(geo.padL-9)+'" y="'+(gy+4).toFixed(1)+'" text-anchor="end">'+(fmt?fmt(gv):fmtCompact(Math.round(gv)))+'</text>';
   }
   return g;
 }
@@ -927,32 +1017,39 @@ function lineChart(elId, labels, series, opts){
   let maxVal=1;
   series.forEach(s=>s.data.forEach(v=>{ if(v>maxVal) maxVal=v; }));
   maxVal=Math.ceil(maxVal*1.08);
+  if(opts.maxCap) maxVal=Math.min(maxVal,opts.maxCap);
   const W=Math.max(opts.W||CH.W, n*Math.max(10,opts.step||22));
   const geo=makeGeo(n,maxVal,{W:W,H:opts.H||CH.H});
-  let out=yGrid(maxVal,geo,opts.yfmt);
+  let defs="", out=yGrid(maxVal,geo,opts.yfmt);
   series.forEach(s=>{
     const pts=s.data.map((v,i)=>geo.x(i).toFixed(1)+","+geo.y(v).toFixed(1)).join(" ");
     if(s.area){
+      const id=gradId();
+      defs+='<linearGradient id="'+id+'" x1="0" y1="0" x2="0" y2="1">'
+        +'<stop offset="0%" stop-color="'+s.color+'" stop-opacity=".34"/>'
+        +'<stop offset="100%" stop-color="'+s.color+'" stop-opacity="0"/></linearGradient>';
       out+='<polygon points="'+geo.x(0).toFixed(1)+','+geo.y(0).toFixed(1)+' '+pts+' '
-        +geo.x(n-1).toFixed(1)+','+geo.y(0).toFixed(1)+'" fill="'+s.color+'" opacity=".16"/>';
+        +geo.x(n-1).toFixed(1)+','+geo.y(0).toFixed(1)+'" fill="url(#'+id+')"/>';
     }
-    out+='<polyline fill="none" stroke="'+s.color+'" stroke-width="'+(s.width||2.5)+'"'
-      +(s.dash?' stroke-dasharray="6 4"':'')+' points="'+pts+'"/>';
+    out+='<polyline fill="none" stroke="'+s.color+'" stroke-width="'+(s.width||2.2)+'"'
+      +' stroke-linejoin="round" stroke-linecap="round"'
+      +(s.dash?' stroke-dasharray="5 5" stroke-opacity=".85"':'')+' points="'+pts+'"/>';
   });
   // punti + tooltip solo sulle serie non tratteggiate
   series.forEach(s=>{
     if(s.dash) return;
     s.data.forEach((v,i)=>{
-      out+='<circle cx="'+geo.x(i).toFixed(1)+'" cy="'+geo.y(v).toFixed(1)+'" r="2.8" fill="'+s.color+'">'
-        +'<title>'+esc(labels[i])+' — '+esc(s.name)+': '+(opts.vfmt?opts.vfmt(v):fmtInt(v))+'</title></circle>';
+      out+='<circle cx="'+geo.x(i).toFixed(1)+'" cy="'+geo.y(v).toFixed(1)+'" r="3" fill="'+s.color+'"'
+        +' stroke="#0a1529" stroke-width="1.4"><title>'+esc(labels[i])+' — '+esc(s.name)+': '
+        +(opts.vfmt?opts.vfmt(v):fmtInt(v))+'</title></circle>';
     });
   });
   const every=Math.max(1,Math.ceil(n/12));
   labels.forEach((lb,i)=>{
     if(i%every===0||i===n-1)
-      out+='<text x="'+geo.x(i).toFixed(1)+'" y="'+(geo.H-geo.padB+18)+'" text-anchor="middle">'+esc(lb)+'</text>';
+      out+='<text x="'+geo.x(i).toFixed(1)+'" y="'+(geo.H-geo.padB+17)+'" text-anchor="middle">'+esc(lb)+'</text>';
   });
-  el.innerHTML=chartFrame(out,{W:W,H:geo.H,label:opts.label});
+  el.innerHTML=chartFrame((defs?'<defs>'+defs+'</defs>':'')+out,{W:W,H:geo.H,label:opts.label});
 }
 
 /* istogramma / barre verticali (una o piu' serie affiancate) */
@@ -975,10 +1072,11 @@ function barChart(elId, labels, series, opts){
       const v=s.data[i]||0;
       const bx=cx-(bw*k)/2+j*bw;
       const by=geo.y(v), bh=geo.padT+geo.plotH-by;
-      out+='<rect x="'+bx.toFixed(1)+'" y="'+by.toFixed(1)+'" width="'+(bw-1).toFixed(1)+'" height="'+Math.max(0,bh).toFixed(1)+'" fill="'+s.color+'">'
+      const r=Math.min(3,(bw-1)/2);
+      out+='<rect x="'+bx.toFixed(1)+'" y="'+by.toFixed(1)+'" width="'+(bw-1).toFixed(1)+'" height="'+Math.max(0,bh).toFixed(1)+'" rx="'+r.toFixed(1)+'" fill="'+s.color+'" fill-opacity=".92">'
         +'<title>'+esc(lb)+' — '+esc(s.name)+': '+(opts.vfmt?opts.vfmt(v):fmtInt(v))+'</title></rect>';
     });
-    out+='<text x="'+cx.toFixed(1)+'" y="'+(geo.H-geo.padB+18)+'" text-anchor="middle">'+esc(lb)+'</text>';
+    out+='<text x="'+cx.toFixed(1)+'" y="'+(geo.H-geo.padB+17)+'" text-anchor="middle">'+esc(lb)+'</text>';
   });
   el.innerHTML=chartFrame(out,{W:W,H:geo.H,label:opts.label});
 }
@@ -1006,13 +1104,13 @@ function stackChart(elId, labels, series, opts){
       const v=s.data[i]||0;
       if(v<=0){ acc+=v; return; }
       const yTop=geo.y(acc+v), yBot=geo.y(acc);
-      out+='<rect x="'+(cx-bw/2).toFixed(1)+'" y="'+yTop.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+Math.max(0,yBot-yTop).toFixed(1)+'" fill="'+s.color+'">'
+      out+='<rect x="'+(cx-bw/2).toFixed(1)+'" y="'+yTop.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+Math.max(0,yBot-yTop).toFixed(1)+'" rx="2" fill="'+s.color+'" fill-opacity=".92">'
         +'<title>'+esc(lb)+' — '+esc(s.name)+': '+fmtInt(v)+'</title></rect>';
       acc+=v;
     });
     const every=Math.max(1,Math.ceil(n/12));
     if(i%every===0||i===n-1)
-      out+='<text x="'+cx.toFixed(1)+'" y="'+(geo.H-geo.padB+18)+'" text-anchor="middle">'+esc(lb)+'</text>';
+      out+='<text x="'+cx.toFixed(1)+'" y="'+(geo.H-geo.padB+17)+'" text-anchor="middle">'+esc(lb)+'</text>';
   });
   el.innerHTML=chartFrame(out,{W:W,H:geo.H,label:opts.label});
 }
@@ -1023,7 +1121,7 @@ function donut(elId, items, opts){
   const el=document.getElementById(elId); if(!el) return;
   const tot=items.reduce((a,x)=>a+x.val,0);
   if(tot<=0){ emptyState(elId,"Nessun dato."); return; }
-  const W=460,H=230,cx=118,cy=H/2,R=86,r=48;
+  const W=460,H=236,cx=116,cy=H/2,R=84,r=54;
   let a0=-Math.PI/2, out="";
   items.forEach(it=>{
     const frac=it.val/tot, a1=a0+frac*Math.PI*2;
@@ -1031,18 +1129,18 @@ function donut(elId, items, opts){
     const p=(ang,rad)=>[(cx+Math.cos(ang)*rad).toFixed(2),(cy+Math.sin(ang)*rad).toFixed(2)];
     const [x0,y0]=p(a0,R),[x1,y1]=p(a1,R),[x2,y2]=p(a1,r),[x3,y3]=p(a0,r);
     out+='<path d="M'+x0+' '+y0+' A'+R+' '+R+' 0 '+large+' 1 '+x1+' '+y1
-      +' L'+x2+' '+y2+' A'+r+' '+r+' 0 '+large+' 0 '+x3+' '+y3+' Z" fill="'+it.color+'" stroke="#0a1730" stroke-width="2">'
+      +' L'+x2+' '+y2+' A'+r+' '+r+' 0 '+large+' 0 '+x3+' '+y3+' Z" fill="'+it.color+'" fill-opacity=".92" stroke="#0a1529" stroke-width="2.5">'
       +'<title>'+esc(it.lbl)+': '+fmtInt(it.val)+' ('+pct(frac*100)+')</title></path>';
     a0=a1;
   });
-  out+='<text x="'+cx+'" y="'+(cy-2)+'" text-anchor="middle" style="font-size:22px;fill:var(--ink)">'+fmtCompact(tot)+'</text>';
-  out+='<text x="'+cx+'" y="'+(cy+18)+'" text-anchor="middle" style="font-size:14px;fill:var(--faint)">'+esc(opts.center||"totale")+'</text>';
-  let ly=34;
+  out+='<text x="'+cx+'" y="'+(cy+2)+'" text-anchor="middle" style="font-size:24px;font-weight:700;fill:var(--ink);font-family:var(--f-head)">'+fmtCompact(tot)+'</text>';
+  out+='<text x="'+cx+'" y="'+(cy+20)+'" text-anchor="middle" style="font-size:11px;fill:var(--faint)">'+esc(opts.center||"totale")+'</text>';
+  let ly=38;
   items.forEach(it=>{
-    out+='<rect x="250" y="'+(ly-11)+'" width="13" height="13" fill="'+it.color+'" stroke="#0a1730" stroke-width="2"/>';
-    out+='<text x="272" y="'+ly+'" style="fill:var(--ink)">'+esc(it.lbl)+'</text>';
-    out+='<text x="272" y="'+(ly+18)+'" class="axlbl">'+fmtInt(it.val)+' · '+pct(it.val/tot*100)+'</text>';
-    ly+=46;
+    out+='<rect x="248" y="'+(ly-10)+'" width="11" height="11" rx="3" fill="'+it.color+'"/>';
+    out+='<text x="268" y="'+ly+'" style="fill:var(--ink);font-size:12.5px">'+esc(it.lbl)+'</text>';
+    out+='<text x="268" y="'+(ly+16)+'" class="axlbl">'+fmtInt(it.val)+' · '+pct(it.val/tot*100)+'</text>';
+    ly+=44;
   });
   el.innerHTML=chartFrame(out,{W:W,H:Math.max(H,ly+10),label:opts.label});
 }
@@ -1203,7 +1301,16 @@ function renderMeta(){
 function updateConv(){
   const tot=DASH_META.dl_ios+DASH_META.dl_android;
   const played=heroCount();
-  setTxt("kDlConv", (tot>0 && played>0) ? pct(played/tot*100) : "—");
+  const el=document.getElementById("kDlConv");
+  const sub=el?el.parentElement.querySelector(".sub"):null;
+  if(!(tot>0 && played>0)){ setTxt("kDlConv","—"); return; }
+  const r=played/tot*100;
+  setTxt("kDlConv", pct(r));
+  if(el) el.parentElement.classList.toggle("warn", r<70);
+  if(sub) sub.innerHTML = r>103
+    ? "più id che download: reinstalli e secondi device creano id nuovi"
+    : (r<70 ? "<b style='color:var(--red)'>"+pct(100-r)+"</b> scarica e non gioca mai"
+            : "quanti dei download si vedono online");
 }
 async function saveDlMeta(){
   const ios=parseInt(document.getElementById("dlIosIn").value,10)||0;
@@ -1359,6 +1466,7 @@ function renderTelemetry(all){
   PLAYER_ROWS=players;
   renderArenaDist(players);
   renderPlayerTable();
+  runDiagnostics(players);
 
   if(CHART_CACHE) decorateStoryTrend(players.filter(p=>p.story_level>0).length);
 }
@@ -1546,7 +1654,7 @@ function renderRetention(players){
     })
   }));
   lineChart("retChart", keys.map(lbl), series,
-    {label:"Ritenzione", yfmt:v=>fmtNum(v,0)+"%", vfmt:v=>fmtNum(v,1)+"%", H:280, step:28});
+    {label:"Ritenzione", yfmt:v=>fmtNum(v,0)+"%", vfmt:v=>fmtNum(v,1)+"%", H:280, step:28, maxCap:100});
   const lg=marks.map((m,i)=>'<span><i style="background:'+ICON_COLORS[i]+'"></i>Ancora attivi dopo '+m+(m===1?" giorno":" giorni")+'</span>').join("");
   document.getElementById("retChart").insertAdjacentHTML("afterbegin",'<div class="legend">'+lg+'</div>');
 }
@@ -1699,6 +1807,7 @@ async function loadChart(){
     renderHero();
 
     if(STATS_PLAYERS) renderVersions(STATS_PLAYERS);   // ora conosce le settimane
+    if(DIAG_PLAYERS) runDiagnostics(DIAG_PLAYERS);     // ora conosce anche chi non ha aggiornato
 
     const live=results.filter(r=>r.c>0||r.s>0).map(r=>r.p);
     await loadAllTime((live.length?live:[currentPeriodUTC()]).concat(legacy));
@@ -1895,6 +2004,7 @@ function renderTable(){
 
   renderScoreDist(rows);
   renderDurDist(rows, tele);
+  if(SELECTED_PERIOD===currentPeriodUTC()) diagScoreGap(rows);
 }
 function renderScoreDist(rows){
   const edges=[1000,10000,100000,1000000,10000000,100000000,1e12];
@@ -1931,6 +2041,404 @@ function renderDurDist(rows, tele){
        +'&Egrave; tempo giocato / partite, l\'unico dato sulle durate che l\'app invia oggi: '
        +'la durata della <i>singola</i> partita da record arriva con la prossima build.</div>'
      : '<div class="foot">Durata media di una partita da classifica: <b style="color:var(--gold)">'+fmtDur(avg)+'</b> su '+fmtInt(durs.length)+' partite.</div>');
+}
+
+
+/* ==========================================================================
+   DIAGNOSI — ogni dato negativo produce un blocco "SOLUZIONE"
+   --------------------------------------------------------------------------
+   Nessuna soglia e' inventata sul momento: sono i riferimenti usuali dei
+   puzzle game mobile (D1 ~40%, D7 ~15-20%, DAU/MAU ~15%). Sotto quei valori
+   il blocco si accende, sopra sparisce da solo.
+   ========================================================================== */
+let DIAG=[];
+let DIAG_PLAYERS=null, GAP_ROWS=null;
+const SEV_ORDER={alta:0, media:1, bassa:2};
+
+function addFix(f){
+  DIAG.push(f);
+  const el=document.getElementById(f.slot);
+  if(!el) return;
+  el.innerHTML=
+    '<div class="fix '+(f.sev==="alta"?"":(f.sev==="media"?"med":"low"))+'" id="fixbox-'+f.id+'">'
+    + '<div class="fix-head"><span class="fix-badge">'+(f.sev==="alta"?"da risolvere subito":(f.sev==="media"?"da migliorare":"da tenere d\'occhio"))+'</span>'
+    + '<span class="fix-title">'+f.titolo+'</span></div>'
+    + '<p>'+f.problema+'</p>'
+    + (f.perche?'<p class="why">'+f.perche+'</p>':'')
+    + '<h5>Soluzione</h5><ol>'+f.azioni.map(a=>'<li>'+a+'</li>').join("")+'</ol>'
+    + (f.impatto?'<div class="impact">Se funziona: <b>'+f.impatto+'</b></div>':'')
+    + '</div>';
+}
+
+function renderDiagIndex(){
+  const bar=document.getElementById("diagBar"), list=document.getElementById("diagList");
+  if(!list) return;
+  const rows=DIAG.slice().sort((a,b)=>SEV_ORDER[a.sev]-SEV_ORDER[b.sev]);
+  const c={alta:0,media:0,bassa:0};
+  rows.forEach(r=>c[r.sev]++);
+  if(bar) bar.innerHTML=
+      '<span class="sevchip">🔴 Da risolvere subito: <b>'+c.alta+'</b></span>'
+    + '<span class="sevchip">🟠 Da migliorare: <b>'+c.media+'</b></span>'
+    + '<span class="sevchip">🔵 Da tenere d\'occhio: <b>'+c.bassa+'</b></span>';
+  if(!rows.length){
+    list.innerHTML='<div class="diag-empty">Nessun problema rilevato sui dati attuali.</div>';
+    return;
+  }
+  list.innerHTML='<div class="diag-list">'+rows.map(r=>
+    '<div class="diag-item '+(r.sev==="alta"?"":(r.sev==="media"?"med":"low"))+'" data-go="'+r.slot+'">'
+    +'<span class="dot"></span><div class="txt"><div class="t">'+r.titolo+'</div>'
+    +'<div class="d">'+r.sintesi+'</div></div><div class="go">vai →</div></div>').join("")+'</div>';
+  list.querySelectorAll(".diag-item").forEach(it=>{
+    it.addEventListener("click",function(){
+      const t=document.getElementById(this.dataset.go);
+      if(t) t.scrollIntoView({behavior:"smooth",block:"center"});
+    });
+  });
+}
+
+function runDiagnostics(players){
+  DIAG=[];
+  DIAG_PLAYERS=players;
+  ["fix-growth","fix-sticky","fix-retention","fix-firstsession","fix-speedrun","fix-story",
+   "fix-storystart","fix-pass","fix-ranked","fix-coins","fix-update","fix-scoregap"]
+   .forEach(id=>{ const e=document.getElementById(id); if(e) e.innerHTML=""; });
+  if(!players || !players.length){ renderDiagIndex(); return; }
+
+  const N=players.length, today=todayDay();
+  const dayOf=t=>Math.floor((t||0)/DAY);
+  const sum=k=>players.reduce((a,p)=>a+(p[k]||0),0);
+  const share=n=>pct(n/N*100);
+
+  /* ---------- 1. RITENZIONE ---------- */
+  const coh={};
+  players.forEach(p=>{
+    if(!p.first_seen||!p.updated) return;
+    const c=dayOf(p.first_seen);
+    (coh[c]=coh[c]||[]).push(Math.max(0,Math.floor((p.updated-p.first_seen)/DAY)));
+  });
+  const retAt=m=>{
+    let tot=0,k=0;
+    Object.keys(coh).forEach(c=>{
+      if(today-Number(c)<m) return;
+      tot+=coh[c].length; k+=coh[c].filter(v=>v>=m).length;
+    });
+    return tot? k/tot*100 : null;
+  };
+  const d1=retAt(1), d7=retAt(7);
+  const lifes=players.filter(p=>p.first_seen&&p.updated)
+    .map(p=>Math.max(0,Math.floor((p.updated-p.first_seen)/DAY)));
+  const oneDay=lifes.length? lifes.filter(v=>v===0).length/lifes.length*100 : 0;
+
+  if((d1!==null && d1<38) || oneDay>55){
+    addFix({
+      id:"ret", sev:"alta", slot:"fix-retention", 
+      titolo:"I giocatori non tornano il giorno dopo",
+      sintesi:"D1 "+(d1===null?"n/d":pct(d1))+" · il "+pct(oneDay)+" gioca un giorno solo e sparisce",
+      problema:"Solo il <b>"+(d1===null?"—":pct(d1))+"</b> torna il giorno dopo l'installazione e il "
+        +"<b>"+pct(d7||0)+"</b> è ancora lì dopo una settimana. Il <b>"+pct(oneDay)+"</b> dei giocatori "
+        +"apre il gioco in un giorno solo e non si rivede più. Un puzzle game mobile in salute sta "
+        +"intorno al 40% a un giorno e al 15-20% a sette.",
+      perche:"Vuol dire che dopo la prima sessione manca un motivo concreto per riaprire l'app: non c'è "
+        +"niente che stia maturando mentre il giocatore è via, e niente che glielo ricordi.",
+      azioni:[
+        "<b>Notifica push a 20-24 ore</b> con un motivo preciso (\"le tue vite sono piene\", \"la classifica chiude fra 2 giorni\"), non un generico \"torna a giocare\". Se il permesso notifiche non è ancora chiesto, chiedilo <i>dopo</i> la prima partita vinta, non all'avvio.",
+        "<b>Ricompensa giornaliera a scalare</b> visibile in home (giorno 1: 100 monete, giorno 2: 250, giorno 3: uno skin cube…) con il calendario sempre in vista e il premio grosso al giorno 3, dove oggi si perde quasi tutto.",
+        "<b>Qualcosa che matura fuori dall'app</b>: casse a tempo, vite che si ricaricano, energia. Il giocatore deve chiudere l'app sapendo che tra qualche ora lì dentro c'è qualcosa che lo aspetta.",
+        "<b>Missione \"torna domani\"</b> assegnata a fine prima sessione, con premio riscattabile solo il giorno dopo.",
+        "<b>Chiudi il ciclo della classifica</b>: la classifica si azzera il lunedì, ma se il giocatore non lo sa non torna. Mostra a fine partita la posizione e quanto manca al giocatore davanti."
+      ],
+      impatto:"portare D1 da "+(d1===null?"—":pct(d1))+" al 40% significa circa "
+        +fmtInt(Math.round(N*Math.max(0,(40-(d1||0))/100)))+" giocatori in più che tornano, a parità di installazioni"
+    });
+  }
+
+  /* ---------- 2. PRIMA SESSIONE ---------- */
+  const oneGame=players.filter(p=>p.g_total<=1).length;
+  const shortPlay=players.filter(p=>p.pt_total>0 && p.pt_total<300).length;
+  if(oneGame/N*100>22){
+    addFix({
+      id:"first", sev:"alta", slot:"fix-firstsession",
+      titolo:"Un giocatore su tre fa una sola partita",
+      sintesi:fmtInt(oneGame)+" giocatori ("+share(oneGame)+") si fermano alla prima partita",
+      problema:"<b>"+fmtInt(oneGame)+"</b> giocatori ("+share(oneGame)+") hanno giocato <b>una partita sola</b>, "
+        +"e <b>"+fmtInt(shortPlay)+"</b> ("+share(shortPlay)+") in tutto hanno passato meno di 5 minuti nel gioco. "
+        +"La mediana è di sole <b>2 partite</b> a testa: il problema non è la fine del gioco, sono i primi due minuti.",
+      perche:"Chi disinstalla dopo una partita non ha capito il gioco, oppure l'ha capito ma non ha visto niente "
+        +"che valesse una seconda partita.",
+      azioni:[
+        "<b>Prima partita \"guidata alla vittoria\"</b>: per le prime 2-3 partite alza un po' le probabilità dei match e delle combo. Deve finire con un punteggio che sembra bravura sua.",
+        "<b>Taglia tutto quello che sta prima del gioco</b>: niente scelta nome, niente login, niente richiesta notifiche prima della prima partita. Si apre l'app e si gioca entro 5 secondi.",
+        "<b>Primo premio entro 60 secondi</b>: una ricompensa visibile (monete, un cubo del deck) già a fine prima partita, con l'animazione di apertura.",
+        "<b>Mostra subito dove si va</b>: dopo la prima partita fai vedere la scalata delle griglie con la prossima soglia vicina, così esiste un obiettivo.",
+        "<b>Controlla il tutorial sui device lenti</b>: guarda quanti si fermano a 0 partite pur avendo aperto l'app — se il tutorial è lungo o si blocca, li perdi lì."
+      ],
+      impatto:"recuperare metà di questi giocatori vale ~"+fmtInt(Math.round(oneGame*0.5))+" utenti attivi in più"
+    });
+  }
+
+  /* ---------- 3. CRESCITA / ACQUISIZIONE ---------- */
+  const newIn=(from,to)=>players.filter(p=>{
+    const d=today-dayOf(p.first_seen);
+    return p.first_seen && d>=from && d<to;
+  }).length;
+  // oggi e' un giorno parziale: si confrontano i 3 giorni pieni con i 3 precedenti
+  const w1=newIn(1,4), w2=newIn(4,7);
+  if(w2>30 && w1 < w2*0.6){
+    const calo=(1-w1/w2)*100;
+    addFix({
+      id:"growth", sev:"alta", slot:"fix-growth",
+      titolo:"Le nuove installazioni stanno crollando",
+      sintesi:"nuovi negli ultimi 3 giorni "+fmtInt(w1)+" contro "+fmtInt(w2)+" dei 3 precedenti (-"+fmtNum(calo,0)+"%)",
+      problema:"Negli ultimi 3 giorni pieni sono arrivati <b>"+fmtInt(w1)+"</b> giocatori nuovi, contro "
+        +"<b>"+fmtInt(w2)+"</b> nei 3 giorni prima: <b>-"+fmtNum(calo,0)+"%</b>. Il picco è passato e "
+        +"il gioco sta tornando ai numeri di prima.",
+      perche:"Un picco così di solito è una spinta esterna (un video, una feature dello store, un post). "
+        +"Quando finisce, se non c'è un canale che porta gente in continuo, si torna al punto di partenza.",
+      azioni:[
+        "<b>Usa le richieste creator che hai già in coda</b>: nella sezione Supporters ci sono richieste di creator con i loro canali. Rispondi a tutte, dai l'icona esclusiva e chiedi in cambio un video o uno short. È il canale che ti è già costato zero.",
+        "<b>ASO sulla scheda dello store</b>: i primi 3 screenshot devono mostrare una combo grossa con il punteggio a schermo, non il menu. Metti nel titolo/sottotitolo le parole che la gente cerca (\"cubi\", \"blast\", \"puzzle\"). Il video di anteprima deve partire con l'azione entro 2 secondi.",
+        "<b>Aggiorna spesso e comunicalo</b>: ogni release con note vere spinge la visibilità sullo store. Collega ogni build a un evento in gioco così hai qualcosa da raccontare.",
+        "<b>Chiedi la recensione al momento giusto</b>: dopo un nuovo record personale o una griglia sbloccata, mai a freddo. Il voto medio è la leva più forte sulla conversione dello store.",
+        "<b>Referral semplice</b>: codice amico che dà monete a tutti e due. Con la classifica settimanale che hai già, è naturale invitare qualcuno a batterti."
+      ],
+      impatto:"riportare le installazioni ai livelli del picco vale ~"+fmtInt(w2-w1)+" giocatori a settimana"
+    });
+  }
+
+  /* ---------- 4. FEDELTA' ---------- */
+  const dau=players.filter(p=>p.updated && dayOf(p.updated)===today).length;
+  const mau=players.filter(p=>p.updated && today-dayOf(p.updated)<30).length;
+  const sticky=mau? dau/mau*100 : 0;
+  if(mau>200 && sticky<12){
+    addFix({
+      id:"sticky", sev:"media", slot:"fix-sticky",
+      titolo:"Si gioca poche volte al mese",
+      sintesi:"fedeltà DAU/MAU "+pct(sticky)+", il riferimento buono è 15-20%",
+      problema:"Il rapporto fra chi gioca oggi e chi ha giocato nell'ultimo mese è <b>"+pct(sticky)+"</b>. "
+        +"Vuol dire che un giocatore medio apre Cube Crash circa <b>"+fmtNum(sticky*30/100,1)+" giorni al mese</b>. "
+        +"I puzzle game che funzionano stanno fra il 15% e il 20%.",
+      perche:"Il gioco viene ricordato solo quando capita, non c'è un appuntamento fisso che lo riporti in mente.",
+      azioni:[
+        "<b>Dai un ritmo alla settimana</b>: la classifica chiude il lunedì, sfruttalo. Domenica sera manda la notifica \"ultime ore\" con la posizione attuale, lunedì mattina quella dei premi.",
+        "<b>Missioni giornaliere corte</b> (3 obiettivi da 1-2 partite) che scadono a mezzanotte, con una piccola cassa alla terza.",
+        "<b>Evento a tempo nel weekend</b>: doppie coppe, oppure una griglia speciale giocabile solo sabato e domenica.",
+        "<b>Notifica \"ti hanno superato\"</b> quando qualcuno ti passa in classifica: è il richiamo più efficace che hai già a disposizione con i dati che raccogli."
+      ],
+      impatto:"passare al 15% significa circa "+fmtInt(Math.round(mau*0.15-dau))+" giocatori attivi in più ogni giorno"
+    });
+  }
+
+  /* ---------- 5. SPEEDRUN ---------- */
+  const spPlayers=players.filter(p=>p.g_speedrun>0);
+  const spShare=spPlayers.length/N*100;
+  const spOnce=spPlayers.length? spPlayers.filter(p=>p.g_speedrun===1).length/spPlayers.length*100 : 0;
+  if(spShare<45 || spOnce>45){
+    addFix({
+      id:"speed", sev:"media", slot:"fix-speedrun",
+      titolo:"La modalità Speedrun quasi non viene giocata",
+      sintesi:"solo il "+pct(spShare)+" la prova, e di quelli il "+pct(spOnce)+" la gioca una volta sola",
+      problema:"Solo <b>"+fmtInt(spPlayers.length)+"</b> giocatori su "+fmtInt(N)+" (<b>"+pct(spShare)+"</b>) "
+        +"hanno fatto almeno una partita in Speedrun, e fra questi il <b>"+pct(spOnce)+"</b> l'ha giocata "
+        +"<b>una volta sola</b>. In totale Speedrun vale "+fmtDurLong(sum("pt_speedrun"))+" contro "
+        +fmtDurLong(sum("pt_classic"))+" di Classic.",
+      perche:"Chi la prova non torna: o non si capisce in cosa è diversa da Classic, o il timer la rende "
+        +"stressante invece che eccitante, o semplicemente non c'è un motivo per preferirla.",
+      azioni:[
+        "<b>Spiega la differenza in 3 secondi</b>: la prima volta che si apre Speedrun mostra una schermata con una frase sola (\"stesso gioco, ma contro il tempo: ogni match ti regala secondi\") e fai partire subito una partita.",
+        "<b>Dalle premi suoi</b>: la scalata Speedrun ha già le sue griglie (SPEED 1-5) e i suoi cubi esclusivi (CUBO NERO, TNT). Falli vedere <i>prima</i> di giocare, nella schermata di scelta modalità, con la scritta \"si sbloccano solo qui\".",
+        "<b>Missioni dedicate</b>: almeno una delle missioni giornaliere deve essere in Speedrun, così la si prova senza doverlo decidere.",
+        "<b>Rivedi i primi 30 secondi</b>: se il timer iniziale è corto la prima partita finisce prima che uno capisca le regole. Prova a partire con più tempo e a stringerlo nelle partite successive.",
+        "<b>Mettile la sua classifica in vista</b>: oggi la classifica Speedrun esiste ma è nascosta dietro una scheda. In home mostra le due classifiche affiancate."
+      ],
+      impatto:"portare Speedrun al 45% di penetrazione vale ~"+fmtInt(Math.round(N*0.45-spPlayers.length))+" giocatori in più su una modalità già fatta"
+    });
+  }
+
+  /* ---------- 6. STORIA: muro sui livelli ---------- */
+  const reach=[]; for(let L=1;L<=STORY_MAX;L++) reach.push(players.filter(p=>p.story_level>=L).length);
+  let worst={drop:0,lvl:0,a:0,b:0}, walls=[];
+  for(let i=0;i<reach.length-1;i++){
+    if(reach[i]<30) continue;
+    const dr=(reach[i]-reach[i+1])/reach[i];
+    if(dr>0.28) walls.push({lvl:i+1, drop:dr, a:reach[i], b:reach[i+1]});
+    if(dr>worst.drop) worst={drop:dr, lvl:i+1, a:reach[i], b:reach[i+1]};
+  }
+  walls.sort((x,y)=>y.drop-x.drop);
+  if(worst.drop>0.28){
+    const lista=walls.slice(0,3).map(w=>"<b>livello "+w.lvl+"</b> (perde il "+pct(w.drop*100)+", da "
+      +fmtInt(w.a)+" a "+fmtInt(w.b)+" giocatori)").join(", ");
+    addFix({
+      id:"story", sev:"alta", slot:"fix-story",
+      titolo:"Ci sono livelli-muro nella Storia",
+      sintesi:"il livello "+worst.lvl+" perde il "+pct(worst.drop*100)+" di chi ci arriva",
+      problema:"I livelli dove si perde più gente sono: "+lista+". Al livello 10 arrivano "
+        +fmtInt(reach[9])+" giocatori su "+fmtInt(N)+", al 30 solo <b>"+fmtInt(reach[29])+"</b>. "
+        +"Non è una difficoltà che cresce, è un gradino secco.",
+      perche:"Un calo del 30-40% su un singolo livello quasi sempre vuol dire obiettivo punti troppo alto "
+        +"per le mosse concesse, oppure una griglia che non permette combo. Il giocatore riprova due volte, "
+        +"perde le vite e chiude.",
+      azioni:[
+        "<b>Rigioca a mano i livelli "+walls.slice(0,3).map(w=>w.lvl).join(", ")+"</b> e conta le mosse che ti servono davvero: se il minimo teorico è vicino al budget, il livello è tarato male. Alza le mosse del 15-20% o abbassa l'obiettivo punti.",
+        "<b>Aiuto dopo due fallimenti</b>: al terzo tentativo sullo stesso livello regala un booster (una bomba, +3 mosse). Sblocca il tappo senza toccare il bilanciamento.",
+        "<b>Non far pagare il muro con le vite</b>: se un livello è fallito 3 volte di fila, il quarto tentativo è gratis. Perdere vite su un livello rotto è il motivo numero uno di abbandono.",
+        "<b>Controlla i colori sulla griglia di quei livelli</b>: se ci sono 6 colori su una griglia piccola le combo diventano quasi impossibili. Togline uno e rivedi.",
+        "<b>Metti una via di fuga</b>: dopo N fallimenti offri di saltare il livello con 1 stella. Meglio un giocatore che avanza imperfetto di uno che disinstalla."
+      ],
+      impatto:"sistemare i tre livelli peggiori può far arrivare al livello 10 il doppio dei giocatori di adesso ("+fmtInt(reach[9])+")"
+    });
+  }
+
+  /* ---------- 7. STORIA: non viene mai iniziata ---------- */
+  const noStory=players.filter(p=>p.story_level<=0).length;
+  if(noStory/N*100>35){
+    addFix({
+      id:"storystart", sev:"media", slot:"fix-storystart",
+      titolo:"Metà dei giocatori non apre mai la Storia",
+      sintesi:fmtInt(noStory)+" giocatori ("+share(noStory)+") non hanno mai giocato un livello della campagna",
+      problema:"<b>"+fmtInt(noStory)+"</b> giocatori (<b>"+share(noStory)+"</b>) non hanno mai fatto "
+        +"nemmeno il primo livello della Storia, pur avendo giocato in Classic. È la modalità con più "
+        +"contenuto costruito e viene ignorata dalla metà delle persone.",
+      perche:"Se il giocatore atterra in Classic e lì resta, la Storia non entra mai nel suo percorso: "
+        +"non è la modalità di default e non c'è niente che lo spinga a provarla.",
+      azioni:[
+        "<b>Fai partire i nuovi giocatori dalla Storia</b>, non da Classic: il livello 1 è un 3×3 che si vince sempre e insegna le regole meglio di un tutorial.",
+        "<b>Metti la mappa in home</b>: un pezzo di mappa con il livello successivo già visibile e il tasto \"continua\", invece di un'icona nel menu.",
+        "<b>Aggancia le due modalità</b>: a fine partita Classic, ogni tanto, \"con questo punteggio avresti superato il livello 4 della Storia — provalo\".",
+        "<b>Premi che servono altrove</b>: fai vedere che i cubi del deck e le skin arrivano dalla Storia, così giocarla conviene anche a chi ama Classic."
+      ],
+      impatto:"la Storia è tempo di gioco già prodotto: ogni punto di percentuale recuperato è contenuto che stai già pagando e non usi"
+    });
+  }
+
+  /* ---------- 8. RANKED ---------- */
+  const rk=players.filter(p=>p.g_ranked>0).length;
+  if(rk/N*100<2){
+    addFix({
+      id:"ranked", sev:"media", slot:"fix-ranked",
+      titolo:"La modalità Ranked è di fatto vuota",
+      sintesi:"solo "+fmtInt(rk)+" giocatori su "+fmtInt(N)+" hanno fatto una partita Ranked",
+      problema:"Hanno giocato in Ranked <b>"+fmtInt(rk)+"</b> giocatori su "+fmtInt(N)+", e "
+        +"<b>nessuno</b> è salito sopra il rank di partenza. La modalità esiste nel codice ma non nella vita dei giocatori.",
+      perche:"O è chiusa dietro un requisito che quasi nessuno raggiunge, o non si capisce dove sia, oppure "
+        +"non si trova nessuno contro cui giocare.",
+      azioni:[
+        "<b>Verifica il requisito di sblocco</b>: con la ritenzione attuale, qualunque soglia alta la rende irraggiungibile. Abbassala a qualcosa che si tocca nella prima settimana.",
+        "<b>Con questi numeri servono i bot</b>: fai giocare contro avversari simulati sui punteggi reali della classifica. Meglio un avversario finto che una coda infinita.",
+        "<b>Decidi se vale la pena</b>: se non hai tempo per farla funzionare, nascondila. Una modalità vuota nel menu fa sembrare il gioco abbandonato e toglie attenzione a Classic e Storia, che invece girano.",
+        "<b>Se la tieni, dalle una stagione</b>: premi visibili, una fine e un reset, altrimenti non c'è motivo di entrarci."
+      ],
+      impatto:"o diventa una modalità vera, o smette di occupare spazio nel menu"
+    });
+  }
+
+  /* ---------- 9. SEASON PASS ---------- */
+  const pass0=players.filter(p=>p.pass_level<=0).length;
+  const passMax=players.filter(p=>p.pass_level>=15).length;
+  if(pass0/N*100>55 || passMax/N*100>6){
+    addFix({
+      id:"pass", sev:"media", slot:"fix-pass",
+      titolo:"La curva del Season Pass è rotta ai due estremi",
+      sintesi:share(pass0)+" fermo a livello 0, "+fmtInt(passMax)+" già al massimo",
+      problema:"<b>"+fmtInt(pass0)+"</b> giocatori (<b>"+share(pass0)+"</b>) sono fermi al <b>livello 0</b> "
+        +"del pass, mentre <b>"+fmtInt(passMax)+"</b> hanno già finito tutti i 15 livelli. "
+        +"Chi sta in mezzo è una minoranza.",
+      perche:"Il pass dà XP pari al punteggio della partita: chi fa punteggi alti lo finisce in poche partite "
+        +"e non ha più niente da inseguire, chi fa punteggi bassi non vede muovere la barra e lo ignora.",
+      azioni:[
+        "<b>Dai XP per le azioni, non per i punti</b>: tot XP a partita finita, tot per missione completata, tot per livello Storia. Così la barra si muove per tutti alla stessa velocità e il pass torna leggibile.",
+        "<b>Primo livello quasi gratis</b>: si deve sbloccare alla prima partita. Vedere il primo premio è quello che convince a guardare il resto.",
+        "<b>Allunga la coda</b>: dopo il livello 15 metti livelli infiniti con un premio ripetibile, così chi corre ha ancora un motivo.",
+        "<b>Mostra il premio successivo in home</b> con la barra di avanzamento: se il pass non si vede, non esiste."
+      ],
+      impatto:"il pass è la struttura che tiene insieme le sessioni: se funziona, alza sia le partite giornaliere sia le conversioni a pagamento"
+    });
+  }
+
+  /* ---------- 10. ECONOMIA ---------- */
+  const coins=players.map(p=>p.coins).sort((a,b)=>a-b);
+  const medCoins=coins.length? coins[Math.floor(coins.length/2)] : 0;
+  const rich=players.filter(p=>p.coins>100000).length;
+  if(medCoins<500){
+    addFix({
+      id:"coins", sev:"media", slot:"fix-coins",
+      titolo:"L'economia non gira: quasi nessuno ha monete",
+      sintesi:"mediana "+fmtInt(medCoins)+" monete, ma c'è chi ne ha oltre "+fmtCompact(coins[coins.length-1]),
+      problema:"La <b>mediana</b> delle monete è <b>"+fmtInt(medCoins)+"</b>: metà dei giocatori non ha "
+        +"praticamente niente in tasca. Allo stesso tempo il massimo è <b>"+fmtCompact(coins[coins.length-1])+"</b> "
+        +"e "+fmtInt(rich)+" giocatori stanno sopra le 100.000 monete.",
+      perche:"Se la moneta non arriva mai, lo shop è arredamento: nessuno lo apre, nessuno impara a desiderare "
+        +"quello che vende, e quando arriva l'acquisto vero non ha un prezzo di riferimento in testa.",
+      azioni:[
+        "<b>Monete a ogni partita</b>, anche poche, anche quando si perde. Il contatore che sale è quello che porta allo shop.",
+        "<b>Metti un primo acquisto davvero a portata</b>: qualcosa da 300-500 monete che si compra nella prima sessione. Serve a far capire che le monete servono.",
+        "<b>Rivedi chi ne ha troppe</b>: "+fmtInt(rich)+" giocatori oltre le 100.000 monete vuol dire che da qualche parte c'è un rubinetto aperto (premi ripetibili, missioni ricicabili). Trovalo prima di mettere in vendita cose serie.",
+        "<b>Fai vedere il prezzo prima del premio</b>: lo shop va aperto almeno una volta in modo guidato, altrimenti la valuta non ha significato."
+      ],
+      impatto:"un'economia che gira è il presupposto per qualunque acquisto reale nello shop"
+    });
+  }
+
+  /* ---------- 11. AGGIORNAMENTO ---------- */
+  const onlyLb=Math.max(0, LB_IDS.size - STATS_IDS_IN_LB);
+  const totSeen=N+onlyLb;
+  if(totSeen>0 && onlyLb/totSeen*100>25 && LB_IDS.size>0){
+    addFix({
+      id:"upd", sev:"bassa", slot:"fix-update",
+      titolo:"Quattro giocatori su dieci hanno una build vecchia",
+      sintesi:fmtInt(onlyLb)+" giocatori ("+pct(onlyLb/totSeen*100)+") non hanno ancora aggiornato",
+      problema:"<b>"+fmtInt(onlyLb)+"</b> giocatori (<b>"+pct(onlyLb/totSeen*100)+"</b> di quelli visti online) "
+        +"compaiono in classifica ma non mandano telemetria: stanno su una build precedente.",
+      perche:"Su Android l'aggiornamento automatico non è garantito, e chi non apre lo store resta indietro "
+        +"anche per settimane. Ogni correzione che fai non li raggiunge.",
+      azioni:[
+        "<b>Controllo versione all'avvio</b>: il gioco ha già <code>loading.gd</code> che confronta la versione con quella dello store. Usalo per mostrare un avviso chiaro con il tasto che porta direttamente alla scheda.",
+        "<b>Aggiornamento obbligatorio</b> quando la build vecchia ha un bug che sporca i dati (è esattamente il caso dei punteggi che non arrivano in classifica).",
+        "<b>Dai un motivo</b>: \"aggiorna per sbloccare X\" funziona molto meglio di \"è disponibile un aggiornamento\".",
+        "<b>Su Android usa l'in-app update</b> di Google Play, così si aggiorna senza uscire dal gioco."
+      ],
+      impatto:"meno build in giro significa dati più puliti e meno bug da inseguire su versioni che non controlli"
+    });
+  }
+
+  checkScoreGap();
+  renderDiagIndex();
+}
+
+/* divario dei punteggi nella classifica della settimana in corso */
+function diagScoreGap(rows){
+  GAP_ROWS=rows;
+  if(DIAG_PLAYERS) runDiagnostics(DIAG_PLAYERS);
+  else { checkScoreGap(); renderDiagIndex(); }
+}
+function checkScoreGap(){
+  const rows=GAP_ROWS;
+  const el=document.getElementById("fix-scoregap");
+  if(el) el.innerHTML="";
+  if(!rows || rows.length<50) return;
+  const sorted=rows.map(r=>r.score).sort((a,b)=>a-b);
+  const med=sorted[Math.floor(sorted.length/2)];
+  const top=sorted[sorted.length-1];
+  const p90=sorted[Math.floor(sorted.length*0.9)];
+  if(med>0 && top/med>400){
+    addFix({
+      id:"gap", sev:"media", slot:"fix-scoregap",
+      titolo:"La classifica è irraggiungibile per un giocatore normale",
+      sintesi:"il primo fa "+fmtCompact(top)+", il giocatore mediano "+fmtCompact(med),
+      problema:"Questa settimana il primo in classifica ha <b>"+fmtInt(top)+"</b> punti, mentre il giocatore "
+        +"a metà classifica ne ha <b>"+fmtInt(med)+"</b>: un divario di <b>"+fmtInt(Math.round(top/med))+" volte</b>. "
+        +"Anche la soglia della top 10% è a "+fmtCompact(p90)+".",
+      perche:"In Classic il punteggio cresce con il moltiplicatore di livello e non ha un tetto: una partita "
+        +"lunghissima vale quanto centinaia di partite normali. Chi entra oggi guarda la classifica, si vede "
+        +"a distanza siderale e smette di considerarla.",
+      azioni:[
+        "<b>Dividi la classifica in fasce</b> usando le griglie che hai già: una classifica per ogni arena (GRIGLIA 1, 2, 3…), così si compete con chi è al proprio livello.",
+        "<b>Premia il miglioramento, non solo il primo posto</b>: premi per chi batte il proprio record della settimana precedente, o per chi sale di posizioni.",
+        "<b>Mostra i vicini, non la cima</b>: in home fai vedere le 3 posizioni sopra e sotto la sua, non la top 10 irraggiungibile.",
+        "<b>Guarda se i punteggi enormi sono legittimi</b>: partite da ore intere che valgono centinaia di milioni indicano che il moltiplicatore per livello cresce troppo. Valuta un tetto o una crescita meno che lineare."
+      ],
+      impatto:"una classifica in cui si può arrivare tra i primi è uno dei motivi più forti per tornare ogni settimana"
+    });
+  }
 }
 
 /* ==========================================================================
