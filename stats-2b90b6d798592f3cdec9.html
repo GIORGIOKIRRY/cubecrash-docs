@@ -426,20 +426,20 @@
   <!-- ===== B. VERSIONI / AGGIORNAMENTI ===== -->
   <div class="section-h"><span class="tag">B</span><h2>AGGIORNAMENTI &amp; VERSIONI</h2><div class="line"></div></div>
   <div class="kpis">
-    <div class="kpi"><div class="lbl">Ultima versione vista</div><div class="val sm" id="kVerLast">—</div><div class="sub">la pi&ugrave; alta in circolazione</div></div>
-    <div class="kpi"><div class="lbl">Hanno l'ultima versione</div><div class="val" id="kVerAdopt">—</div><div class="sub" id="kVerAdoptSub">&nbsp;</div></div>
-    <div class="kpi"><div class="lbl">Aggiornati ultimi 7 giorni</div><div class="val" id="kVerFresh">—</div><div class="sub">attivi 7gg con ultima versione</div></div>
-    <div class="kpi"><div class="lbl">Ancora indietro</div><div class="val" id="kVerOld">—</div><div class="sub">su versioni precedenti</div></div>
+    <div class="kpi"><div class="lbl">Build pi&ugrave; diffusa</div><div class="val sm" id="kVerLast">—</div><div class="sub">quella che manda pi&ugrave; dati</div></div>
+    <div class="kpi"><div class="lbl">Hanno la build recente</div><div class="val" id="kVerAdopt">—</div><div class="sub" id="kVerAdoptSub">&nbsp;</div></div>
+    <div class="kpi"><div class="lbl">Installati ultimi 7 giorni</div><div class="val" id="kVerFresh">—</div><div class="sub">primo avvio recente</div></div>
+    <div class="kpi"><div class="lbl">Ancora indietro</div><div class="val" id="kVerOld">—</div><div class="sub">solo in classifica, niente telemetria</div></div>
   </div>
   <div class="grid-2" style="margin-top:16px">
     <div class="panel">
-      <h3>Distribuzione versioni installate</h3>
-      <p class="desc">Quanti giocatori hanno ciascuna versione dell'app.</p>
+      <h3>Chi ha aggiornato e chi no</h3>
+      <p class="desc">Divisione fra build recente e build precedente sui giocatori visti online.</p>
       <div id="verDist"><div class="state"><div class="spinner"></div></div></div>
     </div>
     <div class="panel">
-      <h3>Adozione dell'ultima versione</h3>
-      <p class="desc">Giocatori attivi ogni giorno, divisi tra ultima versione e versioni precedenti.</p>
+      <h3>L'aggiornamento che si diffonde</h3>
+      <p class="desc">Partecipanti alla classifica settimana per settimana, divisi per build.</p>
       <div id="verAdoptChart"><div class="state"><div class="spinner"></div></div></div>
     </div>
   </div>
@@ -487,8 +487,8 @@
       <div id="scoreDist"><div class="state"><div class="spinner"></div></div></div>
     </div>
     <div class="panel">
-      <h3>Durata delle partite da record</h3>
-      <p class="desc">Quanto durano le partite che entrano in classifica.</p>
+      <h3>Quanto durano le partite</h3>
+      <p class="desc">Distribuzione delle durate di gioco della modalit&agrave; selezionata qui sopra.</p>
       <div id="durDist"><div class="state"><div class="spinner"></div></div></div>
     </div>
   </div>
@@ -612,19 +612,21 @@
   <div class="grid-2">
     <div class="panel">
       <h3>A che griglia sono &middot; Classic</h3>
-      <p class="desc">Quanti giocatori hanno raggiunto ogni griglia della scalata Classic.</p>
+      <p class="desc">Quanti giocatori sono su ogni griglia della scalata Classic.</p>
       <div id="arenaClassic"><div class="state"><div class="spinner"></div></div></div>
     </div>
     <div class="panel">
       <h3>A che griglia sono &middot; Speedrun</h3>
-      <p class="desc">Quanti giocatori hanno raggiunto ogni griglia della scalata Speedrun.</p>
+      <p class="desc">Quanti giocatori sono su ogni griglia della scalata Speedrun.</p>
       <div id="arenaSpeed"><div class="state"><div class="spinner"></div></div></div>
     </div>
   </div>
   <div class="panel">
     <h3>Ogni giocatore, griglia per griglia</h3>
     <p class="desc">Per ogni giocatore: la griglia raggiunta nelle due scalate, con quante partite e quante ore
-      ci &egrave; arrivato e qual &egrave; il suo record. Clicca sulle intestazioni per ordinare.</p>
+      ci &egrave; arrivato e qual &egrave; il suo record. Clicca sulle intestazioni per ordinare.
+      Le griglie col <b>~</b> sono <b>stimate dal record personale</b> (l'app non invia ancora la griglia vera);
+      partite, ore e record sono invece dati esatti.</p>
     <div class="supp-toolbar">
       <input id="plSearch" type="text" placeholder="🔎 Cerca un giocatore…">
       <select id="plMode">
@@ -741,6 +743,17 @@ function arenaIndex(mode, idx, cups){
   if(cups===null || cups===undefined || cups<0) return -1;   // campo non inviato
   let r=0;
   for(let i=0;i<arr.length;i++) if(cups>=arr[i].cups) r=i;
+  return r;
+}
+/* STIMA della griglia dal RECORD personale. Le coppe sono punti accumulati
+   (1 punto = 1 coppa), quindi il record di una sola partita e' un limite
+   INFERIORE grezzo: serve a dare un ordine di grandezza finche' l'app non
+   invia la griglia vera. */
+function arenaGuess(mode, hs){
+  if(!hs || hs<=0) return -1;
+  const arr=ARENAS[mode];
+  let r=0;
+  for(let i=0;i<arr.length;i++) if(hs>=arr[i].cups) r=i;
   return r;
 }
 function arenaName(mode, i){
@@ -1116,6 +1129,8 @@ let CHART_CACHE=null;
 let TABLE_CACHE={};
 let STATS_PLAYERS=null;
 let LB_IDS=new Set();          // tutti gli id visti nelle classifiche
+let LB_WEEK_IDS={};            // periodo -> Set(id) dei partecipanti di quella settimana
+let STATS_IDS_IN_LB=0;         // quanti giocatori con telemetria compaiono anche in classifica
 let ALLTIME={};                // mode -> Map(id -> best row)
 let DASH_META={dl_ios:0, dl_android:0, updated:0};
 
@@ -1147,7 +1162,8 @@ function initDashboard(){
     });
   });
   document.getElementById("refreshBtn").addEventListener("click",function(){
-    CHART_CACHE=null; TABLE_CACHE={}; STATS_PLAYERS=null; LB_IDS=new Set(); ALLTIME={};
+    CHART_CACHE=null; TABLE_CACHE={}; STATS_PLAYERS=null;
+    LB_IDS=new Set(); LB_WEEK_IDS={}; STATS_IDS_IN_LB=0; ALLTIME={};
     loadAll();
   });
   const ps=document.getElementById("platformSelect");
@@ -1213,6 +1229,7 @@ function heroCount(){
 }
 function renderHero(){
   const tele=STATS_PLAYERS?STATS_PLAYERS.length:0;
+  STATS_IDS_IN_LB = STATS_PLAYERS ? STATS_PLAYERS.filter(p=>LB_IDS.has(p.id)).length : 0;
   const total=heroCount();
   setTxt("heroNum", total>0?fmtInt(total):"—");
   const onlyLb=(function(){
@@ -1346,6 +1363,14 @@ function renderTelemetry(all){
   if(CHART_CACHE) decorateStoryTrend(players.filter(p=>p.story_level>0).length);
 }
 
+/* durata MEDIA di una partita di quel giocatore: tempo giocato / partite.
+   E' il ripiego usato ovunque manchi la durata reale della singola partita. */
+function avgMatch(p, mode){
+  if(!p) return 0;
+  const g=p["g_"+mode]||0, t=p["pt_"+mode]||0;
+  return (g>0 && t>0) ? t/g : 0;
+}
+
 /* ---- attivita' giornaliera ---- */
 function renderActivity(players){
   const D=ACT_DAYS, today=todayDay();
@@ -1393,47 +1418,85 @@ function renderPlatforms(players){
   donut("platChart", items, {center:"giocatori", label:"Piattaforme"});
 }
 
-/* ---- versioni ---- */
+/* ---- versioni / aggiornamenti ----
+   Il numero di versione (campo "ver") lo manda solo la build nuova. Finche' non
+   c'e', l'unico spartiacque REALE fra chi ha aggiornato e chi no e' questo:
+   chi manda la telemetria ha una build recente, chi compare solo in classifica
+   sta ancora su una build vecchia (che la telemetria non la invia proprio). */
 function renderVersions(players){
   const withVer=players.filter(p=>p.ver);
-  if(withVer.length===0){
-    ["kVerLast","kVerAdopt","kVerFresh","kVerOld"].forEach(id=>setTxt(id,"—"));
-    const msg='<div class="state"><div class="big">Versione non ancora inviata</div>'
-      +'Il campo <code>ver</code> arriva con la prossima build: da quel momento qui vedi chi ha aggiornato e chi no.</div>';
-    setHtml("verDist",msg); setHtml("verAdoptChart",msg);
+  const today=todayDay();
+  if(withVer.length){
+    const by={};
+    withVer.forEach(p=>{ by[p.ver]=(by[p.ver]||0)+1; });
+    const vers=Object.keys(by).sort((a,b)=>verNum(b)-verNum(a));
+    const latest=vers[0], onLatest=by[latest]||0;
+    const fresh=withVer.filter(p=>p.ver===latest && today-Math.floor(p.updated/DAY)<7).length;
+    setTxt("kVerLast",latest);
+    setTxt("kVerAdopt",fmtInt(onLatest));
+    setTxt("kVerAdoptSub",pct(onLatest/withVer.length*100)+" di "+fmtInt(withVer.length)+" con versione nota");
+    setTxt("kVerFresh",fmtInt(fresh));
+    setTxt("kVerOld",fmtInt(withVer.length-onLatest));
+    renderHBars("verDist", vers.map((v,i)=>({
+      lbl:"v"+v, val:by[v], color: v===latest?"var(--green2)":ICON_COLORS[(i+1)%ICON_COLORS.length]
+    })), {fmt:fmtInt, showPct:true});
+    const D=Math.min(60,Math.max(14,ACT_DAYS));
+    const days=[]; for(let i=D-1;i>=0;i--) days.push(today-i);
+    const idx={}; days.forEach((d,i)=>{ idx[d]=i; });
+    const last=new Array(D).fill(0), old=new Array(D).fill(0);
+    withVer.forEach(p=>{
+      const ud=Math.floor((p.updated||0)/DAY);
+      if(idx[ud]===undefined) return;
+      if(p.ver===latest) last[idx[ud]]++; else old[idx[ud]]++;
+    });
+    const lbl=d=>{ const dt=new Date(d*DAY*1000); return dt.getUTCDate()+"/"+(dt.getUTCMonth()+1); };
+    stackChart("verAdoptChart", days.map(lbl), [
+      {name:"v"+latest,color:"var(--green2)",data:last},
+      {name:"versioni precedenti",color:"var(--orange)",data:old}
+    ], {label:"Adozione ultima versione", H:250, W:560, step:12});
     return;
   }
-  const by={};
-  withVer.forEach(p=>{ by[p.ver]=(by[p.ver]||0)+1; });
-  const vers=Object.keys(by).sort((a,b)=>verNum(b)-verNum(a));
-  const latest=vers[0];
-  const onLatest=by[latest]||0;
-  const today=todayDay();
-  const fresh=withVer.filter(p=>p.ver===latest && today-Math.floor(p.updated/DAY)<7).length;
-  setTxt("kVerLast",latest);
-  setTxt("kVerAdopt",fmtInt(onLatest));
-  setTxt("kVerAdoptSub",pct(onLatest/withVer.length*100)+" di "+fmtInt(withVer.length)+" con versione nota");
-  setTxt("kVerFresh",fmtInt(fresh));
-  setTxt("kVerOld",fmtInt(withVer.length-onLatest));
-  renderHBars("verDist", vers.map((v,i)=>({
-    lbl:"v"+v, val:by[v],
-    color: v===latest?"var(--green2)":ICON_COLORS[(i+1)%ICON_COLORS.length]
-  })), {fmt:fmtInt, showPct:true});
+  /* --- ripiego con i dati che ci sono GIA' --- */
+  const tele=players.length;
+  const onlyLb=Math.max(0, LB_IDS.size - STATS_IDS_IN_LB);
+  const tot=tele+onlyLb;
+  const new7=players.filter(p=>p.first_seen && today-Math.floor(p.first_seen/DAY)<7).length;
+  setTxt("kVerLast","build con telemetria");
+  setTxt("kVerAdopt",fmtInt(tele));
+  setTxt("kVerAdoptSub",(tot?pct(tele/tot*100):"—")+" dei giocatori visti online");
+  setTxt("kVerFresh",fmtInt(new7));
+  setTxt("kVerOld",fmtInt(onlyLb));
+  renderHBars("verDist", [
+    {lbl:"Build recente", val:tele, color:"var(--green2)"},
+    {lbl:"Build precedente", val:onlyLb, color:"var(--orange)"}
+  ], {fmt:fmtInt, showPct:true, wide:true});
+  document.getElementById("verDist").insertAdjacentHTML("beforeend",
+    '<div class="foot"><b>Build recente</b> = manda la telemetria (e quindi compare qui con tutti i suoi dati). '
+    +'<b>Build precedente</b> = compare solo in classifica, la telemetria non ce l\'ha proprio. '
+    +'Il numero di versione esatto (2.1.3, 2.1.2…) non &egrave; mai stato inviato da nessuna build: '
+    +'arriva col prossimo aggiornamento che pubblichi.</div>');
 
-  const D=Math.min(60,Math.max(14,ACT_DAYS));
-  const days=[]; for(let i=D-1;i>=0;i--) days.push(today-i);
-  const idx={}; days.forEach((d,i)=>{ idx[d]=i; });
-  const last=new Array(D).fill(0), old=new Array(D).fill(0);
-  withVer.forEach(p=>{
-    const ud=Math.floor((p.updated||0)/DAY);
-    if(idx[ud]===undefined) return;
-    if(p.ver===latest) last[idx[ud]]++; else old[idx[ud]]++;
+  /* adozione settimana per settimana: partecipanti alla classifica divisi fra le due build */
+  if(!CHART_CACHE || !LB_WEEK_IDS){ emptyState("verAdoptChart","Carico le classifiche…"); return; }
+  const teleIds=new Set(players.map(p=>p.id));
+  const periods=CHART_CACHE.periods;
+  let from=0;
+  while(from<periods.length-1 && !(LB_WEEK_IDS[periods[from]]||new Set()).size) from++;
+  from=Math.max(0, Math.min(from, periods.length-4));
+  const used=periods.slice(from);
+  const a=[], b=[];
+  used.forEach(p=>{
+    const ids=LB_WEEK_IDS[p]||new Set();
+    let n=0; ids.forEach(id=>{ if(teleIds.has(id)) n++; });
+    a.push(n); b.push(ids.size-n);
   });
-  const lbl=d=>{ const dt=new Date(d*DAY*1000); return dt.getUTCDate()+"/"+(dt.getUTCMonth()+1); };
-  stackChart("verAdoptChart", days.map(lbl), [
-    {name:"v"+latest,color:"var(--green2)",data:last},
-    {name:"versioni precedenti",color:"var(--orange)",data:old}
-  ], {label:"Adozione ultima versione", H:250, W:560, step:12});
+  stackChart("verAdoptChart", used.map(p=>decodePeriod(p).short), [
+    {name:"build recente",color:"var(--green2)",data:a},
+    {name:"build precedente",color:"var(--orange)",data:b}
+  ], {label:"Adozione per settimana", H:250, W:560, step:46});
+  document.getElementById("verAdoptChart").insertAdjacentHTML("beforeend",
+    '<div class="foot">Giocatori entrati in classifica ogni settimana, divisi fra chi ha la build recente e chi no: '
+    +'la fetta verde che cresce &egrave; l\'aggiornamento che si diffonde.</div>');
 }
 
 /* ---- coinvolgimento ---- */
@@ -1605,7 +1668,9 @@ async function loadChart(){
       const [c,s,st]=await Promise.all([
         fetchPeriodIds("classic",p), fetchPeriodIds("speedrun",p), fetchPeriodIds("story",p)
       ]);
-      [c,s,st].forEach(arr=>{ if(arr) arr.forEach(id=>LB_IDS.add(id)); });
+      const week=new Set();
+      [c,s,st].forEach(arr=>{ if(arr) arr.forEach(id=>{ LB_IDS.add(id); week.add(id); }); });
+      LB_WEEK_IDS[p]=week;
       return {p, c:c?c.length:0, s:s?s.length:0, st:st===null?null:st.length};
     }));
     CHART_CACHE={
@@ -1632,6 +1697,8 @@ async function loadChart(){
       if(any) legacy.push(p);
     }));
     renderHero();
+
+    if(STATS_PLAYERS) renderVersions(STATS_PLAYERS);   // ora conosce le settimane
 
     const live=results.filter(r=>r.c>0||r.s>0).map(r=>r.p);
     await loadAllTime((live.length?live:[currentPeriodUTC()]).concat(legacy));
@@ -1695,13 +1762,15 @@ function renderAllTime(){
     const rows=Array.from(map.values()).sort((a,b)=>b.score-a.score);
     const top=rows[0];
     // durata: dalla classifica, altrimenti dalla telemetria dello stesso giocatore
-    let dur=top.dur, durSrc="classifica";
-    if(!dur && STATS_PLAYERS){
-      const p=STATS_PLAYERS.find(x=>x.id===top.id);
-      if(p){
-        const d = mode==="classic"?p.hs_classic_dur:p.hs_speedrun_dur;
-        if(d){ dur=d; durSrc="telemetria"; }
-      }
+    let dur=top.dur, durSrc="classifica", durApprox=false;
+    const tp = STATS_PLAYERS ? STATS_PLAYERS.find(x=>x.id===top.id) : null;
+    if(!dur && tp){
+      const d = mode==="classic"?tp.hs_classic_dur:tp.hs_speedrun_dur;
+      if(d){ dur=d; durSrc="telemetria"; }
+    }
+    if(!dur && tp){
+      const a=avgMatch(tp,mode);
+      if(a){ dur=a; durSrc="media delle sue partite"; durApprox=true; }
     }
     setHtml(cardId,
       '<div class="rl">Record assoluto · '+MODE_LABEL[mode]+'</div>'
@@ -1709,18 +1778,21 @@ function renderAllTime(){
       +'<div class="rw">'+badge(top.icon)+esc(top.name)+(top.glo?' <span class="glo-tag">GLO</span>':'')+'</div>'
       +'<div class="recmeta">'
         +'<div>Quando: <b>'+esc(periodLabel(top.period))+'</b></div>'
-        +'<div>Durata partita: <b>'+(dur?fmtDur(dur):"non disponibile")+'</b>'+(dur?' <span style="color:var(--faint)">('+durSrc+')</span>':'')+'</div>'
+        +'<div>Durata partita: <b>'+(dur?((durApprox?"~":"")+fmtDur(dur)):"non disponibile")+'</b>'+(dur?' <span style="color:var(--faint)">('+durSrc+')</span>':'')+'</div>'
         +(top.ts?'<div>Il <b>'+fmtDate(top.ts)+'</b></div>':'')
       +'</div>'
-      +(dur?'':'<div class="foot">La durata arriva con la prossima build dell\'app: da l&igrave; in poi ogni punteggio porta con s&eacute; quanto &egrave; durata la partita.</div>'));
+      +(durApprox?'<div class="foot">Questa &egrave; la durata <b>media</b> delle sue partite (tempo giocato / partite): la durata esatta della partita da record arriva con la prossima build dell\'app.</div>'
+        :(dur?'':'<div class="foot">Durata non disponibile: questo giocatore non ha telemetria. Dalla prossima build ogni punteggio porta con s&eacute; quanto &egrave; durata la partita.</div>')));
 
     const tele=STATS_PLAYERS? new Map(STATS_PLAYERS.map(p=>[p.id,p])) : new Map();
     setHtml(listId,'<div class="toplist">'+rows.slice(0,10).map((r,i)=>{
-      let d=r.dur;
-      if(!d){ const p=tele.get(r.id); if(p) d = mode==="classic"?p.hs_classic_dur:p.hs_speedrun_dur; }
+      let d=r.dur, ap=false;
+      const tp2=tele.get(r.id);
+      if(!d && tp2) d = mode==="classic"?tp2.hs_classic_dur:tp2.hs_speedrun_dur;
+      if(!d && tp2){ d=avgMatch(tp2,mode); ap=d>0; }
       return '<div class="toprow"><span class="n">'+(i+1)+'</span>'
         +'<span class="who">'+badge(r.icon)+esc(r.name)+'</span>'
-        +'<span class="v">'+fmtInt(r.score)+(d?' <span style="color:var(--faint)">· '+fmtDur(d)+'</span>':'')+'</span></div>';
+        +'<span class="v">'+fmtInt(r.score)+(d?' <span style="color:var(--faint)" title="'+(ap?"media delle sue partite":"durata della partita")+'">· '+(ap?"~":"")+fmtDur(d)+'</span>':'')+'</span></div>';
     }).join("")+'</div>');
   });
 }
@@ -1802,20 +1874,24 @@ function renderTable(){
     const rank=i+1;
     const cls=rank===1?"t1":rank===2?"t2":rank===3?"t3":"";
     const medal=rank<=3?'<span class="medal">'+MEDALS[rank-1]+'</span> ':'';
-    let d=r.dur;
+    let d=r.dur, approx=false;
     if(!d){ const p=tele.get(r.id); if(p) d=CURRENT_MODE==="classic"?p.hs_classic_dur:p.hs_speedrun_dur; }
-    if(d) withDur++;
+    if(!d){ d=avgMatch(tele.get(r.id), CURRENT_MODE); approx=d>0; }
+    if(d && !approx) withDur++;
     return '<tr><td class="rank '+cls+'">'+medal+rank+'</td>'
       +'<td><div class="nick"><span class="icon-badge" style="background:'+iconColor(r.icon)+'">'+(r.icon|0)+'</span>'
       +'<span>'+esc(r.name)+'</span>'+(r.glo?' <span class="glo-tag" title="Global / verificato">GLO</span>':'')+'</div></td>'
       +'<td class="score">'+fmtInt(r.score)+'</td>'
-      +'<td class="dur">'+(d?fmtDur(d):"—")+'</td></tr>';
+      +'<td class="dur"'+(approx?' style="color:var(--faint)" title="media delle sue partite, la durata della singola partita arriva con la prossima build"':'')+'>'
+      +(d?((approx?"~":"")+fmtDur(d)):"—")+'</td></tr>';
   }).join("");
   setHtml("tableArea",'<div class="table-wrap"><table>'
     +'<thead><tr><th>#</th><th>Nickname</th><th style="text-align:right">Punteggio</th><th style="text-align:right">Durata</th></tr></thead>'
     +'<tbody>'+body+'</tbody></table></div>'
     +'<div class="foot">'+fmtInt(rows.length)+' giocatori nella settimana · mostrati i primi 100 · '
-    +(withDur?fmtInt(withDur)+' con durata registrata':'durata non ancora inviata dall\'app (arriva con la prossima build)')+'.</div>');
+    +(withDur?fmtInt(withDur)+' con la durata della partita esatta'
+      :'la durata esatta della singola partita non &egrave; ancora inviata dall\'app: i valori con la tilde (~) sono la '
+       +'<b>durata media</b> delle partite di quel giocatore, calcolata da tempo giocato / partite')+'.</div>');
 
   renderScoreDist(rows);
   renderDurDist(rows, tele);
@@ -1828,54 +1904,67 @@ function renderScoreDist(rows){
     {label:"Distribuzione punteggi", H:250, W:560, step:66});
 }
 function renderDurDist(rows, tele){
-  const durs=rows.map(r=>{
+  const real=rows.map(r=>{
     if(r.dur) return r.dur;
     const p=tele.get(r.id);
     if(p) return CURRENT_MODE==="classic"?p.hs_classic_dur:p.hs_speedrun_dur;
     return 0;
   }).filter(d=>d>0);
-  if(!durs.length){
-    setHtml("durDist",'<div class="state"><div class="big">Durata non disponibile</div>'
-      +'Le partite registrate finora non portano la durata: arriva con la prossima build dell\'app.</div>');
-    return;
-  }
   const edges=[60,180,300,600,1200,1800,1e9];
   const lab=(e,i)=>["<1m","1-3m","3-5m","5-10m","10-20m","20-30m","30m+"][i];
+  let durs=real, approx=false;
+  if(!durs.length){
+    // ripiego: durata MEDIA di una partita, calcolata su tutti i giocatori della modalita'
+    durs=(STATS_PLAYERS||[]).map(p=>avgMatch(p,CURRENT_MODE)).filter(d=>d>0);
+    approx=true;
+  }
+  if(!durs.length){ emptyState("durDist","Nessun dato sulle durate."); return; }
   const b=bucketize(durs,edges,lab);
-  barChart("durDist", b.labels, [{name:"Partite",color:"var(--cyan)",data:b.counts}],
-    {label:"Durata partite in classifica", H:250, W:560, step:66});
+  barChart("durDist", b.labels, [{name:approx?"Giocatori":"Partite",color:"var(--cyan)",data:b.counts}],
+    {label:"Durata partite", H:250, W:560, step:66});
   const avg=durs.reduce((a,x)=>a+x,0)/durs.length;
+  const med=durs.slice().sort((a,b2)=>a-b2)[Math.floor(durs.length/2)];
   document.getElementById("durDist").insertAdjacentHTML("beforeend",
-    '<div class="foot">Durata media di una partita da classifica: <b style="color:var(--gold)">'+fmtDur(avg)+'</b> su '+fmtInt(durs.length)+' partite.</div>');
+    approx
+     ? '<div class="foot">Durata <b>media</b> di una partita '+esc(MODE_LABEL[CURRENT_MODE])+': '
+       +'<b style="color:var(--gold)">'+fmtDur(avg)+'</b> (mediana '+fmtDur(med)+') su '+fmtInt(durs.length)+' giocatori. '
+       +'&Egrave; tempo giocato / partite, l\'unico dato sulle durate che l\'app invia oggi: '
+       +'la durata della <i>singola</i> partita da record arriva con la prossima build.</div>'
+     : '<div class="foot">Durata media di una partita da classifica: <b style="color:var(--gold)">'+fmtDur(avg)+'</b> su '+fmtInt(durs.length)+' partite.</div>');
 }
 
 /* ==========================================================================
    SCHEDA GIOCATORI — a che griglia e' arrivato ognuno
    ========================================================================== */
 let PLAYER_ROWS=[];
-let PL_SORT={key:"cups_classic", dir:-1};
+let PL_SORT={key:"arena_classic", dir:-1};
 let PL_SHOWN=50;
 const PL_PAGE=50;
 
 /* distribuzione dei giocatori per griglia, una scalata per volta */
 function renderArenaDist(players){
-  [["classic","arenaClassic","var(--classic)"],["speedrun","arenaSpeed","var(--speedrun)"]].forEach(([mode,elId,col])=>{
+  [["classic","arenaClassic","var(--classic)","hs_classic"],
+   ["speedrun","arenaSpeed","var(--speedrun)","hs_speedrun"]].forEach(([mode,elId,col,hsKey])=>{
     const arr=ARENAS[mode];
     const known=players.filter(p=>arenaIndex(mode,p["arena_"+mode],p["cups_"+mode])>=0);
-    if(!known.length){
-      setHtml(elId,'<div class="state"><div class="big">Griglia non ancora inviata</div>'
-        +'La scalata (campi <code>arena_'+mode+'</code> / <code>cups_'+mode+'</code>) arriva con la prossima build: '
-        +'da quel momento qui vedi a che griglia &egrave; ogni giocatore.</div>');
-      return;
-    }
+    const real=known.length>0;
+    const pool=real?known:players.filter(p=>p[hsKey]>0);
+    if(!pool.length){ emptyState(elId,"Nessun dato."); return; }
     const counts=new Array(arr.length).fill(0);
-    known.forEach(p=>{ counts[arenaIndex(mode,p["arena_"+mode],p["cups_"+mode])]++; });
+    pool.forEach(p=>{
+      const i = real ? arenaIndex(mode,p["arena_"+mode],p["cups_"+mode]) : arenaGuess(mode,p[hsKey]);
+      if(i>=0) counts[i]++;
+    });
     renderHBars(elId, arr.map((a,i)=>({
-      lbl:a.n+" · "+a.t, val:counts[i],
-      color: i===0?"var(--faint)":col
+      lbl:a.n+" · "+a.t, val:counts[i], color: i===0?"var(--faint)":col
     })), {fmt:fmtInt, showPct:true, wide:true});
-    document.getElementById(elId).insertAdjacentHTML("beforeend",
-      '<div class="foot">Su '+fmtInt(known.length)+' giocatori con il dato della scalata.</div>');
+    document.getElementById(elId).insertAdjacentHTML("beforeend", real
+      ? '<div class="foot">Su '+fmtInt(pool.length)+' giocatori con il dato della scalata.</div>'
+      : '<div class="foot"><b>Stima</b> su '+fmtInt(pool.length)+' giocatori: la griglia vera non &egrave; mai stata inviata '
+        +'da nessuna build, qui ogni giocatore &egrave; messo nella fascia corrispondente al suo <b>record personale</b> '
+        +'confrontato con le soglie delle griglie ('+fmtCompact(arr[1].cups)+', '+fmtCompact(arr[2].cups)+'…). '
+        +'Le coppe sono punti accumulati, quindi la griglia reale &egrave; uguale o pi&ugrave; avanti di questa. '
+        +'Col prossimo aggiornamento dell\'app il numero diventa esatto.</div>');
   });
 }
 
@@ -1883,18 +1972,20 @@ function renderArenaDist(players){
 const PL_COLS=[
   {k:"name",  h:"Giocatore", cls:"", cell:p=>'<div class="nick"><span class="icon-badge" style="background:'+iconColor(p.icon)+'">'+(p.icon|0)+'</span><span>'+esc(p.name)+'</span></div>', v:p=>p.name.toLowerCase()},
   {k:"platform", h:"Piatt.", cls:"", cell:p=>esc(p.platform), v:p=>p.platform},
-  {k:"arena_classic", h:"Griglia Classic", cls:"arena", v:p=>arenaIndex("classic",p.arena_classic,p.cups_classic),
-   cell:p=>{ const i=arenaIndex("classic",p.arena_classic,p.cups_classic);
+  {k:"arena_classic", h:"Griglia Classic", cls:"arena", v:p=>{const i=arenaIndex("classic",p.arena_classic,p.cups_classic); return i>=0?i:arenaGuess("classic",p.hs_classic);},
+   cell:p=>{ let i=arenaIndex("classic",p.arena_classic,p.cups_classic), ap=false;
+     if(i<0){ i=arenaGuess("classic",p.hs_classic); ap=i>=0; }
      return i<0?'<span style="color:var(--faint)">—</span>'
-       :'<b style="color:var(--classic)">'+esc(arenaName("classic",i))+'</b><br><small>'+esc(arenaTitle("classic",i))+'</small>'; }},
+       :'<b style="color:var(--classic)"'+(ap?' title="stima dal record personale"':'')+'>'+(ap?"~ ":"")+esc(arenaName("classic",i))+'</b><br><small>'+esc(arenaTitle("classic",i))+'</small>'; }},
   {k:"cups_classic", h:"Coppe C", cls:"score", v:p=>p.cups_classic, cell:p=>p.cups_classic>=0?fmtCompact(p.cups_classic):"—"},
   {k:"g_classic", h:"Partite C", cls:"dur", v:p=>p.g_classic, cell:p=>fmtInt(p.g_classic)},
   {k:"pt_classic", h:"Ore C", cls:"dur", v:p=>p.pt_classic, cell:p=>fmtDur(p.pt_classic)},
   {k:"hs_classic", h:"Record C", cls:"score", v:p=>p.hs_classic, cell:p=>fmtCompact(p.hs_classic)},
-  {k:"arena_speedrun", h:"Griglia Speedrun", cls:"arena", v:p=>arenaIndex("speedrun",p.arena_speedrun,p.cups_speedrun),
-   cell:p=>{ const i=arenaIndex("speedrun",p.arena_speedrun,p.cups_speedrun);
+  {k:"arena_speedrun", h:"Griglia Speedrun", cls:"arena", v:p=>{const i=arenaIndex("speedrun",p.arena_speedrun,p.cups_speedrun); return i>=0?i:arenaGuess("speedrun",p.hs_speedrun);},
+   cell:p=>{ let i=arenaIndex("speedrun",p.arena_speedrun,p.cups_speedrun), ap=false;
+     if(i<0){ i=arenaGuess("speedrun",p.hs_speedrun); ap=i>=0; }
      return i<0?'<span style="color:var(--faint)">—</span>'
-       :'<b style="color:var(--speedrun)">'+esc(arenaName("speedrun",i))+'</b><br><small>'+esc(arenaTitle("speedrun",i))+'</small>'; }},
+       :'<b style="color:var(--speedrun)"'+(ap?' title="stima dal record personale"':'')+'>'+(ap?"~ ":"")+esc(arenaName("speedrun",i))+'</b><br><small>'+esc(arenaTitle("speedrun",i))+'</small>'; }},
   {k:"cups_speedrun", h:"Coppe S", cls:"score", v:p=>p.cups_speedrun, cell:p=>p.cups_speedrun>=0?fmtCompact(p.cups_speedrun):"—"},
   {k:"g_speedrun", h:"Partite S", cls:"dur", v:p=>p.g_speedrun, cell:p=>fmtInt(p.g_speedrun)},
   {k:"pt_speedrun", h:"Ore S", cls:"dur", v:p=>p.pt_speedrun, cell:p=>fmtDur(p.pt_speedrun)},
