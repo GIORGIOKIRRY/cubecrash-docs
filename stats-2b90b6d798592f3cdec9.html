@@ -7,12 +7,12 @@
   - Once committed on the MAIN branch under /docs (GitHub Pages from /docs),
     this file is served at:
         https://giorgiokirry.github.io/CUBE-CRASH/stats-2b90b6d798592f3cdec9.html
-  - To serve it at the BARE ROOT https://giorgiokirry.github.io/ you need a
-    SEPARATE repository named EXACTLY "giorgiokirry.github.io" with this file
-    committed as index.html (Pages then serves it at the root).
   - LOGIN reads dashboard_auth/{key} from Firebase RTDB and verifies a
     SHA-256 hash via crypto.subtle. NO password or hash is stored in source.
     Access is also protected by the SECRET URL of this page.
+  - IMPOSTAZIONI DASHBOARD (download store inseriti a mano) sono salvate in
+    stats/players/_dash — l'unico ramo scrivibile dalle regole RTDB. Tutte le
+    chiavi che iniziano con "_" sono ESCLUSE dalle statistiche dei giocatori.
   ==========================================================================
 -->
 <html lang="it">
@@ -41,6 +41,7 @@
     --red:#ff5468;
     --purple:#b98cff;
     --orange:#ff9f43;
+    --pink:#ec6fa1;
     --classic:#37a0ff;
     --speedrun:#ff9f43;
     --story:#b98cff;
@@ -111,205 +112,208 @@
   .btn:hover{filter:brightness(1.06)}
   .btn:active{transform:translate(4px,4px);box-shadow:none}
   .login-err{color:var(--red);font-size:18px;margin-top:12px;min-height:22px}
-  .login-note{
-    margin-top:18px;padding:11px 12px;font-size:16px;line-height:1.5;
-    background:rgba(255,207,63,.09);border:3px solid rgba(255,207,63,.4);color:#f0d98c;
-  }
 
   /* ---------------- SHELL ---------------- */
   .app{max-width:1280px;margin:0 auto;padding:20px 16px 70px}
   .topbar{
-    display:flex;align-items:center;gap:14px;flex-wrap:wrap;
-    margin-bottom:18px;padding:14px 16px;background:var(--panel);
-    border:4px solid var(--gold);box-shadow:var(--shadow-sm);
-  }
-  .topbar h1{font-size:14px;margin:0;color:var(--gold);text-shadow:3px 3px 0 #000;letter-spacing:1px;line-height:1.6}
-  .topbar .spacer{flex:1}
-  .ctl{display:flex;align-items:center;gap:8px;color:var(--dim);font-size:17px}
-  select{
-    padding:9px 10px;border:3px solid var(--border);background:var(--bg2);color:var(--ink);
-    font-family:'VT323',monospace;font-size:19px;outline:none;cursor:pointer;
-  }
-  select:focus{border-color:var(--gold)}
-  .btn-ghost{
-    background:var(--panel2);color:var(--cyan);border:3px solid var(--border);
-    padding:9px 13px;cursor:pointer;font-family:'Press Start 2P',monospace;font-size:9px;
-    letter-spacing:1px;transition:.1s;text-transform:uppercase;
-  }
-  .btn-ghost:hover{color:#fff;border-color:var(--gold)}
-  .btn-ghost:active{transform:translate(2px,2px)}
-
-  .notice{
-    margin-bottom:18px;padding:14px 16px;font-size:18px;line-height:1.45;
-    background:rgba(255,84,104,.1);border:3px dashed var(--red);color:#ffb3bd;
-  }
-  .notice strong{color:var(--gold)}
-  .disclaimer{
-    margin-bottom:18px;padding:10px 14px;font-size:16px;line-height:1.45;
-    background:rgba(55,230,216,.07);border:3px solid rgba(55,230,216,.28);color:#a9ede6;
-  }
-
-  /* ---------------- SUPPORTERS (sezione H) ---------------- */
-  .supp-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
-  .supp-toolbar input[type=text]{
-    flex:1;min-width:200px;padding:10px 12px;border:3px solid var(--border);
-    background:var(--bg2);color:var(--ink);font-family:'VT323',monospace;font-size:20px;outline:none;
-  }
-  .supp-toolbar input[type=text]:focus{border-color:var(--gold)}
-  .supp-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border:2px solid var(--border-lo);
-    background:var(--bg2);margin-bottom:6px}
-  .supp-row .nm{flex:1;font-size:19px;word-break:break-word}
-  .supp-row .nm small{color:var(--faint);font-size:15px}
-  .supp-row mark{background:var(--gold);color:#20160a;padding:0 2px}
-  .supp-btn{border:2px solid #1a1a1a;cursor:pointer;padding:7px 10px;font-family:'Press Start 2P',monospace;
-    font-size:9px;color:#fff;box-shadow:2px 2px 0 rgba(0,0,0,.5)}
-  .supp-btn:active{transform:translate(2px,2px);box-shadow:none}
-  .supp-ok{background:var(--green2);color:#0a2a12}
-  .supp-no{background:var(--red)}
-  .supp-rm{background:var(--panel2);color:var(--cyan);border-color:var(--border)}
-  .supp-add{display:flex;gap:8px;margin-top:10px}
-  .supp-add input{flex:1;padding:9px 11px;border:3px solid var(--border);background:var(--bg2);
-    color:var(--ink);font-family:'VT323',monospace;font-size:19px;outline:none}
-  .chip{background:var(--panel2);border:2px solid var(--border);color:var(--cyan);
-    font-size:9px;padding:4px 8px;margin-left:6px}
-  .supp-empty{color:var(--faint);font-size:17px;padding:4px 2px}
-  #suppGrid .panel{margin-bottom:0}
-  @media(max-width:760px){ .grid-2{grid-template-columns:1fr} }
-
-  /* ---------------- SECTION ---------------- */
-  .section-h{
-    display:flex;align-items:center;gap:12px;margin:28px 0 14px;
-  }
-  .section-h .tag{
-    background:var(--gold);color:#20160a;font-family:'Press Start 2P',monospace;font-size:10px;
-    padding:7px 10px;border:3px solid #1a1a1a;box-shadow:3px 3px 0 rgba(0,0,0,.5);letter-spacing:1px;
-  }
-  .section-h h2{font-size:12px;margin:0;color:var(--ink);letter-spacing:1px;text-shadow:2px 2px 0 #000}
-  .section-h .line{flex:1;height:4px;background:repeating-linear-gradient(90deg,var(--border) 0 8px,transparent 8px 12px)}
-
-  /* ---------------- KPI ---------------- */
-  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-  .kpi{
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;
     background:var(--panel);border:3px solid var(--border);box-shadow:var(--shadow-sm);
-    padding:14px 14px 13px;position:relative;overflow:hidden;
+    padding:12px 14px;margin-bottom:16px;position:sticky;top:0;z-index:4;
   }
-  .kpi::before{content:"";position:absolute;top:0;left:0;right:0;height:5px;
-    background:repeating-linear-gradient(90deg,var(--gold) 0 6px,var(--gold-d) 6px 12px)}
-  .kpi .lbl{font-size:15px;color:var(--cyan);text-transform:uppercase;letter-spacing:1px;margin-top:4px}
-  .kpi .val{font-size:22px;margin-top:12px;line-height:1.1;color:var(--gold);text-shadow:2px 2px 0 #000;word-break:break-word}
-  .kpi .val.sm{font-size:15px}
-  .kpi .sub{font-size:15px;color:var(--faint);margin-top:9px;line-height:1.35}
-  .pos{color:var(--green2) !important}
-  .neg{color:var(--red) !important}
-  .flat{color:var(--dim) !important}
+  .topbar h1{font-size:13px;margin:0;color:var(--gold);letter-spacing:1px;text-shadow:2px 2px 0 #000}
+  .topbar .spacer{flex:1}
+  .ctl{display:flex;align-items:center;gap:7px;font-size:16px;color:var(--dim)}
+  .ctl select,.ctl input{
+    background:var(--bg2);color:var(--ink);border:3px solid var(--border);
+    font-family:'VT323',monospace;font-size:18px;padding:5px 8px;outline:none
+  }
+  .ctl select:focus,.ctl input:focus{border-color:var(--gold)}
+  .btn-ghost{
+    background:var(--panel2);color:var(--ink);border:3px solid var(--border);cursor:pointer;
+    font-family:'VT323',monospace;font-size:18px;padding:6px 12px;
+  }
+  .btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
+  .btn-ghost:active{transform:translate(2px,2px)}
+  .btn-ghost.on{border-color:var(--gold);color:var(--gold);background:#16336f}
 
-  /* ---------------- PANEL ---------------- */
+  .disclaimer{
+    font-size:16px;color:var(--faint);border-left:4px solid var(--border);
+    padding:6px 0 6px 12px;margin-bottom:16px;line-height:1.45
+  }
+  .notice{
+    background:rgba(255,207,63,.08);border:3px solid rgba(255,207,63,.45);
+    color:#f2dd97;padding:11px 13px;margin-bottom:16px;font-size:17px;line-height:1.5
+  }
+  .notice.bad{background:rgba(255,84,104,.08);border-color:rgba(255,84,104,.5);color:#ffb3bd}
+
+  .section-h{display:flex;align-items:center;gap:12px;margin:30px 0 14px}
+  .section-h .tag{
+    background:var(--gold);color:#20160a;font-family:'Press Start 2P',monospace;font-size:11px;
+    padding:6px 8px;border:3px solid #1a1a1a;box-shadow:3px 3px 0 rgba(0,0,0,.5)
+  }
+  .section-h h2{font-size:13px;margin:0;color:var(--ink);letter-spacing:1px;text-shadow:2px 2px 0 #000}
+  .section-h .line{flex:1;height:3px;background:var(--border-lo)}
+
   .panel{
     background:var(--panel);border:3px solid var(--border);box-shadow:var(--shadow-sm);
-    padding:16px;margin-bottom:18px;
+    padding:15px 15px 17px;margin-bottom:16px
   }
-  .panel > h3{font-size:11px;margin:0 0 4px;color:var(--gold);letter-spacing:1px;line-height:1.5;text-shadow:2px 2px 0 #000}
-  .panel .desc{font-size:16px;color:var(--faint);margin:0 0 14px;line-height:1.4}
-  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-  .grid-2 .panel{margin-bottom:0}
+  .panel h3{font-size:12px;margin:0 0 9px;color:var(--cyan);letter-spacing:1px;line-height:1.55}
+  .panel .desc{font-size:16px;color:var(--faint);margin:0 0 12px;line-height:1.4}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  @media(max-width:900px){.grid-2,.grid-3{grid-template-columns:1fr}}
 
-  /* legends */
-  .legend{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px;font-size:16px;color:var(--dim)}
-  .legend span{display:inline-flex;align-items:center;gap:7px}
-  .legend i{width:13px;height:13px;display:inline-block;border:2px solid rgba(0,0,0,.5)}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  @media(max-width:1000px){.kpis{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:560px){.kpis{grid-template-columns:1fr}}
+  .kpi{background:var(--panel2);border:3px solid var(--border-lo);padding:12px 13px 13px}
+  .kpi .lbl{font-size:15px;color:var(--cyan);text-transform:uppercase;letter-spacing:1px;line-height:1.3;min-height:38px}
+  .kpi .val{font-size:22px;color:var(--gold);text-shadow:2px 2px 0 #000;margin:4px 0 5px;word-break:break-word}
+  .kpi .val.sm{font-size:15px}
+  .kpi .val.xs{font-size:12px;line-height:1.5}
+  .kpi .val.pos{color:var(--green)}
+  .kpi .val.neg{color:var(--red)}
+  .kpi .val.flat{color:var(--dim)}
+  .kpi .sub{font-size:15px;color:var(--faint);line-height:1.35}
+
+  .state{padding:34px 12px;text-align:center;color:var(--faint);font-size:18px}
+  .state .big{font-size:22px;color:var(--dim);margin-bottom:8px}
+  .state.err{color:#ffb3bd}
+  .spinner{
+    width:26px;height:26px;margin:0 auto 6px;background:var(--gold);
+    animation:sp 1s steps(8) infinite
+  }
+  @keyframes sp{to{transform:rotate(360deg)}}
 
   /* charts */
-  .chart-wrap{overflow-x:auto}
-  svg.chart{display:block;width:100%;height:auto}
-  .chart text{fill:var(--dim);font-family:'VT323',monospace;font-size:14px}
-  .chart .axlbl{fill:var(--faint);font-size:13px}
-  .grid-line{stroke:var(--border-lo);stroke-width:1}
+  .chart-wrap{width:100%;overflow-x:auto}
+  svg.chart{display:block;width:100%;height:auto;min-width:0}
+  svg.chart text{font-family:'VT323',monospace;font-size:15px;fill:var(--dim)}
+  svg.chart text.axlbl{fill:var(--faint);font-size:14px}
+  svg.chart .grid-line{stroke:var(--border-lo);stroke-width:1;stroke-dasharray:3 4}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:16px;color:var(--dim);margin:2px 0 8px}
+  .legend span{display:flex;align-items:center;gap:7px;cursor:default}
+  .legend i{width:13px;height:13px;display:inline-block;border:2px solid #0a1730}
+  .rangebar{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px}
 
-  /* bars list (horizontal) */
-  .hbars{display:flex;flex-direction:column;gap:11px}
-  .hbar{display:grid;grid-template-columns:130px 1fr auto;align-items:center;gap:10px;font-size:17px}
+  /* horizontal bars */
+  .hbars{display:flex;flex-direction:column;gap:9px}
+  .hbar{display:grid;grid-template-columns:118px 1fr 150px;align-items:center;gap:10px;font-size:17px}
   .hbar .hlbl{color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .hbar .htrack{background:var(--bg2);border:2px solid var(--border-lo);height:22px;position:relative;overflow:hidden}
-  .hbar .hfill{height:100%;border-right:2px solid rgba(0,0,0,.4);image-rendering:pixelated}
-  .hbar .hval{color:var(--ink);min-width:74px;text-align:right;font-variant-numeric:tabular-nums}
-
-  /* ---------------- TABS ---------------- */
-  .tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
-  .tab{
-    padding:10px 14px;border:3px solid var(--border);background:var(--bg2);color:var(--dim);
-    cursor:pointer;font-size:9px;letter-spacing:1px;display:flex;align-items:center;gap:8px;text-transform:uppercase;
-  }
-  .tab .dot{width:10px;height:10px;flex:none;border:2px solid rgba(0,0,0,.5)}
-  .tab.active{color:#20160a;background:var(--gold);border-color:#1a1a1a;box-shadow:3px 3px 0 rgba(0,0,0,.5)}
-
-  /* ---------------- TABLE ---------------- */
-  .table-wrap{overflow-x:auto;border:3px solid var(--border-lo)}
-  table{width:100%;border-collapse:collapse;font-size:18px;min-width:460px}
-  thead th{
-    text-align:left;padding:10px 12px;background:var(--panel2);color:var(--cyan);
-    font-family:'Press Start 2P',monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;
-    position:sticky;top:0;border-bottom:3px solid var(--border);
-  }
-  tbody td{padding:8px 12px;border-top:2px solid var(--border-lo)}
-  tbody tr:nth-child(even){background:rgba(55,160,255,.05)}
-  tbody tr:hover{background:rgba(255,207,63,.09)}
-  .rank{color:var(--faint);font-variant-numeric:tabular-nums;width:60px;font-family:'Press Start 2P',monospace;font-size:12px}
-  .rank.t1{color:#ffd24a}.rank.t2{color:#dfe7f3}.rank.t3{color:#e0975a}
-  .medal{font-size:20px}
-  .score{text-align:right;font-variant-numeric:tabular-nums;color:var(--gold);font-weight:bold}
-  .nick{display:flex;align-items:center;gap:9px}
-  .icon-badge{
-    width:26px;height:26px;flex:none;font-size:14px;border:2px solid rgba(0,0,0,.55);
-    display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Press Start 2P',monospace;
-    box-shadow:inset -4px -4px 0 rgba(0,0,0,.25);
-  }
-  .glo-tag{
-    font-family:'Press Start 2P',monospace;font-size:8px;padding:3px 6px;letter-spacing:1px;
-    background:rgba(185,140,255,.2);color:var(--purple);border:2px solid rgba(185,140,255,.5);
-  }
-
-  /* toplist rows */
-  .toplist{display:flex;flex-direction:column;gap:8px}
-  .toprow{display:grid;grid-template-columns:36px 1fr auto;align-items:center;gap:10px;
-    padding:8px 10px;background:var(--bg2);border:2px solid var(--border-lo);font-size:17px}
-  .toprow .n{font-family:'Press Start 2P',monospace;font-size:11px;color:var(--gold)}
-  .toprow .who{color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .toprow .v{color:var(--cyan);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+  .hbar .htrack{height:16px;background:var(--bg2);border:2px solid var(--border-lo);position:relative}
+  .hbar .hfill{position:absolute;left:0;top:0;bottom:0;background:var(--classic)}
+  .hbar .hval{text-align:right;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .hbars.wide .hbar{grid-template-columns:190px 1fr 132px}
+  @media(max-width:560px){.hbar{grid-template-columns:86px 1fr 104px;font-size:15px}
+    .hbars.wide .hbar{grid-template-columns:120px 1fr 104px}}
 
   /* funnel */
-  .funnel{display:flex;flex-direction:column;gap:5px}
-  .frow{display:grid;grid-template-columns:78px 1fr auto;align-items:center;gap:9px;font-size:16px}
-  .frow .fl{color:var(--dim);white-space:nowrap}
-  .frow .ft{background:var(--bg2);border:2px solid var(--border-lo);height:18px;overflow:hidden}
-  .frow .ff{height:100%;background:repeating-linear-gradient(90deg,var(--story) 0 6px,#9a6ee0 6px 12px)}
-  .frow .fv{color:var(--ink);min-width:96px;text-align:right;font-variant-numeric:tabular-nums}
+  .funnel{display:flex;flex-direction:column;gap:7px}
+  .frow{display:grid;grid-template-columns:86px 1fr 132px;align-items:center;gap:10px;font-size:17px}
+  .frow .fl{color:var(--dim)}
+  .frow .ft{height:15px;background:var(--bg2);border:2px solid var(--border-lo);position:relative}
+  .frow .ff{position:absolute;left:0;top:0;bottom:0;background:var(--purple)}
+  .frow .fv{text-align:right;color:var(--ink);font-variant-numeric:tabular-nums}
 
-  /* stars */
-  .stars{color:var(--gold);letter-spacing:2px;font-size:20px}
+  /* table */
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .tab{
+    font-size:11px;padding:9px 12px;border:3px solid var(--border);background:var(--panel2);
+    color:var(--dim);cursor:pointer;display:flex;align-items:center;gap:7px
+  }
+  .tab.active{border-color:var(--gold);color:var(--gold);background:#16336f}
+  .tab .dot{width:11px;height:11px;display:inline-block;border:2px solid #0a1730}
+  .table-wrap{overflow-x:auto;border:3px solid var(--border-lo)}
+  table{width:100%;border-collapse:collapse;font-size:18px;min-width:520px}
+  thead th.on{color:var(--gold)}
+  thead th{
+    background:var(--panel2);color:var(--cyan);text-align:left;padding:9px 11px;
+    font-size:15px;text-transform:uppercase;letter-spacing:1px;border-bottom:3px solid var(--border);
+    position:sticky;top:0
+  }
+  tbody td{padding:8px 11px;border-bottom:2px solid rgba(29,59,122,.55)}
+  tbody tr:nth-child(odd){background:rgba(18,42,94,.42)}
+  tbody tr:hover{background:#16336f}
+  td.rank{width:74px;color:var(--faint);font-variant-numeric:tabular-nums}
+  td.rank.t1{color:var(--gold)}td.rank.t2{color:#d8e2f5}td.rank.t3{color:#e0a46a}
+  td.score{text-align:right;font-variant-numeric:tabular-nums;color:var(--gold);white-space:nowrap}
+  td.dur{text-align:right;font-variant-numeric:tabular-nums;color:var(--dim);white-space:nowrap}
+  td.arena{white-space:nowrap;line-height:1.25}
+  td.arena small{color:var(--faint);font-size:15px}
+  .medal{font-size:17px;margin-right:4px}
+  .nick{display:flex;align-items:center;gap:9px;min-width:0}
+  .nick span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .icon-badge{
+    width:26px;height:26px;flex:none;border:2px solid #0a1730;display:flex;
+    align-items:center;justify-content:center;font-size:12px;color:#0a1730;
+    font-family:'Press Start 2P',monospace
+  }
+  .glo-tag{
+    font-size:12px;padding:2px 5px;border:2px solid var(--gold);color:var(--gold);
+    font-family:'Press Start 2P',monospace;flex:none
+  }
+  .foot{font-size:15px;color:var(--faint);margin-top:10px;line-height:1.45}
 
-  /* ---------------- STATES ---------------- */
-  .spinner{
-    width:30px;height:30px;background:var(--gold);margin:0 auto;
-    animation:blink 1s steps(2,end) infinite;image-rendering:pixelated;
-    box-shadow:inset -6px -6px 0 var(--gold-d);
-  }
-  @keyframes blink{50%{opacity:.25;transform:rotate(45deg)}}
-  .state{padding:34px 16px;text-align:center;color:var(--dim);font-size:18px}
-  .state.err{color:var(--red)}
-  .state .big{font-size:12px;font-family:'Press Start 2P',monospace;color:var(--ink);margin-bottom:12px;line-height:1.6}
-  .foot{margin-top:10px;font-size:15px;color:var(--faint);text-align:center;line-height:1.6}
-  .footer{margin-top:26px;font-size:15px;color:var(--faint);text-align:center;line-height:1.8}
+  /* top lists */
+  .toplist{display:flex;flex-direction:column;gap:2px}
+  .toprow{display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:10px;
+    padding:7px 8px;font-size:17px;border-bottom:2px solid rgba(29,59,122,.5)}
+  .toprow:nth-child(odd){background:rgba(18,42,94,.35)}
+  .toprow .n{color:var(--faint);font-variant-numeric:tabular-nums}
+  .toprow .who{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .toprow .v{color:var(--gold);font-variant-numeric:tabular-nums;white-space:nowrap}
 
-  @media(max-width:900px){
-    .kpis{grid-template-columns:repeat(2,1fr)}
-    .grid-2{grid-template-columns:1fr}
+  /* record cards */
+  .recgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:900px){.recgrid{grid-template-columns:1fr}}
+  .reccard{background:var(--panel2);border:3px solid var(--border-lo);padding:15px}
+  .reccard.classic{border-color:var(--classic)}
+  .reccard.speedrun{border-color:var(--speedrun)}
+  .reccard .rl{font-size:15px;color:var(--cyan);text-transform:uppercase;letter-spacing:1px}
+  .reccard .rs{font-family:'Press Start 2P',monospace;font-size:26px;color:var(--gold);
+    text-shadow:3px 3px 0 #000;margin:10px 0 8px;word-break:break-all}
+  .reccard .rw{font-size:19px;color:var(--ink);display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  .recmeta{display:flex;gap:10px;flex-wrap:wrap;margin-top:11px}
+  .recmeta div{background:var(--bg2);border:2px solid var(--border-lo);padding:6px 9px;font-size:16px;color:var(--dim)}
+  .recmeta b{color:var(--ink)}
+
+  /* supporters */
+  .supp-toolbar{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-bottom:11px}
+  .supp-toolbar input,.supp-toolbar select{
+    background:var(--bg2);color:var(--ink);border:3px solid var(--border);
+    font-family:'VT323',monospace;font-size:18px;padding:6px 9px;outline:none
   }
-  @media(max-width:520px){
-    body{font-size:18px}
-    .kpis{grid-template-columns:1fr}
-    .topbar h1{font-size:11px}
-    .hbar{grid-template-columns:96px 1fr auto}
-  }
+  .supp-toolbar input{flex:1;min-width:170px}
+  .supp-toolbar input:focus,.supp-toolbar select:focus{border-color:var(--gold)}
+  .supp-row{display:flex;align-items:flex-start;gap:9px;padding:7px 8px;font-size:18px;
+    border-bottom:2px solid rgba(29,59,122,.5)}
+  .supp-row:nth-child(odd){background:rgba(18,42,94,.35)}
+  .supp-row .nm{flex:1;min-width:0;word-break:break-word}
+  .supp-row .nm small{color:var(--faint);font-size:16px;line-height:1.4}
+  .supp-row .nm a{color:var(--cyan);text-decoration:none;border-bottom:1px dotted var(--cyan)}
+  .supp-row .nm a:hover{color:var(--gold);border-color:var(--gold)}
+  .supp-btn{border:3px solid var(--border);background:var(--panel2);color:var(--ink);
+    cursor:pointer;font-family:'VT323',monospace;font-size:17px;padding:2px 9px;flex:none}
+  .supp-ok{border-color:var(--green2);color:var(--green2)}
+  .supp-no{border-color:var(--red);color:var(--red)}
+  .supp-rm{border-color:var(--orange);color:var(--orange)}
+  .supp-btn:hover{filter:brightness(1.25)}
+  .supp-empty{color:var(--faint);font-size:17px;padding:10px 4px}
+  .supp-add{display:flex;gap:9px;margin-top:11px}
+  .supp-add input{flex:1;background:var(--bg2);color:var(--ink);border:3px solid var(--border);
+    font-family:'VT323',monospace;font-size:18px;padding:6px 9px;outline:none}
+  .chip{font-size:10px;background:var(--border);color:var(--ink);padding:4px 7px;margin-left:7px;
+    border:2px solid var(--border-lo)}
+  mark{background:var(--gold);color:#20160a}
+  .more-btn{width:100%;margin-top:9px;text-align:center}
+
+  .footer{margin-top:34px;text-align:center;color:var(--faint);font-size:15px;line-height:1.7}
+  .editrow{display:flex;gap:9px;flex-wrap:wrap;align-items:center;justify-content:center;margin-top:12px}
+  .editrow input{width:130px;background:var(--bg2);color:var(--ink);border:3px solid var(--border);
+    font-family:'VT323',monospace;font-size:19px;padding:5px 9px;outline:none;text-align:right}
+  .editrow input:focus{border-color:var(--gold)}
+  .editrow label{font-size:16px;color:var(--cyan);text-transform:uppercase;letter-spacing:1px}
 </style>
 </head>
 <body>
@@ -341,7 +345,7 @@
     <div class="cube"></div>
     <h1>CUBE CRASH · STATS</h1>
     <div class="spacer"></div>
-    <div class="ctl"><span>MESE:</span><select id="monthSelect"></select></div>
+    <div class="ctl"><span>SETTIMANA:</span><select id="monthSelect"></select></div>
     <div class="ctl"><span>PIATTAFORMA:</span><select id="platformSelect"><option value="">Tutte</option><option value="iOS">iOS</option><option value="Android">Android</option></select></div>
     <button id="refreshBtn" class="btn-ghost">Aggiorna</button>
     <button id="logoutBtn" class="btn-ghost">Esci</button>
@@ -349,145 +353,298 @@
 
   <div class="disclaimer">
     Dati anonimi aggregati da Firebase RTDB: nickname scelti dai giocatori, punteggi, id anonimi,
-    telemetria di gioco. Nessun dato personale identificabile. Sola lettura.
+    telemetria di gioco. Nessun dato personale identificabile.
   </div>
 
-  <!-- telemetry notice (shown only if stats node denied) -->
-  <div id="teleNotice" class="notice hidden">
-    <strong>Telemetria in attesa dei primi dati:</strong> compariranno quando i giocatori useranno
-    la versione aggiornata dell'app. Le sezioni classifica restano disponibili qui sotto.
-  </div>
+  <div id="teleNotice" class="notice hidden"></div>
+  <div id="syncNotice" class="notice bad hidden"></div>
 
-  <!-- ===== HERO: numero grosso prima della panoramica ===== -->
-  <div class="panel" style="text-align:center;padding:26px 18px;margin-bottom:18px">
+  <!-- ===== HERO ===== -->
+  <div class="panel" style="text-align:center;padding:24px 18px 20px;margin-bottom:18px">
     <div id="heroNum" style="font-size:clamp(56px,14vw,120px);line-height:1;color:var(--ink);text-shadow:3px 3px 0 rgba(0,0,0,.5)">—</div>
     <div style="font-size:20px;color:var(--dim);margin-top:8px;letter-spacing:1px">PERSONE HANNO GIOCATO</div>
-    <div id="heroBreak" style="font-size:16px;color:var(--faint);margin-top:10px">&nbsp;</div>
-    <div class="foot" style="margin-top:8px">I download reali si vedono su App Store Connect / Google Play Console (non sono in Firebase).</div>
+    <div id="heroBreak" style="font-size:17px;color:var(--faint);margin-top:10px">&nbsp;</div>
+    <div class="kpis" style="margin-top:18px">
+      <div class="kpi"><div class="lbl">Download iOS (store)</div><div class="val sm" id="kDlIos">—</div><div class="sub">App Store Connect</div></div>
+      <div class="kpi"><div class="lbl">Download Android (store)</div><div class="val sm" id="kDlAnd">—</div><div class="sub">Google Play Console</div></div>
+      <div class="kpi"><div class="lbl">Download totali (store)</div><div class="val sm" id="kDlTot">—</div><div class="sub" id="kDlUpd">mai inserito</div></div>
+      <div class="kpi"><div class="lbl">Giocano / scaricano</div><div class="val sm" id="kDlConv">—</div><div class="sub">quanti dei download si vedono online</div></div>
+    </div>
+    <div class="editrow">
+      <label for="dlIosIn">iOS</label><input id="dlIosIn" type="number" min="0" placeholder="0">
+      <label for="dlAndIn">Android</label><input id="dlAndIn" type="number" min="0" placeholder="0">
+      <button id="dlSaveBtn" class="btn-ghost">Salva download store</button>
+      <span id="dlStatus" style="font-size:16px;color:var(--faint)"></span>
+    </div>
+    <div class="foot">I download reali esistono solo su App Store Connect / Google Play Console: inseriscili qui una volta a settimana e restano salvati per tutti.</div>
   </div>
 
   <!-- ===== A. PANORAMICA ===== -->
   <div class="section-h"><span class="tag">A</span><h2>PANORAMICA</h2><div class="line"></div></div>
   <div class="kpis" id="kpisA">
-    <div class="kpi"><div class="lbl">Giocatori totali</div><div class="val" id="kTotPlayers">—</div><div class="sub">telemetria (stats/players)</div></div>
-    <div class="kpi"><div class="lbl">Attivi questo mese</div><div class="val" id="kActive">—</div><div class="sub" id="kActiveSub">stima unione modalit&agrave;</div></div>
-    <div class="kpi"><div class="lbl">Crescita M/M</div><div class="val sm" id="kGrowth">—</div><div class="sub" id="kGrowthSub">vs mese precedente</div></div>
-    <div class="kpi"><div class="lbl">Tempo di gioco totale</div><div class="val sm" id="kPlaytime">—</div><div class="sub" id="kPlaytimeSub">somma pt_total</div></div>
+    <div class="kpi"><div class="lbl">Giocatori totali (unici)</div><div class="val" id="kTotPlayers">—</div><div class="sub" id="kTotPlayersSub">telemetria + classifica</div></div>
+    <div class="kpi"><div class="lbl">Nuovi ultimi 7 giorni</div><div class="val" id="kNew7">—</div><div class="sub" id="kNew7Sub">primo avvio</div></div>
+    <div class="kpi"><div class="lbl">Attivi oggi (DAU)</div><div class="val" id="kDau">—</div><div class="sub" id="kDauSub">ultimo accesso oggi</div></div>
+    <div class="kpi"><div class="lbl">Attivi 30 giorni (MAU)</div><div class="val" id="kMau">—</div><div class="sub" id="kMauSub">7 giorni: —</div></div>
   </div>
-  <div class="kpis" id="kpisA2" style="margin-top:14px">
-    <div class="kpi"><div class="lbl">Tempo medio / giocatore</div><div class="val sm" id="kAvgPlayer">—</div><div class="sub">pt_total / giocatori</div></div>
-    <div class="kpi"><div class="lbl">Sessione media</div><div class="val sm" id="kAvgSession">—</div><div class="sub">pt_total / g_total</div></div>
-    <div class="kpi"><div class="lbl">Partite totali</div><div class="val" id="kTotGames">—</div><div class="sub">somma g_total</div></div>
-    <div class="kpi"><div class="lbl">Classic / Speedrun (mese)</div><div class="val sm" id="kModeNow">—</div><div class="sub">partecipanti classifica</div></div>
+  <div class="kpis" style="margin-top:14px">
+    <div class="kpi"><div class="lbl">Partite totali</div><div class="val" id="kTotGames">—</div><div class="sub" id="kTotGamesSub">somma partite</div></div>
+    <div class="kpi"><div class="lbl">Tempo di gioco totale</div><div class="val sm" id="kPlaytime">—</div><div class="sub" id="kPlaytimeSub">&nbsp;</div></div>
+    <div class="kpi"><div class="lbl">Durata media partita</div><div class="val sm" id="kAvgSession">—</div><div class="sub" id="kAvgSessionSub">tempo totale / partite</div></div>
+    <div class="kpi"><div class="lbl">Fedelt&agrave; (DAU/MAU)</div><div class="val sm" id="kSticky">—</div><div class="sub">quanto spesso tornano</div></div>
   </div>
 
-  <!-- ===== attivita' giornaliera (grafico a linee) ===== -->
   <div class="panel" style="margin-top:16px">
-    <h3>Attivit&agrave; giornaliera <span style="color:var(--faint);font-size:14px">&middot; ultimi 30 giorni</span></h3>
-    <div style="display:flex;gap:18px;font-size:15px;margin:2px 0 6px">
-      <span style="color:var(--classic)">&#9679; Nuovi giocatori</span>
-      <span style="color:var(--speedrun)">&#9679; Attivi (ultimo accesso)</span>
+    <h3>Attivit&agrave; giornaliera</h3>
+    <div class="rangebar" id="rangeBar">
+      <button class="btn-ghost" data-days="7">7 giorni</button>
+      <button class="btn-ghost on" data-days="30">30 giorni</button>
+      <button class="btn-ghost" data-days="90">90 giorni</button>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--classic)"></i>Nuovi giocatori</span>
+      <span><i style="background:var(--speedrun)"></i>Attivi (ultimo accesso)</span>
+      <span><i style="background:var(--cyan)"></i>Media mobile 7 giorni (attivi)</span>
     </div>
     <div id="activityChart"><div class="state"><div class="spinner"></div></div></div>
-    <div class="foot">Nuovi = primo avvio (first_seen) per giorno &middot; Attivi = ultimo accesso (updated) per giorno. La telemetria salva l'ultimo stato per giocatore: sono stime derivate.</div>
+    <div class="foot">Nuovi = primo avvio del giocatore. Attivi = giorno dell'ultimo accesso registrato: la telemetria tiene solo l'ultimo stato, quindi chi ha giocato pi&ugrave; giorni conta solo nell'ultimo. &Egrave; una stima per difetto sui giorni passati.</div>
   </div>
 
-  <!-- ===== B. TEMPO DI GIOCO PER MODALITA' ===== -->
-  <div class="section-h"><span class="tag">B</span><h2>TEMPO PER MODALIT&Agrave;</h2><div class="line"></div></div>
   <div class="grid-2">
     <div class="panel">
-      <h3>Tempo di gioco per modalit&agrave;</h3>
-      <p class="desc">Ripartizione di pt_classic / pt_speedrun / pt_story / pt_ranked.</p>
-      <div id="playByMode"><div class="state"><div class="spinner"></div></div></div>
+      <h3>Crescita cumulativa installazioni</h3>
+      <p class="desc">Somma progressiva dei primi avvii: la curva della base giocatori.</p>
+      <div id="growthChart"><div class="state"><div class="spinner"></div></div></div>
     </div>
     <div class="panel">
-      <h3>Partite per modalit&agrave;</h3>
-      <p class="desc">Ripartizione di g_classic / g_speedrun / g_story / g_ranked.</p>
-      <div id="gamesByMode"><div class="state"><div class="spinner"></div></div></div>
+      <h3>Piattaforme</h3>
+      <p class="desc">Ripartizione iOS / Android dei giocatori con telemetria.</p>
+      <div id="platChart"><div class="state"><div class="spinner"></div></div></div>
     </div>
   </div>
 
-  <!-- ===== C. STORIA ===== -->
-  <div class="section-h"><span class="tag">C</span><h2>STORIA</h2><div class="line"></div></div>
-  <div class="grid-2">
+  <!-- ===== B. VERSIONI / AGGIORNAMENTI ===== -->
+  <div class="section-h"><span class="tag">B</span><h2>AGGIORNAMENTI &amp; VERSIONI</h2><div class="line"></div></div>
+  <div class="kpis">
+    <div class="kpi"><div class="lbl">Ultima versione vista</div><div class="val sm" id="kVerLast">—</div><div class="sub">la pi&ugrave; alta in circolazione</div></div>
+    <div class="kpi"><div class="lbl">Hanno l'ultima versione</div><div class="val" id="kVerAdopt">—</div><div class="sub" id="kVerAdoptSub">&nbsp;</div></div>
+    <div class="kpi"><div class="lbl">Aggiornati ultimi 7 giorni</div><div class="val" id="kVerFresh">—</div><div class="sub">attivi 7gg con ultima versione</div></div>
+    <div class="kpi"><div class="lbl">Ancora indietro</div><div class="val" id="kVerOld">—</div><div class="sub">su versioni precedenti</div></div>
+  </div>
+  <div class="grid-2" style="margin-top:16px">
     <div class="panel">
-      <h3>Funnel livello massimo (0..30)</h3>
-      <p class="desc">Giocatori che hanno raggiunto almeno il livello indicato.</p>
-      <div id="storyFunnel"><div class="state"><div class="spinner"></div></div></div>
+      <h3>Distribuzione versioni installate</h3>
+      <p class="desc">Quanti giocatori hanno ciascuna versione dell'app.</p>
+      <div id="verDist"><div class="state"><div class="spinner"></div></div></div>
     </div>
     <div class="panel">
-      <h3>Completamento &amp; stelle</h3>
-      <p class="desc">% storia completata (livello &ge; 30), media stelle e distribuzione.</p>
-      <div id="storyStats"><div class="state"><div class="spinner"></div></div></div>
+      <h3>Adozione dell'ultima versione</h3>
+      <p class="desc">Giocatori attivi ogni giorno, divisi tra ultima versione e versioni precedenti.</p>
+      <div id="verAdoptChart"><div class="state"><div class="spinner"></div></div></div>
     </div>
   </div>
 
-  <!-- ===== D. PROGRESSIONE ===== -->
-  <div class="section-h"><span class="tag">D</span><h2>PROGRESSIONE</h2><div class="line"></div></div>
-  <div class="grid-2">
+  <!-- ===== C. RECORD ===== -->
+  <div class="section-h"><span class="tag">C</span><h2>RECORD ASSOLUTI</h2><div class="line"></div></div>
+  <div class="recgrid">
+    <div class="reccard classic" id="recClassic"><div class="state"><div class="spinner"></div></div></div>
+    <div class="reccard speedrun" id="recSpeedrun"><div class="state"><div class="spinner"></div></div></div>
+  </div>
+  <div class="grid-2" style="margin-top:16px">
     <div class="panel">
-      <h3>Distribuzione Pass Level</h3>
-      <p class="desc">Livelli del pass raggiunti dai giocatori.</p>
-      <div id="passDist"><div class="state"><div class="spinner"></div></div></div>
+      <h3>Top 10 di sempre &middot; Classic</h3>
+      <p class="desc">Miglior punteggio di ogni giocatore su tutti i mesi, con la durata della partita.</p>
+      <div id="allTimeClassic"><div class="state"><div class="spinner"></div></div></div>
     </div>
     <div class="panel">
-      <h3>Distribuzione Rank (Ranked)</h3>
-      <p class="desc">Rank dei giocatori in modalit&agrave; competitiva.</p>
-      <div id="rankDist"><div class="state"><div class="spinner"></div></div></div>
+      <h3>Top 10 di sempre &middot; Speedrun</h3>
+      <p class="desc">Miglior punteggio di ogni giocatore su tutti i mesi, con la durata della partita.</p>
+      <div id="allTimeSpeed"><div class="state"><div class="spinner"></div></div></div>
     </div>
   </div>
-  <div class="panel" style="margin-top:18px">
-    <h3>Record &amp; monete</h3>
-    <p class="desc">Medie e massimi di hs_classic / hs_speedrun e media monete.</p>
+  <div class="panel">
+    <h3>Record &amp; monete (telemetria)</h3>
+    <div id="recSyncFoot" class="foot" style="margin:0 0 12px"></div>
+    <p class="desc">Medie e massimi dei record locali salvati sui telefoni.</p>
     <div id="recordsCoins"><div class="state"><div class="spinner"></div></div></div>
   </div>
 
-  <!-- ===== E. CLASSIFICA ===== -->
-  <div class="section-h"><span class="tag">E</span><h2>CLASSIFICA TOP 100</h2><div class="line"></div></div>
+  <!-- ===== D. CLASSIFICA ===== -->
+  <div class="section-h"><span class="tag">D</span><h2>CLASSIFICA TOP 100</h2><div class="line"></div></div>
   <div class="panel">
-    <h3>Migliori punteggi &middot; <span id="lbMonthLabel">—</span></h3>
-    <p class="desc">Top 100 del mese selezionato. Cambia modalit&agrave; con le schede.</p>
+    <h3>Migliori punteggi &middot; settimana <span id="lbMonthLabel">—</span></h3>
+    <p class="desc">La classifica del gioco si azzera ogni luned&igrave;: qui vedi la top 100 della settimana scelta, con la durata della partita che ha fatto quel punteggio.</p>
     <div class="tabs">
       <div class="tab active" data-mode="classic"><span class="dot" style="background:var(--classic)"></span>Classic</div>
       <div class="tab" data-mode="speedrun"><span class="dot" style="background:var(--speedrun)"></span>Speedrun</div>
     </div>
     <div id="tableArea"></div>
   </div>
+  <div class="grid-2">
+    <div class="panel">
+      <h3>Distribuzione punteggi della settimana</h3>
+      <p class="desc">Quanti giocatori in ogni fascia di punteggio (scala logaritmica).</p>
+      <div id="scoreDist"><div class="state"><div class="spinner"></div></div></div>
+    </div>
+    <div class="panel">
+      <h3>Durata delle partite da record</h3>
+      <p class="desc">Quanto durano le partite che entrano in classifica.</p>
+      <div id="durDist"><div class="state"><div class="spinner"></div></div></div>
+    </div>
+  </div>
 
-  <!-- ===== F. ANDAMENTO 12 MESI ===== -->
-  <div class="section-h"><span class="tag">F</span><h2>ANDAMENTO 12 MESI</h2><div class="line"></div></div>
+  <!-- ===== E. COINVOLGIMENTO ===== -->
+  <div class="section-h"><span class="tag">E</span><h2>COINVOLGIMENTO</h2><div class="line"></div></div>
+  <div class="grid-2">
+    <div class="panel">
+      <h3>Tempo di gioco per modalit&agrave;</h3>
+      <p class="desc">Dove passano il tempo i giocatori.</p>
+      <div id="playByMode"><div class="state"><div class="spinner"></div></div></div>
+    </div>
+    <div class="panel">
+      <h3>Partite per modalit&agrave;</h3>
+      <p class="desc">Quante partite per ogni modalit&agrave;.</p>
+      <div id="gamesByMode"><div class="state"><div class="spinner"></div></div></div>
+    </div>
+  </div>
+  <div class="grid-3">
+    <div class="panel">
+      <h3>Partite per giocatore</h3>
+      <p class="desc">Quanto giocano prima di smettere.</p>
+      <div id="gamesHist"><div class="state"><div class="spinner"></div></div></div>
+    </div>
+    <div class="panel">
+      <h3>Tempo totale per giocatore</h3>
+      <p class="desc">Distribuzione del tempo giocato.</p>
+      <div id="timeHist"><div class="state"><div class="spinner"></div></div></div>
+    </div>
+    <div class="panel">
+      <h3>Giorni di vita del giocatore</h3>
+      <p class="desc">Giorni tra primo avvio e ultimo accesso.</p>
+      <div id="lifeHist"><div class="state"><div class="spinner"></div></div></div>
+    </div>
+  </div>
   <div class="panel">
-    <h3>Partecipanti per mese</h3>
-    <p class="desc">Serie Classic, Speedrun e Storia. Conteggio rapido via <code>shallow=true</code>.</p>
+    <h3>Ritenzione per coorte</h3>
+    <p class="desc">Per ogni giorno di installazione: quanti erano ancora attivi dopo 1, 3, 7, 14 e 30 giorni.</p>
+    <div id="retChart"><div class="state"><div class="spinner"></div></div></div>
+    <div class="foot">Basata sull'ultimo accesso registrato: chi &egrave; tornato pi&ugrave; volte conta solo per l'ultima. Le coorte troppo recenti per un traguardo non vengono conteggiate.</div>
+  </div>
+
+  <!-- ===== F. STORIA ===== -->
+  <div class="section-h"><span class="tag">F</span><h2>STORIA</h2><div class="line"></div></div>
+  <div class="grid-2">
+    <div class="panel">
+      <h3>Dove si fermano i giocatori</h3>
+      <p class="desc">Quanti hanno raggiunto ogni livello della campagna: i gradini pi&ugrave; ripidi sono i livelli che bloccano.</p>
+      <div id="storyCurve"><div class="state"><div class="spinner"></div></div></div>
+    </div>
+    <div class="panel">
+      <h3>Completamento &amp; stelle</h3>
+      <p class="desc">% storia completata, media stelle e distribuzione.</p>
+      <div id="storyStats"><div class="state"><div class="spinner"></div></div></div>
+    </div>
+  </div>
+  <div class="panel">
+    <h3>Funnel a tappe</h3>
+    <p class="desc">Giocatori che hanno raggiunto almeno il livello indicato.</p>
+    <div id="storyFunnel"><div class="state"><div class="spinner"></div></div></div>
+  </div>
+
+  <!-- ===== G. PROGRESSIONE ===== -->
+  <div class="section-h"><span class="tag">G</span><h2>PROGRESSIONE &amp; ECONOMIA</h2><div class="line"></div></div>
+  <div class="grid-3">
+    <div class="panel">
+      <h3>Season Pass</h3>
+      <p class="desc">Livelli del pass raggiunti.</p>
+      <div id="passDist"><div class="state"><div class="spinner"></div></div></div>
+    </div>
+    <div class="panel">
+      <h3>Rank (Ranked)</h3>
+      <p class="desc">Divisione competitiva raggiunta.</p>
+      <div id="rankDist"><div class="state"><div class="spinner"></div></div></div>
+    </div>
+    <div class="panel">
+      <h3>Monete in tasca</h3>
+      <p class="desc">Quante monete hanno accumulato.</p>
+      <div id="coinDist"><div class="state"><div class="spinner"></div></div></div>
+    </div>
+  </div>
+
+  <!-- ===== H. ANDAMENTO MENSILE ===== -->
+  <div class="section-h"><span class="tag">H</span><h2>ANDAMENTO SETTIMANALE</h2><div class="line"></div></div>
+  <div class="panel">
+    <h3>Partecipanti alla classifica per settimana</h3>
     <div class="legend">
       <span><i style="background:var(--classic)"></i>Classic</span>
       <span><i style="background:var(--speedrun)"></i>Speedrun</span>
       <span><i style="background:var(--story)"></i>Storia</span>
     </div>
-    <div id="chartArea"><div class="state"><div class="spinner"></div><div style="margin-top:14px">Caricamento andamento…</div></div></div>
+    <div id="chartArea"><div class="state"><div class="spinner"></div></div></div>
     <div id="storyTrendNote" class="foot"></div>
   </div>
 
-  <!-- ===== G. TOP GIOCATORI ===== -->
-  <div class="section-h"><span class="tag">G</span><h2>TOP GIOCATORI</h2><div class="line"></div></div>
+  <!-- ===== I. TOP GIOCATORI ===== -->
+  <div class="section-h"><span class="tag">I</span><h2>TOP GIOCATORI</h2><div class="line"></div></div>
   <div class="grid-2">
     <div class="panel">
       <h3>Per tempo di gioco</h3>
-      <p class="desc">Giocatori con pt_total pi&ugrave; alto.</p>
       <div id="topPlaytime"><div class="state"><div class="spinner"></div></div></div>
     </div>
     <div class="panel">
+      <h3>Per numero di partite</h3>
+      <div id="topGames"><div class="state"><div class="spinner"></div></div></div>
+    </div>
+  </div>
+  <div class="grid-2">
+    <div class="panel">
       <h3>Per avanzamento storia</h3>
-      <p class="desc">Giocatori pi&ugrave; avanti (story_level, poi stelle).</p>
       <div id="topStory"><div class="state"><div class="spinner"></div></div></div>
+    </div>
+    <div class="panel">
+      <h3>Per monete accumulate</h3>
+      <div id="topCoins"><div class="state"><div class="spinner"></div></div></div>
     </div>
   </div>
 
-  <!-- ===== H. SUPPORTERS & CREATOR ===== -->
-  <div class="section-h"><span class="tag">H</span><h2>SUPPORTERS &amp; CREATOR</h2><div class="line"></div></div>
+  <!-- ===== J. SCHEDA GIOCATORI ===== -->
+  <div class="section-h"><span class="tag">J</span><h2>SCHEDA GIOCATORI</h2><div class="line"></div></div>
+  <div class="grid-2">
+    <div class="panel">
+      <h3>A che griglia sono &middot; Classic</h3>
+      <p class="desc">Quanti giocatori hanno raggiunto ogni griglia della scalata Classic.</p>
+      <div id="arenaClassic"><div class="state"><div class="spinner"></div></div></div>
+    </div>
+    <div class="panel">
+      <h3>A che griglia sono &middot; Speedrun</h3>
+      <p class="desc">Quanti giocatori hanno raggiunto ogni griglia della scalata Speedrun.</p>
+      <div id="arenaSpeed"><div class="state"><div class="spinner"></div></div></div>
+    </div>
+  </div>
+  <div class="panel">
+    <h3>Ogni giocatore, griglia per griglia</h3>
+    <p class="desc">Per ogni giocatore: la griglia raggiunta nelle due scalate, con quante partite e quante ore
+      ci &egrave; arrivato e qual &egrave; il suo record. Clicca sulle intestazioni per ordinare.</p>
+    <div class="supp-toolbar">
+      <input id="plSearch" type="text" placeholder="🔎 Cerca un giocatore…">
+      <select id="plMode">
+        <option value="all">Tutti i giocatori</option>
+        <option value="classic">Solo chi gioca Classic</option>
+        <option value="speedrun">Solo chi gioca Speedrun</option>
+        <option value="active">Solo attivi ultimi 7 giorni</option>
+      </select>
+      <button id="plCsv" class="btn-ghost">⤓ Scarica CSV</button>
+    </div>
+    <div id="plStatus" class="foot" style="min-height:20px"></div>
+    <div id="plTable"><div class="state"><div class="spinner"></div></div></div>
+    <button class="btn-ghost more-btn hidden" id="plMore"></button>
+  </div>
+
+  <!-- ===== J. SUPPORTERS & CREATOR ===== -->
+  <div class="section-h"><span class="tag">K</span><h2>SUPPORTERS &amp; CREATOR</h2><div class="line"></div></div>
   <div class="panel">
     <h3>Gestione OG Supporters e Creator</h3>
-    <p class="desc">Le stesse liste della pagina admin: richieste in arrivo, OG approvati e richieste Creator. Le modifiche sono salvate subito.</p>
+    <p class="desc">Le stesse liste della pagina admin. Le modifiche sono salvate subito. Le liste mostrano i primi 10 nomi: usa &laquo;Mostra tutti&raquo; per aprirle.</p>
     <div class="supp-toolbar">
       <input id="suppSearch" type="text" placeholder="🔎 Cerca un nome…">
       <select id="suppFilter">
@@ -504,11 +661,13 @@
       <div class="panel" id="suppPanelPending">
         <h3>📥 Richieste OG <span class="chip" id="suppPendCount">0</span></h3>
         <div id="suppPending"></div>
+        <button class="btn-ghost more-btn hidden" id="morePending"></button>
         <button class="btn-ghost" id="suppApproveAll" style="margin-top:10px">✓ Approva tutte</button>
       </div>
       <div class="panel" id="suppPanelOg">
         <h3>⭐ OG approvati <span class="chip" id="suppOgCount">0</span></h3>
         <div id="suppOg"></div>
+        <button class="btn-ghost more-btn hidden" id="moreOg"></button>
         <div class="supp-add">
           <input id="suppNewName" type="text" placeholder="Aggiungi un nome…">
           <button class="btn-ghost" id="suppAddBtn">Aggiungi</button>
@@ -517,71 +676,149 @@
       <div class="panel" id="suppPanelCreq">
         <h3>🎬 Richieste Creator <span class="chip" id="suppCreqCount">0</span></h3>
         <div id="suppCreq"></div>
+        <button class="btn-ghost more-btn hidden" id="moreCreq"></button>
       </div>
       <div class="panel" id="suppPanelCok">
         <h3>✅ Creator approvati <span class="chip" id="suppCokCount">0</span></h3>
         <div id="suppCok"></div>
+        <button class="btn-ghost more-btn hidden" id="moreCok"></button>
       </div>
     </div>
   </div>
 
   <div class="footer">
-    CUBE CRASH · SUPER STATS · file statico self-contained · sola lettura<br>
+    CUBE CRASH · SUPER STATS · file statico self-contained<br>
     Accesso protetto da login Firebase e dall'URL segreto della pagina.
   </div>
 </div>
-
 <script>
 /* ==========================================================================
    CONFIG
    ========================================================================== */
 const BASE = "https://cube-80594-default-rtdb.europe-west1.firebasedatabase.app";
 const MODES = ["classic","speedrun"];
-const MONTHS_BACK = 12;
+/* La classifica del gioco e' SETTIMANALE: leaderboard.gd usa
+   period = (unixtime + WEEK_EPOCH_OFFSET) / WEEK_SECONDS  (lunedi' 00:00 UTC).
+   I vecchi bucket "anno*12+mese" esistono ancora ma NESSUNA build li scrive piu':
+   leggerli era il motivo per cui record e classifica sembravano fermi. */
+const WEEK_SECONDS = 604800;
+const WEEK_EPOCH_OFFSET = 259200;
+const WEEKS_BACK = 16;          // settimane da scansionare
+const LEGACY_MONTHS = 14;       // vecchi bucket mensili: solo per i record storici
 const STORY_MAX = 30;
-const LS_KEY = "cc_stats_auth";       // stores email when logged in
+const LS_KEY = "cc_stats_auth";
+const META_PATH = "stats/players/_dash";   // unico ramo scrivibile: chiavi "_" escluse dalle stats
 const MONTH_NAMES = ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno",
   "Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
 const ICON_COLORS = ["#37a0ff","#ff9f43","#4be86a","#ff5468","#ffcf3f",
   "#b98cff","#37e6d8","#ec6fa1","#8bc34a","#ff7043","#9575cd","#4dd0e1"];
 const MODE_COLORS = { classic:"#37a0ff", speedrun:"#ff9f43", story:"#b98cff", ranked:"#4be86a" };
+const MODE_LABEL  = { classic:"Classic", speedrun:"Speedrun", story:"Storia", ranked:"Ranked" };
+const DAY = 86400;
+/* SCALATA GRIGLIE (trophies.gd ARENAS / ARENAS_SR): stesso ordine e stesse soglie.
+   Se cambiano nel gioco vanno aggiornate anche qui. */
+const ARENAS = {
+  classic:[
+    {n:"GRIGLIA 1", t:"ARCADE",         cups:0},
+    {n:"GRIGLIA 2", t:"PIXEL PRATERIA", cups:1500000},
+    {n:"GRIGLIA 3", t:"CUBEVAL",        cups:15000000},
+    {n:"GRIGLIA 4", t:"SPACE CUBERS",   cups:50000000},
+    {n:"GRIGLIA 5", t:"CANDY BLAST",    cups:150000000},
+    {n:"GRIGLIA 6", t:"?????",          cups:400000000}
+  ],
+  speedrun:[
+    {n:"SPEED 1", t:"SPEED ARCADE", cups:0},
+    {n:"SPEED 2", t:"CUBE INFERNO", cups:500000},
+    {n:"SPEED 3", t:"GLITCHRUN",    cups:2000000},
+    {n:"SPEED 4", t:"PROMODE",      cups:6000000},
+    {n:"SPEED 5", t:"CUBE RUSH",    cups:15000000}
+  ]
+};
+/* indice della griglia: usa quello inviato dall'app, altrimenti lo ricava dalle coppe */
+function arenaIndex(mode, idx, cups){
+  const arr=ARENAS[mode];
+  if(idx!==null && idx!==undefined && idx>=0) return Math.min(idx, arr.length-1);
+  if(cups===null || cups===undefined || cups<0) return -1;   // campo non inviato
+  let r=0;
+  for(let i=0;i<arr.length;i++) if(cups>=arr[i].cups) r=i;
+  return r;
+}
+function arenaName(mode, i){
+  const arr=ARENAS[mode];
+  if(i<0||i>=arr.length) return "—";
+  return arr[i].n;
+}
+function arenaTitle(mode, i){
+  const arr=ARENAS[mode];
+  return (i<0||i>=arr.length)?"":arr[i].t;
+}
 
 /* ==========================================================================
    HELPERS
    ========================================================================== */
-function periodFor(y,m){ return y*12 + m; }
-function currentPeriodUTC(){ const n=new Date(); return periodFor(n.getUTCFullYear(), n.getUTCMonth()+1); }
-function decodePeriod(p){ let m=p%12, y=Math.floor(p/12); if(m===0){m=12;y-=1;} return {year:y,month:m,label:MONTH_NAMES[m-1]+" "+y}; }
+function currentPeriodUTC(){ return Math.floor((Date.now()/1000 + WEEK_EPOCH_OFFSET)/WEEK_SECONDS); }
+function periodStart(p){ return p*WEEK_SECONDS - WEEK_EPOCH_OFFSET; }
+function dmy(ts){ const d=new Date(ts*1000); return d.getUTCDate()+"/"+(d.getUTCMonth()+1); }
+function decodePeriod(p){
+  const a=periodStart(p), b=a+WEEK_SECONDS-1;
+  const cur=currentPeriodUTC();
+  let tag="";
+  if(p===cur) tag=" (in corso)";
+  else if(p===cur-1) tag=" (scorsa)";
+  return {start:a, end:b, label:dmy(a)+" – "+dmy(b)+tag, short:dmy(a)};
+}
 function lastPeriods(n){ const cur=currentPeriodUTC(); const a=[]; for(let i=0;i<n;i++)a.push(cur-i); return a; }
+/* vecchi bucket mensili anno*12+mese: li leggiamo solo per non perdere i record storici */
+function legacyPeriods(n){
+  const d=new Date(); let y=d.getUTCFullYear(), m=d.getUTCMonth()+1;
+  const a=[];
+  for(let i=0;i<n;i++){ a.push(y*12+m); m--; if(m===0){ m=12; y--; } }
+  return a;
+}
+/* etichetta leggibile per un periodo, settimanale o vecchio-mensile */
+function periodLabel(p){
+  if(p>=10000){ let m=p%12, y=Math.floor(p/12); if(m===0){m=12;y-=1;} return MONTH_NAMES[m-1]+" "+y+" (vecchia classifica mensile)"; }
+  return "settimana "+decodePeriod(p).label;
+}
+function todayDay(){ return Math.floor(Date.now()/1000/DAY); }
 
 function fmtInt(n){ if(n===null||n===undefined||isNaN(n))return "—"; return Number(n).toLocaleString("it-IT"); }
 function fmtNum(n,d){ if(n===null||n===undefined||isNaN(n))return "—"; return Number(n).toLocaleString("it-IT",{minimumFractionDigits:d,maximumFractionDigits:d}); }
 function pct(n){ if(!isFinite(n))return "—"; return fmtNum(n,1)+"%"; }
-
-/* seconds -> "Xg Yh" or "Xh Ym" or "Xm Ys" */
+function fmtCompact(n){
+  if(n===null||n===undefined||isNaN(n))return "—";
+  n=Number(n);
+  if(Math.abs(n)>=1e9) return fmtNum(n/1e9,1)+"G";
+  if(Math.abs(n)>=1e6) return fmtNum(n/1e6,1)+"M";
+  if(Math.abs(n)>=1e4) return fmtNum(n/1e3,0)+"k";
+  return fmtInt(n);
+}
 function fmtDur(sec){
-  if(sec===null||sec===undefined||isNaN(sec)) return "—";
+  if(sec===null||sec===undefined||isNaN(sec)||sec<=0) return "—";
   sec = Math.max(0, Math.round(sec));
-  const d = Math.floor(sec/86400);
-  const h = Math.floor((sec%86400)/3600);
-  const m = Math.floor((sec%3600)/60);
-  const s = sec%60;
+  const d=Math.floor(sec/86400), h=Math.floor((sec%86400)/3600),
+        m=Math.floor((sec%3600)/60), s=sec%60;
   if(d>0) return d+"g "+h+"h";
   if(h>0) return h+"h "+m+"m";
   if(m>0) return m+"m "+s+"s";
   return s+"s";
 }
-/* long form for KPI: hours + days context */
 function fmtDurLong(sec){
   if(sec===null||sec===undefined||isNaN(sec)) return "—";
-  const hours = sec/3600;
-  return fmtNum(hours,1)+"h";
+  return fmtNum(sec/3600,1)+"h";
 }
-
+function fmtDate(ts){
+  if(!ts) return "—";
+  const d=new Date(ts*1000);
+  return d.getUTCDate()+"/"+(d.getUTCMonth()+1)+"/"+d.getUTCFullYear();
+}
 function esc(s){
   if(s===null||s===undefined) return "";
   return String(s).replace(/[<>&"']/g, c => ({"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;","'":"&#39;"}[c]));
 }
+function setTxt(id,v){ const el=document.getElementById(id); if(el) el.textContent=v; }
+function setHtml(id,v){ const el=document.getElementById(id); if(el) el.innerHTML=v; }
+function emptyState(id,msg){ setHtml(id,'<div class="state">'+esc(msg||"Nessun dato.")+'</div>'); }
 
 async function fetchJSON(url){
   const res = await fetch(url,{method:"GET",cache:"no-store"});
@@ -591,29 +828,242 @@ async function fetchJSON(url){
 async function fetchJSONSafe(url){
   try{ return await fetchJSON(url); }catch(e){ return {__error:e.message||"errore"}; }
 }
-async function countParticipants(mode,period){
-  const url = BASE+"/leaderboards/"+mode+"/"+period+".json?shallow=true";
-  try{ const d=await fetchJSON(url); if(!d||typeof d!=="object")return 0; return Object.keys(d).length; }
-  catch(e){ return null; }
+/* le chiavi che iniziano con "_" sono metadati della dashboard, non giocatori */
+function isPlayerKey(k){ return k && k.charAt(0)!=="_"; }
+
+/* normalizza una voce di classifica */
+function lbRow(id,r){
+  r=r||{};
+  return {
+    id,
+    name:(r.name!=null && String(r.name).trim()!=="")?String(r.name):"Anonimo",
+    score:Number(r.score)||0,
+    icon:(typeof r.icon==="number")?r.icon:0,
+    glo:r.glo===true,
+    pass:r.pass===true,
+    dur:Number(r.dur)||0,        // durata (sec) della partita che ha fatto quel punteggio
+    ts:Number(r.ts)||0,          // quando e' stato fatto
+    ver:(typeof r.ver==="string")?r.ver:""
+  };
+}
+async function fetchPeriodAll(mode,period){
+  const d = await fetchJSON(BASE+"/leaderboards/"+mode+"/"+period+".json");
+  if(!d||typeof d!=="object") return [];
+  return Object.keys(d).filter(isPlayerKey).map(id=>lbRow(id,d[id])).sort((a,b)=>b.score-a.score);
 }
 async function fetchTop(mode,period,limit){
-  const url = BASE+"/leaderboards/"+mode+"/"+period+".json?orderBy=%22score%22&limitToLast="+(limit||100);
-  const d = await fetchJSON(url);
+  const d = await fetchJSON(BASE+"/leaderboards/"+mode+"/"+period+'.json?orderBy="score"&limitToLast='+(limit||100));
   if(!d||typeof d!=="object") return [];
-  const rows = Object.keys(d).map(id=>{
-    const r=d[id]||{};
-    return {
-      id,
-      name:(r.name!=null && String(r.name).trim()!=="")?String(r.name):"Anonimo",
-      score:Number(r.score)||0,
-      icon:(typeof r.icon==="number")?r.icon:0,
-      glo:r.glo===true
-    };
-  });
-  rows.sort((a,b)=>b.score-a.score);
-  return rows;
+  return Object.keys(d).filter(isPlayerKey).map(id=>lbRow(id,d[id])).sort((a,b)=>b.score-a.score);
+}
+async function fetchPeriodIds(mode,period){
+  try{
+    const d=await fetchJSON(BASE+"/leaderboards/"+mode+"/"+period+".json?shallow=true");
+    if(!d||typeof d!=="object") return [];
+    return Object.keys(d).filter(isPlayerKey);
+  }catch(e){ return null; }
 }
 
+/* versioni: "2.1.3" -> numero confrontabile */
+function verNum(v){
+  const parts=String(v||"").split(".").map(x=>parseInt(x,10)||0);
+  return (parts[0]||0)*1000000+(parts[1]||0)*1000+(parts[2]||0);
+}
+
+/* ==========================================================================
+   GRAFICI — SVG senza dipendenze
+   ========================================================================== */
+const CH = {W:860, H:280, padL:48, padR:16, padT:14, padB:44};
+
+function chartFrame(inner, opts){
+  opts=opts||{};
+  const W=opts.W||CH.W, H=opts.H||CH.H;
+  return '<div class="chart-wrap"><svg class="chart" viewBox="0 0 '+W+' '+H+'" '
+    + 'preserveAspectRatio="xMidYMid meet" role="img" aria-label="'+esc(opts.label||"grafico")+'">'
+    + inner + '</svg></div>';
+}
+function yGrid(maxVal, geo, fmt){
+  let g="";
+  for(let i=0;i<=4;i++){
+    const gv=maxVal/4*i, gy=geo.y(gv);
+    g+='<line class="grid-line" x1="'+geo.padL+'" y1="'+gy.toFixed(1)+'" x2="'+(geo.W-geo.padR)+'" y2="'+gy.toFixed(1)+'"/>';
+    g+='<text class="axlbl" x="'+(geo.padL-7)+'" y="'+(gy+5).toFixed(1)+'" text-anchor="end">'+(fmt?fmt(gv):fmtCompact(Math.round(gv)))+'</text>';
+  }
+  return g;
+}
+function makeGeo(n, maxVal, opts){
+  opts=opts||{};
+  const W=opts.W||CH.W, H=opts.H||CH.H;
+  const padL=opts.padL!==undefined?opts.padL:CH.padL, padR=CH.padR, padT=CH.padT, padB=opts.padB||CH.padB;
+  const plotW=W-padL-padR, plotH=H-padT-padB;
+  return {
+    W,H,padL,padR,padT,padB,plotW,plotH,n,maxVal,
+    x:i=>padL+(n<=1?plotW/2:plotW*i/(n-1)),
+    xb:i=>padL+plotW*(i+0.5)/Math.max(1,n),          // centro colonna (istogrammi)
+    bw:()=>plotW/Math.max(1,n),
+    y:v=>padT+plotH-(maxVal>0?(v/maxVal)*plotH:0)
+  };
+}
+
+/* grafico a linee/aree multi-serie */
+function lineChart(elId, labels, series, opts){
+  opts=opts||{};
+  const el=document.getElementById(elId); if(!el) return;
+  const n=labels.length;
+  if(!n){ emptyState(elId,"Nessun dato."); return; }
+  let maxVal=1;
+  series.forEach(s=>s.data.forEach(v=>{ if(v>maxVal) maxVal=v; }));
+  maxVal=Math.ceil(maxVal*1.08);
+  const W=Math.max(opts.W||CH.W, n*Math.max(10,opts.step||22));
+  const geo=makeGeo(n,maxVal,{W:W,H:opts.H||CH.H});
+  let out=yGrid(maxVal,geo,opts.yfmt);
+  series.forEach(s=>{
+    const pts=s.data.map((v,i)=>geo.x(i).toFixed(1)+","+geo.y(v).toFixed(1)).join(" ");
+    if(s.area){
+      out+='<polygon points="'+geo.x(0).toFixed(1)+','+geo.y(0).toFixed(1)+' '+pts+' '
+        +geo.x(n-1).toFixed(1)+','+geo.y(0).toFixed(1)+'" fill="'+s.color+'" opacity=".16"/>';
+    }
+    out+='<polyline fill="none" stroke="'+s.color+'" stroke-width="'+(s.width||2.5)+'"'
+      +(s.dash?' stroke-dasharray="6 4"':'')+' points="'+pts+'"/>';
+  });
+  // punti + tooltip solo sulle serie non tratteggiate
+  series.forEach(s=>{
+    if(s.dash) return;
+    s.data.forEach((v,i)=>{
+      out+='<circle cx="'+geo.x(i).toFixed(1)+'" cy="'+geo.y(v).toFixed(1)+'" r="2.8" fill="'+s.color+'">'
+        +'<title>'+esc(labels[i])+' — '+esc(s.name)+': '+(opts.vfmt?opts.vfmt(v):fmtInt(v))+'</title></circle>';
+    });
+  });
+  const every=Math.max(1,Math.ceil(n/12));
+  labels.forEach((lb,i)=>{
+    if(i%every===0||i===n-1)
+      out+='<text x="'+geo.x(i).toFixed(1)+'" y="'+(geo.H-geo.padB+18)+'" text-anchor="middle">'+esc(lb)+'</text>';
+  });
+  el.innerHTML=chartFrame(out,{W:W,H:geo.H,label:opts.label});
+}
+
+/* istogramma / barre verticali (una o piu' serie affiancate) */
+function barChart(elId, labels, series, opts){
+  opts=opts||{};
+  const el=document.getElementById(elId); if(!el) return;
+  const n=labels.length;
+  if(!n){ emptyState(elId,"Nessun dato."); return; }
+  let maxVal=1;
+  series.forEach(s=>s.data.forEach(v=>{ if(v>maxVal) maxVal=v; }));
+  maxVal=Math.ceil(maxVal*1.08);
+  const W=Math.max(opts.W||CH.W, n*(opts.step||46));
+  const geo=makeGeo(n,maxVal,{W:W,H:opts.H||CH.H,padL:opts.padL});
+  let out=yGrid(maxVal,geo,opts.yfmt);
+  const slot=geo.bw(), k=series.length;
+  const bw=Math.max(3, Math.min(opts.maxBar||34, (slot*0.74)/k));
+  labels.forEach((lb,i)=>{
+    const cx=geo.xb(i);
+    series.forEach((s,j)=>{
+      const v=s.data[i]||0;
+      const bx=cx-(bw*k)/2+j*bw;
+      const by=geo.y(v), bh=geo.padT+geo.plotH-by;
+      out+='<rect x="'+bx.toFixed(1)+'" y="'+by.toFixed(1)+'" width="'+(bw-1).toFixed(1)+'" height="'+Math.max(0,bh).toFixed(1)+'" fill="'+s.color+'">'
+        +'<title>'+esc(lb)+' — '+esc(s.name)+': '+(opts.vfmt?opts.vfmt(v):fmtInt(v))+'</title></rect>';
+    });
+    out+='<text x="'+cx.toFixed(1)+'" y="'+(geo.H-geo.padB+18)+'" text-anchor="middle">'+esc(lb)+'</text>';
+  });
+  el.innerHTML=chartFrame(out,{W:W,H:geo.H,label:opts.label});
+}
+
+/* barre verticali IMPILATE (due serie) */
+function stackChart(elId, labels, series, opts){
+  opts=opts||{};
+  const el=document.getElementById(elId); if(!el) return;
+  const n=labels.length;
+  if(!n){ emptyState(elId,"Nessun dato."); return; }
+  let maxVal=1;
+  for(let i=0;i<n;i++){
+    let t=0; series.forEach(s=>t+=(s.data[i]||0));
+    if(t>maxVal) maxVal=t;
+  }
+  maxVal=Math.ceil(maxVal*1.08);
+  const W=Math.max(opts.W||CH.W, n*(opts.step||26));
+  const geo=makeGeo(n,maxVal,{W:W,H:opts.H||CH.H});
+  let out=yGrid(maxVal,geo,opts.yfmt);
+  const bw=Math.max(3,Math.min(26, geo.bw()*0.66));
+  labels.forEach((lb,i)=>{
+    const cx=geo.xb(i);
+    let acc=0;
+    series.forEach(s=>{
+      const v=s.data[i]||0;
+      if(v<=0){ acc+=v; return; }
+      const yTop=geo.y(acc+v), yBot=geo.y(acc);
+      out+='<rect x="'+(cx-bw/2).toFixed(1)+'" y="'+yTop.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+Math.max(0,yBot-yTop).toFixed(1)+'" fill="'+s.color+'">'
+        +'<title>'+esc(lb)+' — '+esc(s.name)+': '+fmtInt(v)+'</title></rect>';
+      acc+=v;
+    });
+    const every=Math.max(1,Math.ceil(n/12));
+    if(i%every===0||i===n-1)
+      out+='<text x="'+cx.toFixed(1)+'" y="'+(geo.H-geo.padB+18)+'" text-anchor="middle">'+esc(lb)+'</text>';
+  });
+  el.innerHTML=chartFrame(out,{W:W,H:geo.H,label:opts.label});
+}
+
+/* ciambella */
+function donut(elId, items, opts){
+  opts=opts||{};
+  const el=document.getElementById(elId); if(!el) return;
+  const tot=items.reduce((a,x)=>a+x.val,0);
+  if(tot<=0){ emptyState(elId,"Nessun dato."); return; }
+  const W=460,H=230,cx=118,cy=H/2,R=86,r=48;
+  let a0=-Math.PI/2, out="";
+  items.forEach(it=>{
+    const frac=it.val/tot, a1=a0+frac*Math.PI*2;
+    const large=frac>0.5?1:0;
+    const p=(ang,rad)=>[(cx+Math.cos(ang)*rad).toFixed(2),(cy+Math.sin(ang)*rad).toFixed(2)];
+    const [x0,y0]=p(a0,R),[x1,y1]=p(a1,R),[x2,y2]=p(a1,r),[x3,y3]=p(a0,r);
+    out+='<path d="M'+x0+' '+y0+' A'+R+' '+R+' 0 '+large+' 1 '+x1+' '+y1
+      +' L'+x2+' '+y2+' A'+r+' '+r+' 0 '+large+' 0 '+x3+' '+y3+' Z" fill="'+it.color+'" stroke="#0a1730" stroke-width="2">'
+      +'<title>'+esc(it.lbl)+': '+fmtInt(it.val)+' ('+pct(frac*100)+')</title></path>';
+    a0=a1;
+  });
+  out+='<text x="'+cx+'" y="'+(cy-2)+'" text-anchor="middle" style="font-size:22px;fill:var(--ink)">'+fmtCompact(tot)+'</text>';
+  out+='<text x="'+cx+'" y="'+(cy+18)+'" text-anchor="middle" style="font-size:14px;fill:var(--faint)">'+esc(opts.center||"totale")+'</text>';
+  let ly=34;
+  items.forEach(it=>{
+    out+='<rect x="250" y="'+(ly-11)+'" width="13" height="13" fill="'+it.color+'" stroke="#0a1730" stroke-width="2"/>';
+    out+='<text x="272" y="'+ly+'" style="fill:var(--ink)">'+esc(it.lbl)+'</text>';
+    out+='<text x="272" y="'+(ly+18)+'" class="axlbl">'+fmtInt(it.val)+' · '+pct(it.val/tot*100)+'</text>';
+    ly+=46;
+  });
+  el.innerHTML=chartFrame(out,{W:W,H:Math.max(H,ly+10),label:opts.label});
+}
+
+/* barre orizzontali */
+function renderHBars(elId, items, opts){
+  opts=opts||{};
+  const total=items.reduce((a,x)=>a+x.val,0);
+  const max=Math.max(1,...items.map(x=>x.val));
+  if(total===0){ emptyState(elId,"Nessun dato registrato."); return; }
+  let html='<div class="hbars'+(opts.wide?" wide":"")+'">';
+  items.forEach(x=>{
+    const w=(x.val/max)*100, p=total?(x.val/total)*100:0;
+    const valTxt=opts.fmt?opts.fmt(x.val):fmtInt(x.val);
+    const pctTxt=opts.showPct?(' <span style="color:var(--faint)">('+pct(p)+')</span>'):'';
+    html+='<div class="hbar">'
+      +'<span class="hlbl" title="'+esc(x.lbl)+'">'+esc(x.lbl)+'</span>'
+      +'<span class="htrack"><span class="hfill" style="width:'+w.toFixed(1)+'%;background:'+(x.color||"var(--classic)")+'"></span></span>'
+      +'<span class="hval">'+valTxt+pctTxt+'</span></div>';
+  });
+  html+='</div>';
+  setHtml(elId,html);
+}
+
+/* istogramma a fasce da una lista di valori */
+function bucketize(values, edges, labelFn){
+  const counts=new Array(edges.length).fill(0);
+  values.forEach(v=>{
+    let i=edges.length-1;
+    for(let k=0;k<edges.length;k++){ if(v<=edges[k]){ i=k; break; } }
+    counts[i]++;
+  });
+  return {labels:edges.map((e,i)=>labelFn(e,i,edges)), counts};
+}
 /* ==========================================================================
    LOGIN (Firebase dashboard_auth)
    ========================================================================== */
@@ -633,7 +1083,6 @@ function showDashboard(){
   dashboard.classList.remove("hidden");
   if(!window.__ccInit){ window.__ccInit=true; initDashboard(); }
 }
-
 document.getElementById("loginForm").addEventListener("submit", async function(e){
   e.preventDefault();
   const email=document.getElementById("email").value;
@@ -642,20 +1091,13 @@ document.getElementById("loginForm").addEventListener("submit", async function(e
   err.textContent="Verifica in corso…";
   if(!email||!pass){ err.textContent="Inserisci email e password."; return; }
   try{
-    const key=slugify(email);
-    const rec=await fetchJSON(BASE+"/dashboard_auth/"+key+".json");
+    const rec=await fetchJSON(BASE+"/dashboard_auth/"+slugify(email)+".json");
     if(!rec || typeof rec!=="object" || !rec.hash){ err.textContent="Credenziali non valide."; return; }
     const h=await sha256Hex(pass);
     if(String(rec.hash).toLowerCase()===h.toLowerCase()){
-      err.textContent="";
-      setSavedEmail(email.trim().toLowerCase());
-      showDashboard();
-    }else{
-      err.textContent="Credenziali non valide.";
-    }
-  }catch(ex){
-    err.textContent="Errore di verifica (serve HTTPS/connessione).";
-  }
+      err.textContent=""; setSavedEmail(email.trim().toLowerCase()); showDashboard();
+    }else{ err.textContent="Credenziali non valide."; }
+  }catch(ex){ err.textContent="Errore di verifica (serve HTTPS/connessione)."; }
 });
 document.getElementById("logoutBtn").addEventListener("click", function(){
   setSavedEmail(null);
@@ -665,19 +1107,22 @@ document.getElementById("logoutBtn").addEventListener("click", function(){
 });
 
 /* ==========================================================================
-   DASHBOARD STATE
+   STATO
    ========================================================================== */
 let CURRENT_MODE="classic";
 let SELECTED_PERIOD=currentPeriodUTC();
+let ACT_DAYS=30;
 let CHART_CACHE=null;
 let TABLE_CACHE={};
-let STATS_PLAYERS=null;     // array of player objects, or null if denied
-let STATS_DENIED=false;
+let STATS_PLAYERS=null;
+let LB_IDS=new Set();          // tutti gli id visti nelle classifiche
+let ALLTIME={};                // mode -> Map(id -> best row)
+let DASH_META={dl_ios:0, dl_android:0, updated:0};
 
 function initDashboard(){
   const sel=document.getElementById("monthSelect");
   sel.innerHTML="";
-  lastPeriods(MONTHS_BACK).forEach(p=>{
+  lastPeriods(WEEKS_BACK).forEach(p=>{
     const o=document.createElement("option");
     o.value=String(p); o.textContent=decodePeriod(p).label;
     sel.appendChild(o);
@@ -685,45 +1130,875 @@ function initDashboard(){
   sel.value=String(SELECTED_PERIOD);
   sel.addEventListener("change",function(){ SELECTED_PERIOD=parseInt(this.value,10); loadMonth(); });
 
-  document.querySelectorAll(".tab").forEach(t=>{
+  document.querySelectorAll(".tabs .tab").forEach(t=>{
     t.addEventListener("click",function(){
-      document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+      document.querySelectorAll(".tabs .tab").forEach(x=>x.classList.remove("active"));
       this.classList.add("active");
       CURRENT_MODE=this.dataset.mode;
       renderTable();
     });
   });
+  document.querySelectorAll("#rangeBar button").forEach(b=>{
+    b.addEventListener("click",function(){
+      document.querySelectorAll("#rangeBar button").forEach(x=>x.classList.remove("on"));
+      this.classList.add("on");
+      ACT_DAYS=parseInt(this.dataset.days,10)||30;
+      if(STATS_PLAYERS) renderTelemetry(STATS_PLAYERS);
+    });
+  });
   document.getElementById("refreshBtn").addEventListener("click",function(){
-    CHART_CACHE=null; TABLE_CACHE={}; STATS_PLAYERS=null; STATS_DENIED=false;
+    CHART_CACHE=null; TABLE_CACHE={}; STATS_PLAYERS=null; LB_IDS=new Set(); ALLTIME={};
     loadAll();
   });
-  // filtro PIATTAFORMA: ri-renderizza le sezioni (senza ricaricare da Firebase)
-  var ps=document.getElementById("platformSelect");
-  if(ps) ps.addEventListener("change",function(){
-    if(STATS_PLAYERS) renderTelemetry(STATS_PLAYERS);
-  });
+  const ps=document.getElementById("platformSelect");
+  if(ps) ps.addEventListener("change",function(){ if(STATS_PLAYERS) renderTelemetry(STATS_PLAYERS); });
+  document.getElementById("dlSaveBtn").addEventListener("click", saveDlMeta);
   loadAll();
 }
 
 function loadAll(){
-  updateHeroReal();      // numero grosso: giocatori REALI dalla classifica
-  loadTelemetry();       // A,B,C,D,G
-  loadChart();           // F (+ A active KPIs from leaderboard)
-  loadMonth();           // E
-  suppLoad();            // H (supporters & creator)
+  loadMeta();
+  loadTelemetry();
+  loadChart();        // scansione classifiche: hero, andamento, record all-time
+  loadMonth();
+  suppLoad();
 }
 
 /* ==========================================================================
-   H. SUPPORTERS & CREATOR — stesse liste npoint della pagina admin
+   META DASHBOARD (download store inseriti a mano)
+   ========================================================================== */
+async function loadMeta(){
+  const d=await fetchJSONSafe(BASE+"/"+META_PATH+".json");
+  if(d && !d.__error && typeof d==="object"){
+    DASH_META={dl_ios:Number(d.dl_ios)||0, dl_android:Number(d.dl_android)||0, updated:Number(d.updated)||0};
+  }
+  renderMeta();
+}
+function renderMeta(){
+  const ios=DASH_META.dl_ios, and=DASH_META.dl_android, tot=ios+and;
+  setTxt("kDlIos", ios?fmtInt(ios):"—");
+  setTxt("kDlAnd", and?fmtInt(and):"—");
+  setTxt("kDlTot", tot?fmtInt(tot):"—");
+  setTxt("kDlUpd", DASH_META.updated?("aggiornato il "+fmtDate(DASH_META.updated)):"mai inserito");
+  document.getElementById("dlIosIn").value = ios||"";
+  document.getElementById("dlAndIn").value = and||"";
+  updateConv();
+}
+function updateConv(){
+  const tot=DASH_META.dl_ios+DASH_META.dl_android;
+  const played=heroCount();
+  setTxt("kDlConv", (tot>0 && played>0) ? pct(played/tot*100) : "—");
+}
+async function saveDlMeta(){
+  const ios=parseInt(document.getElementById("dlIosIn").value,10)||0;
+  const and=parseInt(document.getElementById("dlAndIn").value,10)||0;
+  const st=document.getElementById("dlStatus");
+  st.textContent="Salvo…"; st.style.color="var(--faint)";
+  const body={dl_ios:ios, dl_android:and, updated:Math.floor(Date.now()/1000)};
+  try{
+    const r=await fetch(BASE+"/"+META_PATH+".json",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    DASH_META=body; renderMeta();
+    st.textContent="Salvato ✓"; st.style.color="var(--green2)";
+  }catch(e){ st.textContent="Errore: "+e.message; st.style.color="var(--red)"; }
+}
+
+/* ==========================================================================
+   HERO
+   ========================================================================== */
+function heroCount(){
+  const ids=new Set(LB_IDS);
+  if(STATS_PLAYERS) STATS_PLAYERS.forEach(p=>ids.add(p.id));
+  return ids.size;
+}
+function renderHero(){
+  const tele=STATS_PLAYERS?STATS_PLAYERS.length:0;
+  const total=heroCount();
+  setTxt("heroNum", total>0?fmtInt(total):"—");
+  const onlyLb=(function(){
+    if(!STATS_PLAYERS) return LB_IDS.size;
+    const t=new Set(STATS_PLAYERS.map(p=>p.id));
+    let n=0; LB_IDS.forEach(id=>{ if(!t.has(id)) n++; });
+    return n;
+  })();
+  setHtml("heroBreak",
+    'Con telemetria: <b style="color:var(--ink)">'+fmtInt(tele)+'</b>'
+    +' &nbsp;&middot;&nbsp; In classifica: <b style="color:var(--ink)">'+fmtInt(LB_IDS.size)+'</b>'
+    +' &nbsp;&middot;&nbsp; Solo classifica (build senza telemetria): <b style="color:var(--ink)">'+fmtInt(onlyLb)+'</b>');
+  setTxt("kTotPlayers", total>0?fmtInt(total):"—");
+  setTxt("kTotPlayersSub","telemetria "+fmtInt(tele)+" + classifica "+fmtInt(LB_IDS.size)+" (id unici)");
+  updateConv();
+}
+
+/* ==========================================================================
+   TELEMETRIA (stats/players)
+   ========================================================================== */
+async function loadTelemetry(){
+  const raw = await fetchJSONSafe(BASE+"/stats/players.json");
+  const notice = document.getElementById("teleNotice");
+  const denied = !!(raw && raw.__error !== undefined);
+  if(denied || raw===null || typeof raw!=="object"){
+    STATS_PLAYERS=null;
+    notice.innerHTML = denied
+      ? '<strong>Telemetria non leggibile:</strong> verifica le regole Firebase sul nodo <code>stats</code>.'
+      : '<strong>Telemetria in attesa dei primi dati.</strong>';
+    notice.classList.remove("hidden");
+    renderTelemetryEmpty(); renderHero();
+    return;
+  }
+  const players = Object.keys(raw).filter(isPlayerKey).map(id=>{
+    const p=raw[id]||{};
+    const num=k=>Number(p[k])||0;
+    const str=k=>(typeof p[k]==="string"&&p[k].trim()!=="")?p[k].trim():"";
+    return {
+      id,
+      name:str("name")||"Anonimo",
+      icon:(typeof p.icon==="number")?p.icon:0,
+      pt_classic:num("pt_classic"), pt_speedrun:num("pt_speedrun"),
+      pt_story:num("pt_story"), pt_ranked:num("pt_ranked"), pt_total:num("pt_total"),
+      g_classic:num("g_classic"), g_speedrun:num("g_speedrun"),
+      g_story:num("g_story"), g_ranked:num("g_ranked"), g_total:num("g_total"),
+      hs_classic:num("hs_classic"), hs_speedrun:num("hs_speedrun"),
+      hs_classic_dur:num("hs_classic_dur"), hs_speedrun_dur:num("hs_speedrun_dur"),
+      hs_classic_at:num("hs_classic_at"), hs_speedrun_at:num("hs_speedrun_at"),
+      story_level:num("story_level"), story_stars:num("story_stars"),
+      coins:num("coins"), pass_level:num("pass_level"), rank:num("rank"),
+      arena_classic:(p.arena_classic===undefined?-1:Number(p.arena_classic)),
+      arena_speedrun:(p.arena_speedrun===undefined?-1:Number(p.arena_speedrun)),
+      // -1 = campo assente (build senza scalata), 0 = zero coppe davvero
+      cups_classic:(p.cups_classic===undefined?-1:Number(p.cups_classic)||0),
+      cups_speedrun:(p.cups_speedrun===undefined?-1:Number(p.cups_speedrun)||0),
+      cubes:num("cubes_broken"),
+      first_seen:num("first_seen"), updated:num("updated"),
+      ver:str("ver"),
+      platform:str("platform")||"—"
+    };
+  });
+  STATS_PLAYERS=players;
+  notice.classList.add("hidden");
+  renderTelemetry(players);
+  renderHero();
+  renderSyncNotice();
+}
+
+function renderTelemetryEmpty(){
+  ["kTotPlayers","kNew7","kDau","kMau","kTotGames","kPlaytime","kAvgSession","kSticky",
+   "kVerLast","kVerAdopt","kVerFresh","kVerOld"].forEach(id=>setTxt(id,"—"));
+  const msg='<div class="state"><div class="big">In attesa di dati</div>'
+    +'La telemetria comparir&agrave; quando i giocatori useranno la versione aggiornata dell\'app.</div>';
+  ["activityChart","growthChart","platChart","verDist","verAdoptChart","playByMode","gamesByMode",
+   "gamesHist","timeHist","lifeHist","retChart","storyCurve","storyStats","storyFunnel",
+   "passDist","rankDist","coinDist","recordsCoins","topPlaytime","topGames","topStory","topCoins"]
+   .forEach(id=>setHtml(id,msg));
+}
+
+function renderTelemetry(all){
+  const pf=(document.getElementById("platformSelect")||{}).value||"";
+  const players = pf ? all.filter(p=>p.platform===pf) : all;
+  const N=players.length;
+  const sum=k=>players.reduce((a,p)=>a+p[k],0);
+  const today=todayDay();
+
+  /* ---- KPI ---- */
+  const ptTotal=sum("pt_total"), gTotal=sum("g_total");
+  const dayOf=t=>Math.floor((t||0)/DAY);
+  const new7=players.filter(p=>p.first_seen && today-dayOf(p.first_seen)<7).length;
+  const new30=players.filter(p=>p.first_seen && today-dayOf(p.first_seen)<30).length;
+  const dau=players.filter(p=>p.updated && dayOf(p.updated)===today).length;
+  const wau=players.filter(p=>p.updated && today-dayOf(p.updated)<7).length;
+  const mau=players.filter(p=>p.updated && today-dayOf(p.updated)<30).length;
+  setTxt("kNew7",fmtInt(new7)); setTxt("kNew7Sub","ultimi 30 giorni: "+fmtInt(new30));
+  setTxt("kDau",fmtInt(dau));   setTxt("kDauSub","ieri: "+fmtInt(players.filter(p=>dayOf(p.updated)===today-1).length));
+  setTxt("kMau",fmtInt(mau));   setTxt("kMauSub","7 giorni: "+fmtInt(wau));
+  setTxt("kSticky", mau?pct(dau/mau*100):"—");
+  setTxt("kTotGames",fmtInt(gTotal));
+  setTxt("kTotGamesSub", N?fmtNum(gTotal/N,1)+" partite per giocatore":"");
+  setTxt("kPlaytime",fmtDurLong(ptTotal));
+  setTxt("kPlaytimeSub","≈ "+fmtDur(ptTotal)+" · media "+(N?fmtDur(ptTotal/N):"—")+" a giocatore");
+  setTxt("kAvgSession", gTotal?fmtDur(ptTotal/gTotal):"—");
+  setTxt("kAvgSessionSub", fmtInt(gTotal)+" partite · "+fmtDurLong(ptTotal));
+
+  renderActivity(players);
+  renderGrowth(players);
+  renderPlatforms(players);
+  renderVersions(players);
+
+  /* ---- modalita' ---- */
+  const modes=["classic","speedrun","story","ranked"];
+  renderHBars("playByMode", modes.map(m=>({lbl:MODE_LABEL[m],val:sum("pt_"+m),color:MODE_COLORS[m]})),{fmt:fmtDur,showPct:true});
+  renderHBars("gamesByMode", modes.map(m=>({lbl:MODE_LABEL[m],val:sum("g_"+m),color:MODE_COLORS[m]})),{fmt:fmtInt,showPct:true});
+
+  renderEngagement(players);
+  renderRetention(players);
+  renderStory(players);
+  renderProgression(players);
+  renderRecordsCoins(players);
+
+  renderTopList("topPlaytime",players,(a,b)=>b.pt_total-a.pt_total,p=>fmtDur(p.pt_total));
+  renderTopList("topGames",players,(a,b)=>b.g_total-a.g_total,p=>fmtInt(p.g_total)+" partite");
+  renderTopList("topStory",players,(a,b)=>(b.story_level-a.story_level)||(b.story_stars-a.story_stars),p=>"Liv "+p.story_level+" · "+p.story_stars+"★");
+  renderTopList("topCoins",players,(a,b)=>b.coins-a.coins,p=>fmtCompact(p.coins)+" 🪙");
+
+  PLAYER_ROWS=players;
+  renderArenaDist(players);
+  renderPlayerTable();
+
+  if(CHART_CACHE) decorateStoryTrend(players.filter(p=>p.story_level>0).length);
+}
+
+/* ---- attivita' giornaliera ---- */
+function renderActivity(players){
+  const D=ACT_DAYS, today=todayDay();
+  const days=[]; for(let i=D-1;i>=0;i--) days.push(today-i);
+  const idx={}; days.forEach((d,i)=>{ idx[d]=i; });
+  const nw=new Array(D).fill(0), ac=new Array(D).fill(0);
+  players.forEach(p=>{
+    const fd=Math.floor((p.first_seen||0)/DAY), ud=Math.floor((p.updated||0)/DAY);
+    if(idx[fd]!==undefined) nw[idx[fd]]++;
+    if(idx[ud]!==undefined) ac[idx[ud]]++;
+  });
+  const roll=ac.map((_,i)=>{
+    const a=Math.max(0,i-6); const s=ac.slice(a,i+1);
+    return s.reduce((x,y)=>x+y,0)/s.length;
+  });
+  const lbl=d=>{ const dt=new Date(d*DAY*1000); return dt.getUTCDate()+"/"+(dt.getUTCMonth()+1); };
+  lineChart("activityChart", days.map(lbl), [
+    {name:"Nuovi",color:"var(--classic)",data:nw,area:true},
+    {name:"Attivi",color:"var(--speedrun)",data:ac,area:true},
+    {name:"Media 7gg",color:"var(--cyan)",data:roll,dash:true,width:2}
+  ], {label:"Attivita giornaliera", step:D<=7?60:22});
+}
+
+/* ---- crescita cumulativa ---- */
+function renderGrowth(players){
+  const D=Math.min(120,Math.max(30,ACT_DAYS)), today=todayDay();
+  const days=[]; for(let i=D-1;i>=0;i--) days.push(today-i);
+  const first=players.map(p=>Math.floor((p.first_seen||0)/DAY)).filter(d=>d>0).sort((a,b)=>a-b);
+  const before=first.filter(d=>d<days[0]).length;
+  let acc=before;
+  const cum=days.map(d=>{ acc+=first.filter(f=>f===d).length; return acc; });
+  const lbl=d=>{ const dt=new Date(d*DAY*1000); return dt.getUTCDate()+"/"+(dt.getUTCMonth()+1); };
+  lineChart("growthChart", days.map(lbl),
+    [{name:"Giocatori totali",color:"var(--green2)",data:cum,area:true}],
+    {label:"Crescita installazioni", H:250, W:560, step:11});
+}
+
+/* ---- piattaforme ---- */
+function renderPlatforms(players){
+  const by={};
+  players.forEach(p=>{ by[p.platform]=(by[p.platform]||0)+1; });
+  const cols={iOS:"var(--classic)",Android:"var(--green2)"};
+  const items=Object.keys(by).sort((a,b)=>by[b]-by[a]).slice(0,5)
+    .map((k,i)=>({lbl:k,val:by[k],color:cols[k]||ICON_COLORS[i+3]}));
+  donut("platChart", items, {center:"giocatori", label:"Piattaforme"});
+}
+
+/* ---- versioni ---- */
+function renderVersions(players){
+  const withVer=players.filter(p=>p.ver);
+  if(withVer.length===0){
+    ["kVerLast","kVerAdopt","kVerFresh","kVerOld"].forEach(id=>setTxt(id,"—"));
+    const msg='<div class="state"><div class="big">Versione non ancora inviata</div>'
+      +'Il campo <code>ver</code> arriva con la prossima build: da quel momento qui vedi chi ha aggiornato e chi no.</div>';
+    setHtml("verDist",msg); setHtml("verAdoptChart",msg);
+    return;
+  }
+  const by={};
+  withVer.forEach(p=>{ by[p.ver]=(by[p.ver]||0)+1; });
+  const vers=Object.keys(by).sort((a,b)=>verNum(b)-verNum(a));
+  const latest=vers[0];
+  const onLatest=by[latest]||0;
+  const today=todayDay();
+  const fresh=withVer.filter(p=>p.ver===latest && today-Math.floor(p.updated/DAY)<7).length;
+  setTxt("kVerLast",latest);
+  setTxt("kVerAdopt",fmtInt(onLatest));
+  setTxt("kVerAdoptSub",pct(onLatest/withVer.length*100)+" di "+fmtInt(withVer.length)+" con versione nota");
+  setTxt("kVerFresh",fmtInt(fresh));
+  setTxt("kVerOld",fmtInt(withVer.length-onLatest));
+  renderHBars("verDist", vers.map((v,i)=>({
+    lbl:"v"+v, val:by[v],
+    color: v===latest?"var(--green2)":ICON_COLORS[(i+1)%ICON_COLORS.length]
+  })), {fmt:fmtInt, showPct:true});
+
+  const D=Math.min(60,Math.max(14,ACT_DAYS));
+  const days=[]; for(let i=D-1;i>=0;i--) days.push(today-i);
+  const idx={}; days.forEach((d,i)=>{ idx[d]=i; });
+  const last=new Array(D).fill(0), old=new Array(D).fill(0);
+  withVer.forEach(p=>{
+    const ud=Math.floor((p.updated||0)/DAY);
+    if(idx[ud]===undefined) return;
+    if(p.ver===latest) last[idx[ud]]++; else old[idx[ud]]++;
+  });
+  const lbl=d=>{ const dt=new Date(d*DAY*1000); return dt.getUTCDate()+"/"+(dt.getUTCMonth()+1); };
+  stackChart("verAdoptChart", days.map(lbl), [
+    {name:"v"+latest,color:"var(--green2)",data:last},
+    {name:"versioni precedenti",color:"var(--orange)",data:old}
+  ], {label:"Adozione ultima versione", H:250, W:560, step:12});
+}
+
+/* ---- coinvolgimento ---- */
+function renderEngagement(players){
+  if(!players.length){ ["gamesHist","timeHist","lifeHist"].forEach(id=>emptyState(id)); return; }
+  const gEdges=[1,2,5,10,25,50,100,250,1e9];
+  const gLab=(e,i)=>i===0?"1":(i===gEdges.length-1?"250+":(gEdges[i-1]+1)+"-"+e);
+  const g=bucketize(players.map(p=>p.g_total), gEdges, gLab);
+  barChart("gamesHist", g.labels, [{name:"Giocatori",color:"var(--classic)",data:g.counts}],
+    {label:"Partite per giocatore", H:250, W:520, step:52});
+
+  const tEdges=[300,900,1800,3600,7200,18000,43200,1e9];
+  const tLab=(e,i)=>["<5m","5-15m","15-30m","30m-1h","1-2h","2-5h","5-12h","12h+"][i];
+  const t=bucketize(players.map(p=>p.pt_total), tEdges, tLab);
+  barChart("timeHist", t.labels, [{name:"Giocatori",color:"var(--gold)",data:t.counts}],
+    {label:"Tempo per giocatore", H:250, W:520, step:52});
+
+  const lEdges=[0,1,3,7,14,30,1e9];
+  const lLab=(e,i)=>["stesso giorno","1 g","2-3 g","4-7 g","8-14 g","15-30 g","30+ g"][i];
+  const life=players.filter(p=>p.first_seen&&p.updated)
+    .map(p=>Math.max(0,Math.floor((p.updated-p.first_seen)/DAY)));
+  const l=bucketize(life, lEdges, lLab);
+  barChart("lifeHist", l.labels, [{name:"Giocatori",color:"var(--purple)",data:l.counts}],
+    {label:"Giorni di vita", H:250, W:520, step:52});
+}
+
+/* ---- ritenzione per coorte ---- */
+function renderRetention(players){
+  const today=todayDay();
+  const marks=[1,3,7,14,30];
+  const cohorts={};
+  players.forEach(p=>{
+    if(!p.first_seen||!p.updated) return;
+    const c=Math.floor(p.first_seen/DAY);
+    if(today-c>60) return;
+    (cohorts[c]=cohorts[c]||[]).push(Math.max(0,Math.floor((p.updated-p.first_seen)/DAY)));
+  });
+  const keys=Object.keys(cohorts).map(Number).sort((a,b)=>a-b);
+  if(!keys.length){ emptyState("retChart"); return; }
+  const lbl=d=>{ const dt=new Date(d*DAY*1000); return dt.getUTCDate()+"/"+(dt.getUTCMonth()+1); };
+  const series=marks.map((m,i)=>({
+    name:"D"+m, color:ICON_COLORS[i],
+    data:keys.map(c=>{
+      if(today-c<m) return 0;                       // coorte troppo recente
+      const arr=cohorts[c];
+      return arr.length?Math.round(arr.filter(v=>v>=m).length/arr.length*1000)/10:0;
+    })
+  }));
+  lineChart("retChart", keys.map(lbl), series,
+    {label:"Ritenzione", yfmt:v=>fmtNum(v,0)+"%", vfmt:v=>fmtNum(v,1)+"%", H:280, step:28});
+  const lg=marks.map((m,i)=>'<span><i style="background:'+ICON_COLORS[i]+'"></i>Ancora attivi dopo '+m+(m===1?" giorno":" giorni")+'</span>').join("");
+  document.getElementById("retChart").insertAdjacentHTML("afterbegin",'<div class="legend">'+lg+'</div>');
+}
+
+/* ---- storia ---- */
+function renderStory(players){
+  const N=players.length;
+  if(!N){ ["storyCurve","storyStats","storyFunnel"].forEach(id=>emptyState(id,"Nessun dato storia.")); return; }
+  const levels=[]; for(let L=1;L<=STORY_MAX;L++) levels.push(L);
+  const reached=levels.map(L=>players.filter(p=>p.story_level>=L).length);
+  lineChart("storyCurve", levels.map(L=>String(L)),
+    [{name:"Hanno raggiunto",color:"var(--story)",data:reached,area:true}],
+    {label:"Curva storia", H:260, step:26});
+  // drop % fra un livello e il successivo
+  let worst=-1, worstDrop=0;
+  for(let i=0;i<reached.length-1;i++){
+    if(reached[i]<=0) continue;
+    const d=(reached[i]-reached[i+1])/reached[i];
+    if(d>worstDrop){ worstDrop=d; worst=levels[i]; }
+  }
+  if(worst>0) document.getElementById("storyCurve").insertAdjacentHTML("beforeend",
+    '<div class="foot">Salto pi&ugrave; grande: dal livello <b style="color:var(--gold)">'+worst+'</b> al '+(worst+1)
+    +' se ne perde il <b style="color:var(--red)">'+pct(worstDrop*100)+'</b>.</div>');
+
+  const steps=[1,5,10,15,20,25,30];
+  let fh='<div class="funnel">';
+  steps.forEach(L=>{
+    const r=players.filter(p=>p.story_level>=L).length;
+    fh+='<div class="frow"><span class="fl">Liv &ge; '+L+'</span>'
+      +'<span class="ft"><span class="ff" style="width:'+((r/N)*100).toFixed(1)+'%"></span></span>'
+      +'<span class="fv">'+fmtInt(r)+' · '+pct(r/N*100)+'</span></div>';
+  });
+  setHtml("storyFunnel",fh+'</div>');
+
+  const withStory=players.filter(p=>p.story_level>0);
+  const completed=players.filter(p=>p.story_level>=STORY_MAX).length;
+  const avgStars=withStory.length?withStory.reduce((a,p)=>a+p.story_stars,0)/withStory.length:0;
+  const avgLevel=withStory.length?withStory.reduce((a,p)=>a+p.story_level,0)/withStory.length:0;
+  const buckets=[{lbl:"0",lo:0,hi:0},{lbl:"1-15",lo:1,hi:15},{lbl:"16-30",lo:16,hi:30},
+                 {lbl:"31-60",lo:31,hi:60},{lbl:"61-90",lo:61,hi:STORY_MAX*3}];
+  const counts=buckets.map(b=>players.filter(p=>p.story_stars>=b.lo&&p.story_stars<=b.hi).length);
+  const maxC=Math.max(1,...counts);
+  let h='<div class="kpis" style="grid-template-columns:1fr 1fr;margin-bottom:14px">'
+    +'<div class="kpi"><div class="lbl">Storia completata</div><div class="val sm">'+pct(completed/N*100)+'</div>'
+      +'<div class="sub">'+fmtInt(completed)+' su '+fmtInt(N)+'</div></div>'
+    +'<div class="kpi"><div class="lbl">Media stelle</div><div class="val sm">'+fmtNum(avgStars,1)+'</div>'
+      +'<div class="sub">livello medio '+fmtNum(avgLevel,1)+'</div></div></div>'
+    +'<div style="color:var(--dim);font-size:15px;margin-bottom:8px">Distribuzione stelle totali</div><div class="hbars">';
+  buckets.forEach((b,i)=>{
+    h+='<div class="hbar"><span class="hlbl">'+esc(b.lbl)+'</span>'
+      +'<span class="htrack"><span class="hfill" style="width:'+((counts[i]/maxC)*100).toFixed(1)+'%;background:var(--gold)"></span></span>'
+      +'<span class="hval">'+fmtInt(counts[i])+'</span></div>';
+  });
+  setHtml("storyStats",h+'</div>');
+}
+
+/* ---- progressione ---- */
+function distByField(players, field){
+  const map={};
+  players.forEach(p=>{ map[p[field]]=(map[p[field]]||0)+1; });
+  return Object.keys(map).map(Number).sort((a,b)=>a-b).map(k=>({k,c:map[k]}));
+}
+function renderProgression(players){
+  if(!players.length){ ["passDist","rankDist","coinDist"].forEach(id=>emptyState(id)); return; }
+  const pass=distByField(players,"pass_level").slice(0,20);
+  renderHBars("passDist", pass.map(d=>({lbl:"Pass "+d.k,val:d.c,color:"var(--gold)"})),{fmt:fmtInt,showPct:true});
+  const rank=distByField(players,"rank").slice(0,20);
+  renderHBars("rankDist", rank.map(d=>({lbl:"Rank "+d.k,val:d.c,color:"var(--ranked)"})),{fmt:fmtInt,showPct:true});
+  const cEdges=[0,1000,5000,20000,50000,100000,500000,1e12];
+  const cLab=(e,i)=>["0","1-1k","1k-5k","5k-20k","20k-50k","50k-100k","100k-500k","500k+"][i];
+  const c=bucketize(players.map(p=>p.coins),cEdges,cLab);
+  renderHBars("coinDist", c.labels.map((l,i)=>({lbl:l,val:c.counts[i],color:"var(--cyan)"})),{fmt:fmtInt,showPct:true});
+}
+
+function renderRecordsCoins(players){
+  const N=players.length;
+  if(!N){ emptyState("recordsCoins"); return; }
+  const avg=k=>players.reduce((a,p)=>a+p[k],0)/N;
+  const max=k=>players.reduce((a,p)=>Math.max(a,p[k]),0);
+  const med=k=>{ const a=players.map(p=>p[k]).sort((x,y)=>x-y); return a[Math.floor(a.length/2)]; };
+  const cards=[
+    {lbl:"HS Classic · media",  val:fmtCompact(Math.round(avg("hs_classic")))},
+    {lbl:"HS Classic · mediana",val:fmtCompact(med("hs_classic"))},
+    {lbl:"HS Classic · max",    val:fmtCompact(max("hs_classic"))},
+    {lbl:"HS Speedrun · media", val:fmtCompact(Math.round(avg("hs_speedrun")))},
+    {lbl:"HS Speedrun · mediana",val:fmtCompact(med("hs_speedrun"))},
+    {lbl:"HS Speedrun · max",   val:fmtCompact(max("hs_speedrun"))},
+    {lbl:"Monete · media",      val:fmtCompact(Math.round(avg("coins")))},
+    {lbl:"Monete · max",        val:fmtCompact(max("coins"))}
+  ];
+  const cubes=players.reduce((a,p)=>a+p.cubes,0);
+  if(cubes>0) cards.push({lbl:"Cubi rotti · totale", val:fmtCompact(cubes)});
+  setHtml("recordsCoins",'<div class="kpis" style="grid-template-columns:repeat(3,1fr)">'
+    +cards.map(c=>'<div class="kpi"><div class="lbl" style="min-height:0">'+esc(c.lbl)+'</div><div class="val sm">'+c.val+'</div></div>').join("")
+    +'</div>');
+}
+
+/* ---- top list ---- */
+function iconColor(i){ return ICON_COLORS[(i|0)%ICON_COLORS.length]; }
+function badge(icon){
+  return '<span class="icon-badge" style="background:'+iconColor(icon)+';width:22px;height:22px;font-size:10px;'
+    +'display:inline-flex;vertical-align:middle;margin-right:7px">'+(icon|0)+'</span>';
+}
+function renderTopList(elId, players, sortFn, valFn){
+  if(!players.length){ emptyState(elId); return; }
+  const top=players.slice().sort(sortFn).slice(0,10);
+  setHtml(elId,'<div class="toplist">'+top.map((p,i)=>
+    '<div class="toprow"><span class="n">'+(i+1)+'</span>'
+    +'<span class="who">'+badge(p.icon)+esc(p.name)+'</span>'
+    +'<span class="v">'+valFn(p)+'</span></div>').join("")+'</div>');
+}
+/* ==========================================================================
+   SCANSIONE CLASSIFICHE: andamento mensile + record di sempre + hero
+   ========================================================================== */
+async function loadChart(){
+  const periods=lastPeriods(WEEKS_BACK).slice().reverse();   // dalla piu' vecchia
+  try{
+    const results=await Promise.all(periods.map(async p=>{
+      const [c,s,st]=await Promise.all([
+        fetchPeriodIds("classic",p), fetchPeriodIds("speedrun",p), fetchPeriodIds("story",p)
+      ]);
+      [c,s,st].forEach(arr=>{ if(arr) arr.forEach(id=>LB_IDS.add(id)); });
+      return {p, c:c?c.length:0, s:s?s.length:0, st:st===null?null:st.length};
+    }));
+    CHART_CACHE={
+      periods,
+      classic:results.map(r=>r.c),
+      speedrun:results.map(r=>r.s),
+      story:results.map(r=>r.st===null?0:r.st),
+      storyBucketExists:results.some(r=>r.st!==null&&r.st>0)
+    };
+    drawWeekChart(CHART_CACHE);
+    renderHero();
+    if(!CHART_CACHE.storyBucketExists)
+      decorateStoryTrend(STATS_PLAYERS?STATS_PLAYERS.filter(p=>p.story_level>0).length:null);
+    else setTxt("storyTrendNote","");
+
+    /* VECCHI BUCKET MENSILI (anno*12+mese): nessuna build li scrive piu', ma
+       contengono i giocatori delle prime settimane. Li leggiamo solo per il
+       conteggio totale e per i record storici. */
+    const legacy=[];
+    await Promise.all(legacyPeriods(LEGACY_MONTHS).map(async p=>{
+      const [c,s]=await Promise.all([fetchPeriodIds("classic",p),fetchPeriodIds("speedrun",p)]);
+      let any=false;
+      [c,s].forEach(arr=>{ if(arr&&arr.length){ any=true; arr.forEach(id=>LB_IDS.add(id)); } });
+      if(any) legacy.push(p);
+    }));
+    renderHero();
+
+    const live=results.filter(r=>r.c>0||r.s>0).map(r=>r.p);
+    await loadAllTime((live.length?live:[currentPeriodUTC()]).concat(legacy));
+  }catch(e){
+    setHtml("chartArea",'<div class="state err"><div class="big">Errore andamento</div>'+esc(e.message)+'</div>');
+  }
+}
+
+function drawWeekChart(cache){
+  // taglia le settimane iniziali vuote (il gioco e' uscito da poco): niente barre a zero
+  let from=0;
+  while(from<cache.periods.length-1 &&
+        !cache.classic[from] && !cache.speedrun[from] && !cache.story[from]) from++;
+  from=Math.max(0, Math.min(from, cache.periods.length-4));
+  const labels=cache.periods.slice(from).map(p=>decodePeriod(p).short);
+  barChart("chartArea", labels, [
+    {name:"Classic",color:"var(--classic)",data:cache.classic.slice(from)},
+    {name:"Speedrun",color:"var(--speedrun)",data:cache.speedrun.slice(from)},
+    {name:"Storia",color:"var(--story)",data:cache.story.slice(from)}
+  ], {label:"Partecipanti per settimana", H:290, step:58, maxBar:15});
+  const el=document.getElementById("chartArea");
+  if(from>0 && el) el.insertAdjacentHTML("beforeend",
+    '<div class="foot">Nascoste '+from+' settimane precedenti senza nessun giocatore.</div>');
+}
+function decorateStoryTrend(cur){
+  const note=document.getElementById("storyTrendNote");
+  if(cur===null||cur===undefined){ note.textContent="Storia: nessuna classifica settimanale dedicata."; return; }
+  note.textContent="Storia: non esiste una classifica dedicata; l'ultima barra usa i giocatori con story_level>0 (valore corrente: "+fmtInt(cur)+").";
+  if(CHART_CACHE){
+    const st=CHART_CACHE.story.slice();
+    st[st.length-1]=cur;
+    CHART_CACHE.story=st;
+    drawWeekChart(CHART_CACHE);
+  }
+}
+
+/* ---- record assoluti: miglior punteggio di ogni giocatore su TUTTI i mesi ---- */
+async function loadAllTime(periods){
+  for(const mode of MODES){
+    const best=new Map();
+    const lists=await Promise.all(periods.map(p=>fetchTop(mode,p,100).catch(()=>[])));
+    lists.forEach((rows,i)=>rows.forEach(r=>{
+      const prev=best.get(r.id);
+      if(!prev || r.score>prev.score) best.set(r.id,Object.assign({},r,{period:periods[i]}));
+    }));
+    ALLTIME[mode]=best;
+  }
+  renderAllTime();
+  renderSyncNotice();
+}
+
+function renderAllTime(){
+  MODES.forEach(mode=>{
+    const map=ALLTIME[mode];
+    const cardId = mode==="classic"?"recClassic":"recSpeedrun";
+    const listId = mode==="classic"?"allTimeClassic":"allTimeSpeed";
+    if(!map||map.size===0){
+      setHtml(cardId,'<div class="state">Nessun record.</div>');
+      emptyState(listId); return;
+    }
+    const rows=Array.from(map.values()).sort((a,b)=>b.score-a.score);
+    const top=rows[0];
+    // durata: dalla classifica, altrimenti dalla telemetria dello stesso giocatore
+    let dur=top.dur, durSrc="classifica";
+    if(!dur && STATS_PLAYERS){
+      const p=STATS_PLAYERS.find(x=>x.id===top.id);
+      if(p){
+        const d = mode==="classic"?p.hs_classic_dur:p.hs_speedrun_dur;
+        if(d){ dur=d; durSrc="telemetria"; }
+      }
+    }
+    setHtml(cardId,
+      '<div class="rl">Record assoluto · '+MODE_LABEL[mode]+'</div>'
+      +'<div class="rs">'+fmtInt(top.score)+'</div>'
+      +'<div class="rw">'+badge(top.icon)+esc(top.name)+(top.glo?' <span class="glo-tag">GLO</span>':'')+'</div>'
+      +'<div class="recmeta">'
+        +'<div>Quando: <b>'+esc(periodLabel(top.period))+'</b></div>'
+        +'<div>Durata partita: <b>'+(dur?fmtDur(dur):"non disponibile")+'</b>'+(dur?' <span style="color:var(--faint)">('+durSrc+')</span>':'')+'</div>'
+        +(top.ts?'<div>Il <b>'+fmtDate(top.ts)+'</b></div>':'')
+      +'</div>'
+      +(dur?'':'<div class="foot">La durata arriva con la prossima build dell\'app: da l&igrave; in poi ogni punteggio porta con s&eacute; quanto &egrave; durata la partita.</div>'));
+
+    const tele=STATS_PLAYERS? new Map(STATS_PLAYERS.map(p=>[p.id,p])) : new Map();
+    setHtml(listId,'<div class="toplist">'+rows.slice(0,10).map((r,i)=>{
+      let d=r.dur;
+      if(!d){ const p=tele.get(r.id); if(p) d = mode==="classic"?p.hs_classic_dur:p.hs_speedrun_dur; }
+      return '<div class="toprow"><span class="n">'+(i+1)+'</span>'
+        +'<span class="who">'+badge(r.icon)+esc(r.name)+'</span>'
+        +'<span class="v">'+fmtInt(r.score)+(d?' <span style="color:var(--faint)">· '+fmtDur(d)+'</span>':'')+'</span></div>';
+    }).join("")+'</div>');
+  });
+}
+
+/* ---- controllo di coerenza fra telemetria e classifica ----
+   Serve ad accorgersi subito se i punteggi smettono di arrivare online: confronta
+   il record locale (telemetria) con il miglior punteggio visto in classifica.
+   Il confronto sui punteggi vale solo per chi compare nelle top 100 scansionate. */
+function renderSyncNotice(){
+  const el=document.getElementById("syncNotice");
+  if(!el || !STATS_PLAYERS || !ALLTIME.classic) return;
+  const played=STATS_PLAYERS.filter(p=>p.g_classic>0);
+  const missing=played.filter(p=>!LB_IDS.has(p.id)).length;
+  let stuck=0, worst=null;
+  STATS_PLAYERS.forEach(p=>{
+    const r=ALLTIME.classic.get(p.id);
+    if(!r || p.hs_classic<=0) return;
+    if(p.hs_classic > r.score*1.05){
+      stuck++;
+      const gap=p.hs_classic-r.score;
+      if(!worst||gap>worst.gap) worst={name:p.name,gap,local:p.hs_classic,online:r.score};
+    }
+  });
+  const missPct = played.length? missing/played.length*100 : 0;
+  // riga informativa sotto i record: sempre utile, non allarmistica
+  const detail=document.getElementById("recSyncFoot");
+  if(detail){
+    detail.innerHTML='Copertura: '+fmtInt(played.length-missing)+' su '+fmtInt(played.length)
+      +' giocatori con partite Classic hanno una riga in classifica ('+pct(100-missPct)+').'
+      +(stuck?(' '+fmtInt(stuck)+' record locali risultano pi&ugrave; alti del miglior punteggio online'
+        +(worst?' (il pi&ugrave; grosso: '+esc(worst.name)+', '+fmtInt(worst.local)+' sul telefono contro '+fmtInt(worst.online)+' online)':'')
+        +' &mdash; pu&ograve; dipendere da partite fatte prima delle settimane scansionate.'):'');
+  }
+  if(missPct<8){ el.classList.add("hidden"); return; }
+  el.classList.remove("hidden");
+  el.innerHTML='<strong>Punteggi che non arrivano in classifica.</strong> '
+    +fmtInt(missing)+' giocatori su '+fmtInt(played.length)+' ('+pct(missPct)+') hanno partite Classic '
+    +'nella telemetria ma nessuna riga in classifica. Se la percentuale cresce, l\'invio in classifica dell\'app sta fallendo.';
+}
+
+/* ==========================================================================
+   CLASSIFICA DEL MESE
+   ========================================================================== */
+async function loadMonth(){
+  setTxt("lbMonthLabel",decodePeriod(SELECTED_PERIOD).label);
+  setHtml("tableArea",'<div class="state"><div class="spinner"></div><div style="margin-top:14px">Caricamento classifica…</div></div>');
+  await Promise.all(MODES.map(m=>ensureTable(m,SELECTED_PERIOD)));
+  renderTable();
+}
+async function ensureTable(mode,period){
+  const key=mode+":"+period;
+  if(TABLE_CACHE[key]!==undefined) return TABLE_CACHE[key];
+  try{ TABLE_CACHE[key]=await fetchPeriodAll(mode,period); }
+  catch(e){ TABLE_CACHE[key]={__error:e.message||"errore"}; }
+  return TABLE_CACHE[key];
+}
+const MEDALS=["🥇","🥈","🥉"];
+function renderTable(){
+  const key=CURRENT_MODE+":"+SELECTED_PERIOD;
+  const cached=TABLE_CACHE[key];
+  if(cached===undefined){
+    setHtml("tableArea",'<div class="state"><div class="spinner"></div></div>');
+    ensureTable(CURRENT_MODE,SELECTED_PERIOD).then(renderTable); return;
+  }
+  if(cached && cached.__error){
+    setHtml("tableArea",'<div class="state err"><div class="big">Errore classifica</div>'+esc(cached.__error)+'</div>');
+    return;
+  }
+  const rows=cached;
+  if(!rows||!rows.length){
+    setHtml("tableArea",'<div class="state"><div class="big">Nessun giocatore</div>Nessun punteggio per '
+      +'la settimana '+esc(decodePeriod(SELECTED_PERIOD).label)+' in '+esc(MODE_LABEL[CURRENT_MODE])+'.</div>');
+    emptyState("scoreDist"); emptyState("durDist");
+    return;
+  }
+  const tele=STATS_PLAYERS? new Map(STATS_PLAYERS.map(p=>[p.id,p])) : new Map();
+  let withDur=0;
+  const body=rows.slice(0,100).map((r,i)=>{
+    const rank=i+1;
+    const cls=rank===1?"t1":rank===2?"t2":rank===3?"t3":"";
+    const medal=rank<=3?'<span class="medal">'+MEDALS[rank-1]+'</span> ':'';
+    let d=r.dur;
+    if(!d){ const p=tele.get(r.id); if(p) d=CURRENT_MODE==="classic"?p.hs_classic_dur:p.hs_speedrun_dur; }
+    if(d) withDur++;
+    return '<tr><td class="rank '+cls+'">'+medal+rank+'</td>'
+      +'<td><div class="nick"><span class="icon-badge" style="background:'+iconColor(r.icon)+'">'+(r.icon|0)+'</span>'
+      +'<span>'+esc(r.name)+'</span>'+(r.glo?' <span class="glo-tag" title="Global / verificato">GLO</span>':'')+'</div></td>'
+      +'<td class="score">'+fmtInt(r.score)+'</td>'
+      +'<td class="dur">'+(d?fmtDur(d):"—")+'</td></tr>';
+  }).join("");
+  setHtml("tableArea",'<div class="table-wrap"><table>'
+    +'<thead><tr><th>#</th><th>Nickname</th><th style="text-align:right">Punteggio</th><th style="text-align:right">Durata</th></tr></thead>'
+    +'<tbody>'+body+'</tbody></table></div>'
+    +'<div class="foot">'+fmtInt(rows.length)+' giocatori nella settimana · mostrati i primi 100 · '
+    +(withDur?fmtInt(withDur)+' con durata registrata':'durata non ancora inviata dall\'app (arriva con la prossima build)')+'.</div>');
+
+  renderScoreDist(rows);
+  renderDurDist(rows, tele);
+}
+function renderScoreDist(rows){
+  const edges=[1000,10000,100000,1000000,10000000,100000000,1e12];
+  const lab=(e,i)=>["<1k","1k-10k","10k-100k","100k-1M","1M-10M","10M-100M","100M+"][i];
+  const b=bucketize(rows.map(r=>r.score),edges,lab);
+  barChart("scoreDist", b.labels, [{name:"Giocatori",color:"var(--gold)",data:b.counts}],
+    {label:"Distribuzione punteggi", H:250, W:560, step:66});
+}
+function renderDurDist(rows, tele){
+  const durs=rows.map(r=>{
+    if(r.dur) return r.dur;
+    const p=tele.get(r.id);
+    if(p) return CURRENT_MODE==="classic"?p.hs_classic_dur:p.hs_speedrun_dur;
+    return 0;
+  }).filter(d=>d>0);
+  if(!durs.length){
+    setHtml("durDist",'<div class="state"><div class="big">Durata non disponibile</div>'
+      +'Le partite registrate finora non portano la durata: arriva con la prossima build dell\'app.</div>');
+    return;
+  }
+  const edges=[60,180,300,600,1200,1800,1e9];
+  const lab=(e,i)=>["<1m","1-3m","3-5m","5-10m","10-20m","20-30m","30m+"][i];
+  const b=bucketize(durs,edges,lab);
+  barChart("durDist", b.labels, [{name:"Partite",color:"var(--cyan)",data:b.counts}],
+    {label:"Durata partite in classifica", H:250, W:560, step:66});
+  const avg=durs.reduce((a,x)=>a+x,0)/durs.length;
+  document.getElementById("durDist").insertAdjacentHTML("beforeend",
+    '<div class="foot">Durata media di una partita da classifica: <b style="color:var(--gold)">'+fmtDur(avg)+'</b> su '+fmtInt(durs.length)+' partite.</div>');
+}
+
+/* ==========================================================================
+   SCHEDA GIOCATORI — a che griglia e' arrivato ognuno
+   ========================================================================== */
+let PLAYER_ROWS=[];
+let PL_SORT={key:"cups_classic", dir:-1};
+let PL_SHOWN=50;
+const PL_PAGE=50;
+
+/* distribuzione dei giocatori per griglia, una scalata per volta */
+function renderArenaDist(players){
+  [["classic","arenaClassic","var(--classic)"],["speedrun","arenaSpeed","var(--speedrun)"]].forEach(([mode,elId,col])=>{
+    const arr=ARENAS[mode];
+    const known=players.filter(p=>arenaIndex(mode,p["arena_"+mode],p["cups_"+mode])>=0);
+    if(!known.length){
+      setHtml(elId,'<div class="state"><div class="big">Griglia non ancora inviata</div>'
+        +'La scalata (campi <code>arena_'+mode+'</code> / <code>cups_'+mode+'</code>) arriva con la prossima build: '
+        +'da quel momento qui vedi a che griglia &egrave; ogni giocatore.</div>');
+      return;
+    }
+    const counts=new Array(arr.length).fill(0);
+    known.forEach(p=>{ counts[arenaIndex(mode,p["arena_"+mode],p["cups_"+mode])]++; });
+    renderHBars(elId, arr.map((a,i)=>({
+      lbl:a.n+" · "+a.t, val:counts[i],
+      color: i===0?"var(--faint)":col
+    })), {fmt:fmtInt, showPct:true, wide:true});
+    document.getElementById(elId).insertAdjacentHTML("beforeend",
+      '<div class="foot">Su '+fmtInt(known.length)+' giocatori con il dato della scalata.</div>');
+  });
+}
+
+/* colonne della tabella: chiave di ordinamento + come si stampa la cella */
+const PL_COLS=[
+  {k:"name",  h:"Giocatore", cls:"", cell:p=>'<div class="nick"><span class="icon-badge" style="background:'+iconColor(p.icon)+'">'+(p.icon|0)+'</span><span>'+esc(p.name)+'</span></div>', v:p=>p.name.toLowerCase()},
+  {k:"platform", h:"Piatt.", cls:"", cell:p=>esc(p.platform), v:p=>p.platform},
+  {k:"arena_classic", h:"Griglia Classic", cls:"arena", v:p=>arenaIndex("classic",p.arena_classic,p.cups_classic),
+   cell:p=>{ const i=arenaIndex("classic",p.arena_classic,p.cups_classic);
+     return i<0?'<span style="color:var(--faint)">—</span>'
+       :'<b style="color:var(--classic)">'+esc(arenaName("classic",i))+'</b><br><small>'+esc(arenaTitle("classic",i))+'</small>'; }},
+  {k:"cups_classic", h:"Coppe C", cls:"score", v:p=>p.cups_classic, cell:p=>p.cups_classic>=0?fmtCompact(p.cups_classic):"—"},
+  {k:"g_classic", h:"Partite C", cls:"dur", v:p=>p.g_classic, cell:p=>fmtInt(p.g_classic)},
+  {k:"pt_classic", h:"Ore C", cls:"dur", v:p=>p.pt_classic, cell:p=>fmtDur(p.pt_classic)},
+  {k:"hs_classic", h:"Record C", cls:"score", v:p=>p.hs_classic, cell:p=>fmtCompact(p.hs_classic)},
+  {k:"arena_speedrun", h:"Griglia Speedrun", cls:"arena", v:p=>arenaIndex("speedrun",p.arena_speedrun,p.cups_speedrun),
+   cell:p=>{ const i=arenaIndex("speedrun",p.arena_speedrun,p.cups_speedrun);
+     return i<0?'<span style="color:var(--faint)">—</span>'
+       :'<b style="color:var(--speedrun)">'+esc(arenaName("speedrun",i))+'</b><br><small>'+esc(arenaTitle("speedrun",i))+'</small>'; }},
+  {k:"cups_speedrun", h:"Coppe S", cls:"score", v:p=>p.cups_speedrun, cell:p=>p.cups_speedrun>=0?fmtCompact(p.cups_speedrun):"—"},
+  {k:"g_speedrun", h:"Partite S", cls:"dur", v:p=>p.g_speedrun, cell:p=>fmtInt(p.g_speedrun)},
+  {k:"pt_speedrun", h:"Ore S", cls:"dur", v:p=>p.pt_speedrun, cell:p=>fmtDur(p.pt_speedrun)},
+  {k:"hs_speedrun", h:"Record S", cls:"score", v:p=>p.hs_speedrun, cell:p=>fmtCompact(p.hs_speedrun)},
+  {k:"updated", h:"Ultimo accesso", cls:"dur", v:p=>p.updated, cell:p=>fmtDate(p.updated)}
+];
+
+function plFiltered(){
+  const q=((document.getElementById("plSearch")||{}).value||"").trim().toLowerCase();
+  const f=((document.getElementById("plMode")||{}).value)||"all";
+  const today=todayDay();
+  let rows=PLAYER_ROWS.filter(p=>{
+    if(q && p.name.toLowerCase().indexOf(q)<0) return false;
+    if(f==="classic")  return p.g_classic>0;
+    if(f==="speedrun") return p.g_speedrun>0;
+    if(f==="active")   return p.updated && today-Math.floor(p.updated/DAY)<7;
+    return true;
+  });
+  const col=PL_COLS.find(c=>c.k===PL_SORT.key)||PL_COLS[0];
+  rows=rows.slice().sort((a,b)=>{
+    const va=col.v(a), vb=col.v(b);
+    if(va<vb) return -PL_SORT.dir;
+    if(va>vb) return PL_SORT.dir;
+    return 0;
+  });
+  return rows;
+}
+
+function renderPlayerTable(){
+  if(!PLAYER_ROWS.length){ emptyState("plTable","Nessun giocatore con telemetria."); return; }
+  const rows=plFiltered();
+  const shown=rows.slice(0,PL_SHOWN);
+  const head=PL_COLS.map(c=>{
+    const on=PL_SORT.key===c.k;
+    const arrow=on?(PL_SORT.dir<0?" ▼":" ▲"):"";
+    const align=(c.cls==="score"||c.cls==="dur")?' style="text-align:right;cursor:pointer;white-space:nowrap"':' style="cursor:pointer;white-space:nowrap"';
+    return '<th'+align+' data-k="'+c.k+'"'+(on?' class="on"':'')+'>'+esc(c.h)+arrow+'</th>';
+  }).join("");
+  const body=shown.map(p=>'<tr>'+PL_COLS.map(c=>'<td'+(c.cls?' class="'+c.cls+'"':'')+'>'+c.cell(p)+'</td>').join("")+'</tr>').join("");
+  setHtml("plTable",'<div class="table-wrap"><table style="min-width:1180px">'
+    +'<thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table></div>');
+  document.querySelectorAll("#plTable th").forEach(th=>{
+    th.addEventListener("click",function(){
+      const k=this.dataset.k; if(!k) return;
+      if(PL_SORT.key===k) PL_SORT.dir=-PL_SORT.dir;
+      else { PL_SORT.key=k; PL_SORT.dir=-1; }
+      renderPlayerTable();
+    });
+  });
+  setTxt("plStatus", fmtInt(rows.length)+" giocatori · mostrati "+fmtInt(shown.length));
+  const more=document.getElementById("plMore");
+  if(rows.length>shown.length){
+    more.classList.remove("hidden");
+    more.textContent="▼ Mostra altri "+Math.min(PL_PAGE, rows.length-shown.length)+" (di "+fmtInt(rows.length-shown.length)+" rimasti)";
+  }else more.classList.add("hidden");
+}
+
+function plCsv(){
+  const rows=plFiltered();
+  const head=["Giocatore","Piattaforma","Griglia Classic","Nome arena Classic","Coppe Classic",
+    "Partite Classic","Secondi Classic","Record Classic","Griglia Speedrun","Nome arena Speedrun",
+    "Coppe Speedrun","Partite Speedrun","Secondi Speedrun","Record Speedrun","Ultimo accesso"];
+  const q=v=>'"'+String(v===null||v===undefined?"":v).replace(/"/g,'""')+'"';
+  const lines=[head.map(q).join(";")];
+  rows.forEach(p=>{
+    const ic=arenaIndex("classic",p.arena_classic,p.cups_classic);
+    const is=arenaIndex("speedrun",p.arena_speedrun,p.cups_speedrun);
+    lines.push([p.name,p.platform,ic<0?"":ic+1,ic<0?"":arenaTitle("classic",ic),p.cups_classic<0?"":p.cups_classic,
+      p.g_classic,p.pt_classic,p.hs_classic,is<0?"":is+1,is<0?"":arenaTitle("speedrun",is),
+      p.cups_speedrun<0?"":p.cups_speedrun,p.g_speedrun,p.pt_speedrun,p.hs_speedrun,fmtDate(p.updated)].map(q).join(";"));
+  });
+  const blob=new Blob(["﻿"+lines.join("\n")],{type:"text/csv;charset=utf-8"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="cube-crash-giocatori.csv";
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },1000);
+}
+
+(function(){
+  const s=document.getElementById("plSearch");
+  if(s) s.addEventListener("input",()=>{ PL_SHOWN=PL_PAGE; renderPlayerTable(); });
+  const m=document.getElementById("plMode");
+  if(m) m.addEventListener("change",()=>{ PL_SHOWN=PL_PAGE; renderPlayerTable(); });
+  const b=document.getElementById("plMore");
+  if(b) b.addEventListener("click",()=>{ PL_SHOWN+=PL_PAGE; renderPlayerTable(); });
+  const c=document.getElementById("plCsv");
+  if(c) c.addEventListener("click",plCsv);
+})();
+
+/* ==========================================================================
+   SUPPORTERS & CREATOR
    ========================================================================== */
 const SUPP_URL    = "https://api.npoint.io/c0e50f85707a48094b11";
 const PEND_URL    = "https://api.npoint.io/d580adb16f1a8cd182d6";
 const CREATOR_URL = "https://api.npoint.io/d307da3a533b2dd1bafa";
+const SUPP_PAGE   = 10;
 let suppOg=[], suppPending=[], suppCreq=[], suppCok=[];
+let suppExpand={pending:false, og:false, creq:false, cok:false};
 
-function suppStatus(msg,col){ const el=document.getElementById("suppStatus");
-  if(el){ el.textContent=msg||""; el.style.color=col||"var(--faint)"; } }
-
+function suppStatus(msg,col){
+  const el=document.getElementById("suppStatus");
+  if(el){ el.textContent=msg||""; el.style.color=col||"var(--faint)"; }
+}
 async function suppLoad(){
   suppStatus("Carico le liste…");
   try{
@@ -744,10 +2019,8 @@ async function suppSaveOg(){ await fetch(SUPP_URL,{method:"POST",headers:{"Conte
 async function suppSavePending(){ await fetch(PEND_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({pending:suppPending})}); }
 async function suppSaveCreators(){ await fetch(CREATOR_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({creator_requests:suppCreq,creator_approved:suppCok})}); }
 
-// le richieste creator possono essere oggetti {player, info} (nuovo) o stringhe (vecchio)
 function suppCPlayer(c){ return (c&&typeof c==="object")?(c.player||"?"):String(c); }
 function suppCInfo(c){ return (c&&typeof c==="object")?(c.info||""):""; }
-
 function suppMatch(name,q){ return !q || String(name).toLowerCase().includes(q); }
 function suppHi(name,q){
   const s=esc(name);
@@ -756,8 +2029,79 @@ function suppHi(name,q){
   if(i<0) return s;
   return esc(name.slice(0,i))+"<mark>"+esc(name.slice(i,i+q.length))+"</mark>"+esc(name.slice(i+q.length));
 }
-function suppRow(html,btns){ return '<div class="supp-row"><div class="nm">'+html+'</div>'+btns+'</div>'; }
 
+/* --- LINK CLICCABILI: url espliciti, domini nudi e @handle dei social --- */
+const SOCIALS=[
+  {re:/^@([A-Za-z0-9_.\-]{2,32})$/, url:h=>"https://www.youtube.com/@"+h, icon:"▶"},
+  {re:/^tiktok[:/ ]*@?([A-Za-z0-9_.]{2,32})$/i, url:h=>"https://www.tiktok.com/@"+h, icon:"♪"},
+  {re:/^ig[:/ ]*@?([A-Za-z0-9_.]{2,32})$/i, url:h=>"https://www.instagram.com/"+h, icon:"◉"},
+  {re:/^(?:instagram)[:/ ]*@?([A-Za-z0-9_.]{2,32})$/i, url:h=>"https://www.instagram.com/"+h, icon:"◉"},
+  {re:/^(?:twitch)[:/ ]*@?([A-Za-z0-9_]{2,32})$/i, url:h=>"https://www.twitch.tv/"+h, icon:"▣"}
+];
+function linkIcon(u){
+  const l=u.toLowerCase();
+  if(l.includes("youtube.")||l.includes("youtu.be")) return "▶ ";
+  if(l.includes("tiktok.")) return "♪ ";
+  if(l.includes("instagram.")) return "◉ ";
+  if(l.includes("twitch.")) return "▣ ";
+  if(l.includes("twitter.")||l.includes("x.com")) return "✕ ";
+  if(l.includes("discord.")) return "◆ ";
+  return "🔗 ";
+}
+function anchor(href,text){
+  return '<a href="'+esc(href)+'" target="_blank" rel="noopener noreferrer">'+esc(text)+'</a>';
+}
+/* trasforma il testo libero della richiesta in HTML con i link cliccabili */
+function linkify(text){
+  const s=String(text||"");
+  if(!s) return "";
+  // 1) url completi o domini nudi
+  const urlRe=/((?:https?:\/\/)?(?:www\.)?[A-Za-z0-9\-]+(?:\.[A-Za-z0-9\-]+)+(?:\/[^\s,;]*)?)/g;
+  const TLD=/\.(com|it|net|org|tv|be|me|gg|io|co|app|xyz|live|page|link|to|dev|fm|uk|de|fr|es|eu)(\/|$|\?)/i;
+  let out="", last=0, m;
+  while((m=urlRe.exec(s))!==null){
+    const raw=m[1];
+    // scarta falsi positivi: "3.5", nomi puntati come "@mario.rossi", domini inventati
+    if(!/[A-Za-z]{2,}\.[A-Za-z]{2,}/.test(raw)) continue;
+    if(m.index>0 && s.charAt(m.index-1)==="@") continue;
+    if(!/^https?:\/\//i.test(raw) && !TLD.test(raw)) continue;
+    out+=esc(s.slice(last,m.index));
+    const href=/^https?:\/\//i.test(raw)?raw:("https://"+raw);
+    out+=linkIcon(raw)+anchor(href, raw.replace(/^https?:\/\//,""));
+    last=m.index+raw.length;
+  }
+  out+=esc(s.slice(last));
+  // 2) @handle / "tiktok: nome" quando non c'e' gia' un link
+  if(out.indexOf("<a ")<0){
+    for(const sc of SOCIALS){
+      const mm=s.trim().match(sc.re);
+      if(mm){ return sc.icon+" "+anchor(sc.url(mm[1]), s.trim()); }
+    }
+    // @handle in mezzo alla frase -> YouTube (il caso piu' comune)
+    out=out.replace(/(^|\s)@([A-Za-z0-9_.\-]{2,32})/g,
+      (all,pre,h)=>pre+'▶ <a href="https://www.youtube.com/@'+encodeURIComponent(h)+'" target="_blank" rel="noopener noreferrer">@'+esc(h)+'</a>');
+  }
+  return out;
+}
+
+function suppRow(html,btns){ return '<div class="supp-row"><div class="nm">'+html+'</div>'+btns+'</div>'; }
+/* stampa al massimo SUPP_PAGE righe + bottone "mostra tutti" */
+function suppList(elId, btnId, key, rows, emptyMsg, q){
+  const el=document.getElementById(elId), btn=document.getElementById(btnId);
+  if(!rows.length){
+    el.innerHTML='<div class="supp-empty">'+esc(emptyMsg)+'</div>';
+    btn.classList.add("hidden"); return;
+  }
+  const open=suppExpand[key] || !!q;
+  const shown=open?rows:rows.slice(0,SUPP_PAGE);
+  el.innerHTML=shown.join("");
+  if(rows.length>SUPP_PAGE && !q){
+    btn.classList.remove("hidden");
+    btn.textContent=open?("▲ Mostra solo i primi "+SUPP_PAGE):("▼ Mostra tutti ("+rows.length+")");
+  }else{
+    btn.classList.add("hidden");
+  }
+}
 function suppRender(){
   const q=(document.getElementById("suppSearch").value||"").trim().toLowerCase();
   const flt=document.getElementById("suppFilter").value;
@@ -767,35 +2111,36 @@ function suppRender(){
   document.getElementById("suppPanelOg").classList.toggle("hidden",!show.og);
   document.getElementById("suppPanelCreq").classList.toggle("hidden",!show.creq);
   document.getElementById("suppPanelCok").classList.toggle("hidden",!show.cok);
+  setTxt("suppPendCount",suppPending.length);
+  setTxt("suppOgCount",suppOg.length);
+  setTxt("suppCreqCount",suppCreq.length);
+  setTxt("suppCokCount",suppCok.length);
 
-  document.getElementById("suppPendCount").textContent=suppPending.length;
-  document.getElementById("suppOgCount").textContent=suppOg.length;
-  document.getElementById("suppCreqCount").textContent=suppCreq.length;
-  document.getElementById("suppCokCount").textContent=suppCok.length;
+  const pend=[];
+  suppPending.forEach((n,i)=>{ if(suppMatch(n,q)) pend.push(suppRow(suppHi(n,q),
+    '<button class="supp-btn supp-ok" onclick="suppApprove('+i+')">✓</button>'
+   +'<button class="supp-btn supp-no" onclick="suppReject('+i+')">✗</button>')); });
+  suppList("suppPending","morePending","pending",pend,q?"Nessun risultato.":"Nessuna richiesta.",q);
 
-  let h="";
-  suppPending.forEach((n,i)=>{ if(suppMatch(n,q)) h+=suppRow(suppHi(n,q),
-    '<button class="supp-btn supp-ok" onclick="suppApprove('+i+')">✓</button>'+
-    '<button class="supp-btn supp-no" onclick="suppReject('+i+')">✗</button>'); });
-  document.getElementById("suppPending").innerHTML=h||'<div class="supp-empty">'+(q?"Nessun risultato.":"Nessuna richiesta.")+'</div>';
+  const og=[];
+  suppOg.forEach((n,i)=>{ if(suppMatch(n,q)) og.push(suppRow(suppHi(n,q),
+    '<button class="supp-btn supp-rm" onclick="suppRemoveOg('+i+')">✕</button>')); });
+  suppList("suppOg","moreOg","og",og,q?"Nessun risultato.":"Lista vuota.",q);
 
-  h="";
-  suppOg.forEach((n,i)=>{ if(suppMatch(n,q)) h+=suppRow(suppHi(n,q),
-    '<button class="supp-btn supp-rm" onclick="suppRemoveOg('+i+')">✕</button>'); });
-  document.getElementById("suppOg").innerHTML=h||'<div class="supp-empty">'+(q?"Nessun risultato.":"Lista vuota.")+'</div>';
+  const creq=[];
+  suppCreq.forEach((c,i)=>{
+    const pl=suppCPlayer(c), info=suppCInfo(c);
+    if(!suppMatch(pl,q) && !suppMatch(info,q)) return;
+    creq.push(suppRow('👤 <b>'+suppHi(pl,q)+'</b>'+(info?'<br><small>'+linkify(info)+'</small>':""),
+      '<button class="supp-btn supp-ok" onclick="suppApproveCreator('+i+')" title="assegna l\'icona Creator">✓</button>'
+     +'<button class="supp-btn supp-no" onclick="suppRejectCreator('+i+')">✗</button>'));
+  });
+  suppList("suppCreq","moreCreq","creq",creq,q?"Nessun risultato.":"Nessuna richiesta.",q);
 
-  h="";
-  suppCreq.forEach((c,i)=>{ const pl=suppCPlayer(c); if(suppMatch(pl,q)){
-    const info=suppCInfo(c);
-    h+=suppRow("👤 <b>"+suppHi(pl,q)+"</b>"+(info?'<br><small>'+esc(info)+'</small>':""),
-      '<button class="supp-btn supp-ok" onclick="suppApproveCreator('+i+')" title="assegna l\'icona Creator">✓</button>'+
-      '<button class="supp-btn supp-no" onclick="suppRejectCreator('+i+')">✗</button>'); } });
-  document.getElementById("suppCreq").innerHTML=h||'<div class="supp-empty">'+(q?"Nessun risultato.":"Nessuna richiesta.")+'</div>';
-
-  h="";
-  suppCok.forEach((n,i)=>{ if(suppMatch(n,q)) h+=suppRow("🎬 "+suppHi(n,q),
-    '<button class="supp-btn supp-rm" onclick="suppRemoveCok('+i+')" title="revoca l\'icona Creator">✕</button>'); });
-  document.getElementById("suppCok").innerHTML=h||'<div class="supp-empty">'+(q?"Nessun risultato.":"Nessuno approvato.")+'</div>';
+  const cok=[];
+  suppCok.forEach((n,i)=>{ if(suppMatch(n,q)) cok.push(suppRow("🎬 "+suppHi(n,q),
+    '<button class="supp-btn supp-rm" onclick="suppRemoveCok('+i+')" title="revoca l\'icona Creator">✕</button>')); });
+  suppList("suppCok","moreCok","cok",cok,q?"Nessun risultato.":"Nessuno approvato.",q);
 }
 
 async function suppApprove(i){ const n=suppPending[i]; if(n==null)return;
@@ -845,495 +2190,11 @@ async function suppRemoveCok(i){ const pl=suppCok[i];
   const ab=document.getElementById("suppAddBtn"); if(ab) ab.addEventListener("click",suppAddName);
   const ni=document.getElementById("suppNewName");
   if(ni) ni.addEventListener("keydown",e=>{ if(e.key==="Enter") suppAddName(); });
+  [["morePending","pending"],["moreOg","og"],["moreCreq","creq"],["moreCok","cok"]].forEach(([id,key])=>{
+    const b=document.getElementById(id);
+    if(b) b.addEventListener("click",()=>{ suppExpand[key]=!suppExpand[key]; suppRender(); });
+  });
 })();
-
-/* NUMERO GROSSO: quante persone hanno DAVVERO giocato = giocatori unici presenti
-   nelle classifiche (unione degli ID su tutte le modalita' e gli ultimi mesi).
-   E' il dato reale: la telemetria stats/players ce l'hanno solo i device aggiornati. */
-async function updateHeroReal(){
-  const hn=document.getElementById("heroNum");
-  const periods=lastPeriods(18);            // fino a 18 mesi indietro
-  const ids=new Set();
-  const tasks=[];
-  for(const m of MODES) for(const p of periods){
-    tasks.push(
-      fetchJSON(BASE+"/leaderboards/"+m+"/"+p+".json?shallow=true")
-        .then(d=>{ if(d&&typeof d==="object") Object.keys(d).forEach(id=>ids.add(id)); })
-        .catch(()=>{})
-    );
-  }
-  await Promise.all(tasks);
-  if(hn) hn.textContent = ids.size>0 ? fmtInt(ids.size) : "—";
-}
-
-/* ==========================================================================
-   TELEMETRY (stats/players) -> sections A,B,C,D,G
-   ========================================================================== */
-async function loadTelemetry(){
-  const raw = await fetchJSONSafe(BASE+"/stats/players.json");
-  const notice = document.getElementById("teleNotice");
-  const denied = !!(raw && (raw.__error !== undefined || raw.__denied));
-  if(denied || raw===null || typeof raw!=="object"){
-    // denied = regole non OK; null/vuoto = nessun dato ancora (NON un errore)
-    STATS_DENIED = denied;
-    STATS_PLAYERS = null;
-    notice.innerHTML = denied
-      ? '<strong>Telemetria non leggibile:</strong> verifica le regole Firebase sul nodo <code>stats</code>.'
-      : '<strong>Telemetria in attesa dei primi dati:</strong> compariranno quando i giocatori useranno la versione aggiornata dell\'app. Le sezioni classifica qui sotto sono gi&agrave; disponibili.';
-    notice.classList.remove("hidden");
-    renderTelemetryEmpty();
-    return;
-  }
-  const players = Object.keys(raw).map(id=>{
-    const p=raw[id]||{};
-    const num = k => Number(p[k])||0;
-    return {
-      id,
-      name:(p.name!=null && String(p.name).trim()!=="")?String(p.name):"Anonimo",
-      icon:(typeof p.icon==="number")?p.icon:0,
-      pt_classic:num("pt_classic"), pt_speedrun:num("pt_speedrun"),
-      pt_story:num("pt_story"), pt_ranked:num("pt_ranked"), pt_total:num("pt_total"),
-      g_classic:num("g_classic"), g_speedrun:num("g_speedrun"),
-      g_story:num("g_story"), g_ranked:num("g_ranked"), g_total:num("g_total"),
-      hs_classic:num("hs_classic"), hs_speedrun:num("hs_speedrun"),
-      story_level:num("story_level"), story_stars:num("story_stars"),
-      coins:num("coins"), pass_level:num("pass_level"), rank:num("rank"),
-      first_seen:num("first_seen"), updated:num("updated"),
-      platform:(typeof p.platform==="string" && p.platform.trim()!=="")?p.platform:"—"
-    };
-  });
-  STATS_PLAYERS = players;
-  STATS_DENIED=false;
-  document.getElementById("teleNotice").classList.add("hidden");
-  renderTelemetry(players);
-}
-
-function renderTelemetryEmpty(){
-  // NB: il numero grosso (heroNum) viene dalla classifica (updateHeroReal), non da qui
-  var hb=document.getElementById("heroBreak"); if(hb) hb.innerHTML="Con telemetria (0)";
-  // KPIs that come from telemetry
-  ["kTotPlayers","kPlaytime","kAvgPlayer","kAvgSession","kTotGames"].forEach(id=>{
-    const el=document.getElementById(id); if(el) el.textContent="—";
-  });
-  const teleMsg = '<div class="state"><div class="big">In attesa di dati</div>'
-    + 'La telemetria comparir&agrave; quando i giocatori useranno la versione aggiornata dell\'app.</div>';
-  ["activityChart","playByMode","gamesByMode","storyFunnel","storyStats","passDist","rankDist","recordsCoins","topPlaytime","topStory"]
-    .forEach(id=>{ const el=document.getElementById(id); if(el) el.innerHTML=teleMsg; });
-}
-
-function renderTelemetry(playersAll){
-  /* HERO: il NUMERO GROSSO viene dai giocatori REALI in classifica (updateHeroReal).
-     Qui riempio solo il breakdown piattaforma, che pero' e' noto SOLO per chi ha la
-     telemetria (versione aggiornata) -> lo etichetto come sottoinsieme. */
-  const byPlat={}; playersAll.forEach(p=>{ byPlat[p.platform]=(byPlat[p.platform]||0)+1; });
-  const niOS=byPlat["iOS"]||0, nAnd=byPlat["Android"]||0, nOth=playersAll.length-niOS-nAnd;
-  document.getElementById("heroBreak").innerHTML =
-    'Con telemetria ('+fmtInt(playersAll.length)+') &mdash; iOS: <b style="color:var(--ink)">'+fmtInt(niOS)+'</b> &nbsp;&middot;&nbsp; Android: <b style="color:var(--ink)">'+fmtInt(nAnd)+'</b>'
-    +(nOth>0?' &nbsp;&middot;&nbsp; Altro: '+fmtInt(nOth):'');
-
-  /* filtro PIATTAFORMA: le sezioni sotto usano solo i giocatori filtrati */
-  const pf=(document.getElementById("platformSelect")||{}).value||"";
-  const players = pf ? playersAll.filter(p=>p.platform===pf) : playersAll;
-
-  const N = players.length;
-  const sum = k => players.reduce((a,p)=>a+p[k],0);
-
-  /* ---- A: KPIs ---- */
-  const ptTotal = sum("pt_total");
-  const gTotal  = sum("g_total");
-  document.getElementById("kTotPlayers").textContent = fmtInt(N);
-  document.getElementById("kPlaytime").textContent = fmtDurLong(ptTotal);
-  document.getElementById("kPlaytimeSub").textContent = "≈ "+fmtDur(ptTotal)+" · "+fmtInt(Math.round(ptTotal/3600))+" ore";
-  document.getElementById("kAvgPlayer").textContent = N?fmtDur(ptTotal/N):"—";
-  document.getElementById("kAvgSession").textContent = gTotal?fmtDur(ptTotal/gTotal):"—";
-  document.getElementById("kTotGames").textContent = fmtInt(gTotal);
-
-  /* ---- attività giornaliera (grafico a linee) ---- */
-  renderActivityChart(players);
-
-  /* ---- B: play time & games by mode ---- */
-  const modes=["classic","speedrun","story","ranked"];
-  const ptByMode = modes.map(m=>({key:m,val:sum("pt_"+m),color:MODE_COLORS[m]}));
-  const gByMode  = modes.map(m=>({key:m,val:sum("g_"+m),color:MODE_COLORS[m]}));
-  renderHBars("playByMode", ptByMode, {fmt:fmtDur, showPct:true});
-  renderHBars("gamesByMode", gByMode, {fmt:fmtInt, showPct:true});
-
-  /* ---- C: story funnel + stats ---- */
-  renderStoryFunnel(players);
-  renderStoryStats(players);
-
-  /* ---- D: progression ---- */
-  renderPassDist(players);
-  renderRankDist(players);
-  renderRecordsCoins(players);
-
-  /* ---- G: top players ---- */
-  renderTopPlaytime(players);
-  renderTopStory(players);
-
-  /* refresh chart's story series if chart already drawn */
-  if(CHART_CACHE){ decorateStoryTrend(players.filter(p=>p.story_level>0).length); }
-}
-
-/* labels for modes */
-const MODE_LABEL={classic:"Classic",speedrun:"Speedrun",story:"Storia",ranked:"Ranked"};
-
-function renderHBars(elId, items, opts){
-  opts=opts||{};
-  const total = items.reduce((a,x)=>a+x.val,0);
-  const max = Math.max(1, ...items.map(x=>x.val));
-  if(total===0){
-    document.getElementById(elId).innerHTML='<div class="state">Nessun dato registrato.</div>';
-    return;
-  }
-  let html='<div class="hbars">';
-  items.forEach(x=>{
-    const w = (x.val/max)*100;
-    const p = total?(x.val/total)*100:0;
-    const valTxt = opts.fmt?opts.fmt(x.val):fmtInt(x.val);
-    const pctTxt = opts.showPct?(' <span style="color:var(--faint)">('+pct(p)+')</span>'):'';
-    html += '<div class="hbar">'
-      + '<span class="hlbl">'+esc(MODE_LABEL[x.key]||x.key)+'</span>'
-      + '<span class="htrack"><span class="hfill" style="width:'+w.toFixed(1)+'%;background:'+x.color+'"></span></span>'
-      + '<span class="hval">'+valTxt+pctTxt+'</span>'
-      + '</div>';
-  });
-  html+='</div>';
-  document.getElementById(elId).innerHTML=html;
-}
-
-/* ---- Story funnel (levels 0..30, reached at least L) ---- */
-function renderStoryFunnel(players){
-  const N=players.length;
-  // buckets at 0,5,10,...,30 for compact funnel
-  const steps=[0,5,10,15,20,25,30];
-  let html='<div class="funnel">';
-  const base = Math.max(1, players.filter(p=>p.story_level>=0).length);
-  steps.forEach(L=>{
-    const reached = players.filter(p=>p.story_level>=L).length;
-    const w = (reached/Math.max(1,N))*100;
-    html += '<div class="frow">'
-      + '<span class="fl">Liv &ge; '+L+'</span>'
-      + '<span class="ft"><span class="ff" style="width:'+w.toFixed(1)+'%"></span></span>'
-      + '<span class="fv">'+fmtInt(reached)+' · '+pct((reached/Math.max(1,N))*100)+'</span>'
-      + '</div>';
-  });
-  html+='</div>';
-  if(N===0) html='<div class="state">Nessun dato storia.</div>';
-  document.getElementById("storyFunnel").innerHTML=html;
-}
-
-function renderStoryStats(players){
-  const withStory = players.filter(p=>p.story_level>0);
-  const N=players.length;
-  const completed = players.filter(p=>p.story_level>=STORY_MAX).length;
-  const pctComplete = N?(completed/N)*100:0;
-  const avgStars = withStory.length? withStory.reduce((a,p)=>a+p.story_stars,0)/withStory.length : 0;
-  const avgLevel = withStory.length? withStory.reduce((a,p)=>a+p.story_level,0)/withStory.length : 0;
-  // stars distribution: max stars per level = 3 -> total possible 90; show buckets by average stars per completed level
-  // distribution of story_stars in ranges
-  const maxStars = STORY_MAX*3;
-  const buckets = [
-    {lbl:"0", lo:0, hi:0},
-    {lbl:"1-15", lo:1, hi:15},
-    {lbl:"16-30", lo:16, hi:30},
-    {lbl:"31-60", lo:31, hi:60},
-    {lbl:"61-90", lo:61, hi:maxStars}
-  ];
-  const counts = buckets.map(b=>players.filter(p=>p.story_stars>=b.lo && p.story_stars<=b.hi).length);
-  const maxC = Math.max(1,...counts);
-
-  let html = '<div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px">'
-    + '<div style="flex:1;min-width:120px"><div style="color:var(--cyan);font-size:15px">STORIA COMPLETATA</div>'
-      + '<div style="font-family:\'Press Start 2P\',monospace;font-size:16px;color:var(--gold);margin-top:8px;text-shadow:2px 2px 0 #000">'+pct(pctComplete)+'</div>'
-      + '<div style="color:var(--faint);font-size:14px;margin-top:6px">'+fmtInt(completed)+' su '+fmtInt(N)+' (liv &ge; '+STORY_MAX+')</div></div>'
-    + '<div style="flex:1;min-width:120px"><div style="color:var(--cyan);font-size:15px">MEDIA STELLE</div>'
-      + '<div style="font-family:\'Press Start 2P\',monospace;font-size:16px;color:var(--gold);margin-top:8px;text-shadow:2px 2px 0 #000">'+fmtNum(avgStars,1)+'</div>'
-      + '<div style="color:var(--faint);font-size:14px;margin-top:6px">liv. medio '+fmtNum(avgLevel,1)+'</div></div>'
-    + '</div>';
-  html += '<div style="color:var(--dim);font-size:15px;margin-bottom:8px">Distribuzione stelle totali</div><div class="hbars">';
-  buckets.forEach((b,i)=>{
-    const w=(counts[i]/maxC)*100;
-    html += '<div class="hbar"><span class="hlbl">'+esc(b.lbl)+'</span>'
-      + '<span class="htrack"><span class="hfill" style="width:'+w.toFixed(1)+'%;background:var(--gold)"></span></span>'
-      + '<span class="hval">'+fmtInt(counts[i])+'</span></div>';
-  });
-  html+='</div>';
-  if(N===0) html='<div class="state">Nessun dato storia.</div>';
-  document.getElementById("storyStats").innerHTML=html;
-}
-
-/* ---- D: distributions ---- */
-function distByField(players, field){
-  const map={};
-  players.forEach(p=>{ const v=p[field]; map[v]=(map[v]||0)+1; });
-  const keys=Object.keys(map).map(Number).sort((a,b)=>a-b);
-  return keys.map(k=>({k, c:map[k]}));
-}
-function renderDist(elId, players, field, color, labelPrefix){
-  const dist=distByField(players, field);
-  if(dist.length===0 || players.length===0){
-    document.getElementById(elId).innerHTML='<div class="state">Nessun dato.</div>'; return;
-  }
-  const maxC=Math.max(1,...dist.map(d=>d.c));
-  let html='<div class="hbars">';
-  dist.forEach(d=>{
-    const w=(d.c/maxC)*100;
-    html+='<div class="hbar"><span class="hlbl">'+esc(labelPrefix)+' '+d.k+'</span>'
-      +'<span class="htrack"><span class="hfill" style="width:'+w.toFixed(1)+'%;background:'+color+'"></span></span>'
-      +'<span class="hval">'+fmtInt(d.c)+'</span></div>';
-  });
-  html+='</div>';
-  document.getElementById(elId).innerHTML=html;
-}
-function renderPassDist(players){ renderDist("passDist", players, "pass_level", "var(--gold)", "Pass"); }
-function renderRankDist(players){ renderDist("rankDist", players, "rank", "var(--ranked)", "Rank"); }
-
-function renderRecordsCoins(players){
-  const N=players.length;
-  if(N===0){ document.getElementById("recordsCoins").innerHTML='<div class="state">Nessun dato.</div>'; return; }
-  const avg = k => players.reduce((a,p)=>a+p[k],0)/N;
-  const max = k => players.reduce((a,p)=>Math.max(a,p[k]),0);
-  const cards = [
-    {lbl:"HS Classic (media)", val:fmtInt(Math.round(avg("hs_classic")))},
-    {lbl:"HS Classic (max)", val:fmtInt(max("hs_classic"))},
-    {lbl:"HS Speedrun (media)", val:fmtInt(Math.round(avg("hs_speedrun")))},
-    {lbl:"HS Speedrun (max)", val:fmtInt(max("hs_speedrun"))},
-    {lbl:"Monete (media)", val:fmtInt(Math.round(avg("coins")))},
-    {lbl:"Monete (max)", val:fmtInt(max("coins"))}
-  ];
-  let html='<div class="kpis" style="grid-template-columns:repeat(3,1fr)">';
-  cards.forEach(c=>{
-    html+='<div class="kpi"><div class="lbl">'+esc(c.lbl)+'</div><div class="val sm">'+c.val+'</div></div>';
-  });
-  html+='</div>';
-  document.getElementById("recordsCoins").innerHTML=html;
-}
-
-/* ---- G: top lists ---- */
-function iconColor(i){ return ICON_COLORS[(i|0)%ICON_COLORS.length]; }
-function renderTopList(elId, players, sortFn, valFn){
-  if(players.length===0){ document.getElementById(elId).innerHTML='<div class="state">Nessun dato.</div>'; return; }
-  const top=players.slice().sort(sortFn).slice(0,10);
-  let html='<div class="toplist">';
-  top.forEach((p,i)=>{
-    html+='<div class="toprow"><span class="n">'+(i+1)+'</span>'
-      +'<span class="who"><span class="icon-badge" style="background:'+iconColor(p.icon)+';width:22px;height:22px;font-size:10px;display:inline-flex;vertical-align:middle;margin-right:7px">'+(p.icon|0)+'</span>'+esc(p.name)+'</span>'
-      +'<span class="v">'+valFn(p)+'</span></div>';
-  });
-  html+='</div>';
-  document.getElementById(elId).innerHTML=html;
-}
-function renderTopPlaytime(players){
-  renderTopList("topPlaytime", players, (a,b)=>b.pt_total-a.pt_total, p=>fmtDur(p.pt_total));
-}
-function renderTopStory(players){
-  renderTopList("topStory", players,
-    (a,b)=> (b.story_level-a.story_level)||(b.story_stars-a.story_stars),
-    p=>"Liv "+p.story_level+" · "+p.story_stars+"★");
-}
-
-/* ==========================================================================
-   CHART (12 months participants: classic, speedrun, story) — section F
-   ========================================================================== */
-async function loadChart(){
-  const chartArea=document.getElementById("chartArea");
-  const periods=lastPeriods(MONTHS_BACK).slice().reverse(); // oldest -> newest
-  try{
-    const results=await Promise.all(periods.map(async p=>{
-      const [c,s,st]=await Promise.all([
-        countParticipants("classic",p),
-        countParticipants("speedrun",p),
-        countParticipants("story",p)   // story bucket may not exist -> null
-      ]);
-      return {p,c,s,st};
-    }));
-    const classic=results.map(r=>r.c===null?0:r.c);
-    const speedrun=results.map(r=>r.s===null?0:r.s);
-    const storyBucketExists = results.some(r=>r.st!==null && r.st>0);
-    const story=results.map(r=>r.st===null?0:r.st);
-    CHART_CACHE={periods, classic, speedrun, story, storyBucketExists};
-    drawChart(CHART_CACHE);
-    updateActiveKpis(CHART_CACHE);
-    // story trend note / fallback
-    if(!storyBucketExists){
-      const fallback = (STATS_PLAYERS? STATS_PLAYERS.filter(p=>p.story_level>0).length : null);
-      decorateStoryTrend(fallback);
-    }else{
-      document.getElementById("storyTrendNote").textContent="";
-    }
-  }catch(e){
-    chartArea.innerHTML='<div class="state err"><div class="big">Errore andamento</div>'+esc(e.message)+'</div>';
-  }
-}
-
-/* set the "attivi questo mese" + growth + mode-now KPIs from leaderboard counts */
-function updateActiveKpis(cache){
-  const n=cache.periods.length;
-  const curC=cache.classic[n-1]||0, curS=cache.speedrun[n-1]||0;
-  const prvC=n>=2?(cache.classic[n-2]||0):0, prvS=n>=2?(cache.speedrun[n-2]||0):0;
-  const curEst=Math.max(curC,curS), prvEst=Math.max(prvC,prvS);
-
-  document.getElementById("kActive").textContent=fmtInt(curEst);
-  document.getElementById("kActiveSub").textContent="Classic "+fmtInt(curC)+" · Speedrun "+fmtInt(curS);
-  document.getElementById("kModeNow").textContent=fmtInt(curC)+" / "+fmtInt(curS);
-
-  const gEl=document.getElementById("kGrowth"), gSub=document.getElementById("kGrowthSub");
-  if(prvEst===0){
-    gEl.textContent=curEst>0?"+∞%":"—";
-    gEl.className="val sm "+(curEst>0?"pos":"flat");
-    gSub.textContent="mese prec.: "+fmtInt(prvEst);
-  }else{
-    const p=((curEst-prvEst)/prvEst)*100, r=Math.round(p*10)/10;
-    gEl.textContent=(r>=0?"+":"")+fmtNum(r,1)+"%";
-    gEl.className="val sm "+(r>0?"pos":(r<0?"neg":"flat"));
-    gSub.textContent="mese prec.: "+fmtInt(prvEst)+" (stima)";
-  }
-}
-
-function decorateStoryTrend(currentStoryPlayers){
-  const note=document.getElementById("storyTrendNote");
-  if(currentStoryPlayers===null || currentStoryPlayers===undefined){
-    note.textContent="Storia: nessun bucket mensile; abilita la telemetria per il valore corrente.";
-    return;
-  }
-  note.textContent="Storia: nessun bucket mensile disponibile. La barra Storia usa i giocatori con story_level>0 (valore corrente: "+fmtInt(currentStoryPlayers)+").";
-  if(CHART_CACHE){
-    const n=CHART_CACHE.periods.length;
-    const st=CHART_CACHE.story.slice();
-    st[n-1]=currentStoryPlayers;
-    CHART_CACHE.story=st;
-    drawChart(CHART_CACHE);
-  }
-}
-
-/* grouped bar chart, dependency-free SVG */
-/* Grafico a LINEE: attività giornaliera (ultimi 30 giorni).
-   Nuovi giocatori/giorno (first_seen) e Attivi/giorno (updated = ultimo accesso). */
-function renderActivityChart(players){
-  const el=document.getElementById("activityChart");
-  if(!el) return;
-  const DAY=86400, DAYS=30;
-  const nowDay=Math.floor(Date.now()/1000/DAY);
-  const days=[]; for(let i=DAYS-1;i>=0;i--) days.push(nowDay-i);
-  const idx={}; days.forEach((d,i)=>{idx[d]=i;});
-  const nw=new Array(DAYS).fill(0), ac=new Array(DAYS).fill(0);
-  (players||[]).forEach(p=>{
-    const fd=Math.floor((p.first_seen||0)/DAY), ud=Math.floor((p.updated||0)/DAY);
-    if(idx[fd]!==undefined) nw[idx[fd]]++;
-    if(idx[ud]!==undefined) ac[idx[ud]]++;
-  });
-  const maxVal=Math.max(1, ...nw, ...ac);
-  const W=Math.max(720, DAYS*24), H=260, padL=40, padR=14, padT=14, padB=46;
-  const plotW=W-padL-padR, plotH=H-padT-padB;
-  const x=i=>padL+(DAYS<=1?plotW/2:plotW*i/(DAYS-1));
-  const y=v=>padT+plotH-(v/maxVal)*plotH;
-  let grid="";
-  for(let i=0;i<=4;i++){ const gv=Math.round(maxVal/4*i), gy=y(gv);
-    grid+='<line class="grid-line" x1="'+padL+'" y1="'+gy+'" x2="'+(W-padR)+'" y2="'+gy+'"/>';
-    grid+='<text class="axlbl" x="'+(padL-7)+'" y="'+(gy+4)+'" text-anchor="end">'+fmtInt(gv)+'</text>';
-  }
-  const pts=arr=>arr.map((v,i)=>x(i).toFixed(1)+','+y(v).toFixed(1)).join(' ');
-  const dayLbl=i=>{ const d=new Date(days[i]*DAY*1000); return d.getUTCDate()+'/'+(d.getUTCMonth()+1); };
-  const dots=(arr,col,name)=>arr.map((v,i)=>'<circle cx="'+x(i).toFixed(1)+'" cy="'+y(v).toFixed(1)+'" r="2.6" fill="'+col+'"><title>'+dayLbl(i)+' — '+name+': '+fmtInt(v)+'</title></circle>').join('');
-  let xlab=""; days.forEach((dd,i)=>{ if(i%5===0||i===DAYS-1) xlab+='<text x="'+x(i).toFixed(1)+'" y="'+(H-padB+18)+'" text-anchor="middle">'+dayLbl(i)+'</text>'; });
-  const svg='<div class="chart-wrap"><svg class="chart" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Attivita giornaliera">'
-    +grid
-    +'<polyline fill="none" stroke="var(--classic)" stroke-width="2.5" points="'+pts(nw)+'"/>'
-    +'<polyline fill="none" stroke="var(--speedrun)" stroke-width="2.5" points="'+pts(ac)+'"/>'
-    +dots(nw,'var(--classic)','Nuovi')+dots(ac,'var(--speedrun)','Attivi')+xlab
-    +'</svg></div>';
-  const allZero=nw.every(v=>!v)&&ac.every(v=>!v);
-  el.innerHTML=svg+(allZero?'<div class="foot">Nessun dato negli ultimi 30 giorni.</div>':'');
-}
-
-function drawChart(cache){
-  const {periods, classic, speedrun, story}=cache;
-  const maxVal=Math.max(1, ...classic, ...speedrun, ...story);
-  const W=Math.max(720, periods.length*66);
-  const H=290, padL=44, padR=14, padT=14, padB=52;
-  const plotW=W-padL-padR, plotH=H-padT-padB;
-  const groups=periods.length, groupW=plotW/groups;
-  const barW=Math.min(13, groupW*0.22), gap=2;
-  const y=v=>padT+plotH-(v/maxVal)*plotH;
-
-  let grid="";
-  for(let i=0;i<=4;i++){
-    const gv=Math.round((maxVal/4)*i), gy=y(gv);
-    grid+='<line class="grid-line" x1="'+padL+'" y1="'+gy+'" x2="'+(W-padR)+'" y2="'+gy+'"/>';
-    grid+='<text class="axlbl" x="'+(padL-7)+'" y="'+(gy+4)+'" text-anchor="end">'+fmtInt(gv)+'</text>';
-  }
-  let bars="";
-  periods.forEach((p,i)=>{
-    const gx=padL+groupW*i+groupW/2;
-    const c=classic[i]||0, s=speedrun[i]||0, st=story[i]||0;
-    const x0=gx-(barW*1.5+gap);
-    const series=[{v:c,col:"var(--classic)",lab:"Classic"},{v:s,col:"var(--speedrun)",lab:"Speedrun"},{v:st,col:"var(--story)",lab:"Storia"}];
-    series.forEach((se,k)=>{
-      const bx=x0+k*(barW+gap);
-      bars+='<rect x="'+bx.toFixed(1)+'" y="'+y(se.v).toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+(padT+plotH-y(se.v)).toFixed(1)+'" fill="'+se.col+'">'
-        +'<title>'+decodePeriod(p).label+' — '+se.lab+': '+fmtInt(se.v)+'</title></rect>';
-    });
-    const d=decodePeriod(p);
-    const lbl=MONTH_NAMES[d.month-1].slice(0,3)+" "+String(d.year).slice(2);
-    bars+='<text x="'+gx.toFixed(1)+'" y="'+(H-padB+18)+'" text-anchor="middle">'+lbl+'</text>';
-  });
-  const svg='<div class="chart-wrap"><svg class="chart" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Partecipanti per mese">'
-    +grid+bars+'</svg></div>';
-  const allZero=classic.every(v=>v===0)&&speedrun.every(v=>v===0)&&story.every(v=>v===0);
-  document.getElementById("chartArea").innerHTML=svg+(allZero?'<div class="foot">Nessun dato per i periodi recenti.</div>':'');
-}
-
-/* ==========================================================================
-   LEADERBOARD TABLE — section E
-   ========================================================================== */
-async function loadMonth(){
-  document.getElementById("lbMonthLabel").textContent=decodePeriod(SELECTED_PERIOD).label;
-  document.getElementById("tableArea").innerHTML='<div class="state"><div class="spinner"></div><div style="margin-top:14px">Caricamento classifica…</div></div>';
-  await Promise.all(MODES.map(m=>ensureTable(m,SELECTED_PERIOD)));
-  renderTable();
-}
-async function ensureTable(mode,period){
-  const key=mode+":"+period;
-  if(TABLE_CACHE[key]!==undefined) return TABLE_CACHE[key];
-  try{ const rows=await fetchTop(mode,period,100); TABLE_CACHE[key]=rows; return rows; }
-  catch(e){ TABLE_CACHE[key]={__error:e.message||"errore"}; return TABLE_CACHE[key]; }
-}
-const MEDALS=["🥇","🥈","🥉"];
-function renderTable(){
-  const area=document.getElementById("tableArea");
-  const key=CURRENT_MODE+":"+SELECTED_PERIOD;
-  const cached=TABLE_CACHE[key];
-  if(cached===undefined){
-    area.innerHTML='<div class="state"><div class="spinner"></div><div style="margin-top:14px">Caricamento…</div></div>';
-    ensureTable(CURRENT_MODE,SELECTED_PERIOD).then(renderTable); return;
-  }
-  if(cached && cached.__error){
-    area.innerHTML='<div class="state err"><div class="big">Errore classifica</div>'+esc(cached.__error)+'</div>'; return;
-  }
-  const rows=cached;
-  if(!rows||rows.length===0){
-    area.innerHTML='<div class="state"><div class="big">Nessun giocatore</div>'
-      +'Nessun punteggio per '+esc(decodePeriod(SELECTED_PERIOD).label)+' in '+esc(MODE_LABEL[CURRENT_MODE])+'.</div>';
-    return;
-  }
-  let body="";
-  rows.slice(0,100).forEach((r,i)=>{
-    const rank=i+1;
-    const cls=rank===1?"t1":rank===2?"t2":rank===3?"t3":"";
-    const medal=rank<=3?'<span class="medal">'+MEDALS[rank-1]+'</span> ':'';
-    const col=iconColor(r.icon);
-    const glo=r.glo?' <span class="glo-tag" title="Global / verificato">GLO</span>':"";
-    body+='<tr>'
-      +'<td class="rank '+cls+'">'+medal+rank+'</td>'
-      +'<td><div class="nick"><span class="icon-badge" style="background:'+col+'">'+(r.icon|0)+'</span><span>'+esc(r.name)+'</span>'+glo+'</div></td>'
-      +'<td class="score">'+fmtInt(r.score)+'</td></tr>';
-  });
-  area.innerHTML='<div class="table-wrap"><table>'
-    +'<thead><tr><th>#</th><th>Nickname</th><th style="text-align:right">Punteggio</th></tr></thead>'
-    +'<tbody>'+body+'</tbody></table></div>'
-    +'<div class="foot">'+fmtInt(rows.length)+' giocatori mostrati (max 100).</div>';
-}
 
 /* ==========================================================================
    BOOT
