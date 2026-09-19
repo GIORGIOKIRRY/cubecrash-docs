@@ -226,6 +226,17 @@
   .fix .impact{margin-top:11px;padding-top:10px;border-top:1px solid rgba(255,255,255,.07);
     font-size:12.5px;color:var(--faint)}
   .fix .impact b{color:var(--green)}
+  /* cosa è già stato fatto nella build in lavorazione */
+  .fix .done{margin-top:13px;padding:11px 13px 12px;border-radius:9px;
+    background:rgba(70,209,127,.09);border:1px solid rgba(70,209,127,.28)}
+  .fix .done h6{margin:0 0 7px;font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
+    color:var(--green);font-weight:700;font-family:var(--f-head)}
+  .fix .done ul{margin:0;padding-left:18px;color:var(--dim);font-size:12.7px;line-height:1.6}
+  .fix .done li{margin-bottom:4px}
+  .fix .done li::marker{color:var(--green)}
+  .diag-item .tag-done{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+    padding:3px 7px;border-radius:5px;background:rgba(70,209,127,.16);color:var(--green);
+    border:1px solid rgba(70,209,127,.3);margin-left:8px;white-space:nowrap;vertical-align:middle}
 
   /* indice dei problemi */
   .diag-list{display:flex;flex-direction:column;gap:9px}
@@ -806,14 +817,20 @@ const MODE_LABEL  = { classic:"Classic", speedrun:"Speedrun", story:"Storia", ra
 const DAY = 86400;
 /* SCALATA GRIGLIE (trophies.gd ARENAS / ARENAS_SR): stesso ordine e stesse soglie.
    Se cambiano nel gioco vanno aggiornate anche qui. */
+/* SOGLIE AGGIORNATE il 19/09/2026 insieme al MOLTIPLICATORE PER GRIGLIA
+   (x1 / x1,8 / x3 / x5 / x8 / x12). Le vecchie erano 1,5M / 15M / 50M / 150M /
+   400M: con i punti moltiplicati sarebbero state raggiunte in un lampo, quindi
+   ogni distanza è stata moltiplicata per quanto è cresciuto il ritmo dei punti.
+   Le coppe dei giocatori sono state rimappate sulla nuova scala: nessuno è
+   retrocesso di griglia. */
 const ARENAS = {
   classic:[
-    {n:"GRIGLIA 1", t:"ARCADE",         cups:0},
-    {n:"GRIGLIA 2", t:"PIXEL PRATERIA", cups:1500000},
-    {n:"GRIGLIA 3", t:"CUBEVAL",        cups:15000000},
-    {n:"GRIGLIA 4", t:"SPACE CUBERS",   cups:50000000},
-    {n:"GRIGLIA 5", t:"CANDY BLAST",    cups:150000000},
-    {n:"GRIGLIA 6", t:"?????",          cups:400000000}
+    {n:"GRIGLIA 1", t:"ARCADE",         cups:0,          mult:1},
+    {n:"GRIGLIA 2", t:"PIXEL PRATERIA", cups:2500000,    mult:1.8},
+    {n:"GRIGLIA 3", t:"CUBEVAL",        cups:35000000,   mult:3},
+    {n:"GRIGLIA 4", t:"SPACE CUBERS",   cups:170000000,  mult:5},
+    {n:"GRIGLIA 5", t:"CANDY BLAST",    cups:750000000,  mult:8},
+    {n:"GRIGLIA 6", t:"?????",          cups:3000000000, mult:12}
   ],
   speedrun:[
     {n:"SPEED 1", t:"SPEED ARCADE", cups:0},
@@ -851,6 +868,12 @@ function arenaName(mode, i){
 function arenaTitle(mode, i){
   const arr=ARENAS[mode];
   return (i<0||i>=arr.length)?"":arr[i].t;
+}
+/* moltiplicatore punti della griglia (solo Classic) */
+function arenaMult(mode, i){
+  const arr=ARENAS[mode];
+  if(mode==="speedrun" || i<0 || i>=arr.length) return 1;
+  return arr[i].mult || 1;
 }
 
 /* ==========================================================================
@@ -2066,6 +2089,10 @@ function addFix(f){
     + '<p>'+f.problema+'</p>'
     + (f.perche?'<p class="why">'+f.perche+'</p>':'')
     + '<h5>Soluzione</h5><ol>'+f.azioni.map(a=>'<li>'+a+'</li>').join("")+'</ol>'
+    + (f.fatto && f.fatto.length
+        ? '<div class="done"><h6>Già fatto nella build del 19/09 — in attesa di rilascio</h6><ul>'
+          + f.fatto.map(x=>'<li>'+x+'</li>').join("") + '</ul></div>'
+        : '')
     + (f.impatto?'<div class="impact">Se funziona: <b>'+f.impatto+'</b></div>':'')
     + '</div>';
 }
@@ -2079,14 +2106,16 @@ function renderDiagIndex(){
   if(bar) bar.innerHTML=
       '<span class="sevchip">🔴 Da risolvere subito: <b>'+c.alta+'</b></span>'
     + '<span class="sevchip">🟠 Da migliorare: <b>'+c.media+'</b></span>'
-    + '<span class="sevchip">🔵 Da tenere d\'occhio: <b>'+c.bassa+'</b></span>';
+    + '<span class="sevchip">🔵 Da tenere d\'occhio: <b>'+c.bassa+'</b></span>'
+    + '<span class="sevchip">🟢 Con interventi già fatti: <b>'+rows.filter(r=>r.fatto && r.fatto.length).length+'</b></span>';
   if(!rows.length){
     list.innerHTML='<div class="diag-empty">Nessun problema rilevato sui dati attuali.</div>';
     return;
   }
   list.innerHTML='<div class="diag-list">'+rows.map(r=>
     '<div class="diag-item '+(r.sev==="alta"?"":(r.sev==="media"?"med":"low"))+'" data-go="'+r.slot+'">'
-    +'<span class="dot"></span><div class="txt"><div class="t">'+r.titolo+'</div>'
+    +'<span class="dot"></span><div class="txt"><div class="t">'+r.titolo
+    +((r.fatto && r.fatto.length)?'<span class="tag-done">interventi fatti</span>':'')+'</div>'
     +'<div class="d">'+r.sintesi+'</div></div><div class="go">vai →</div></div>').join("")+'</div>';
   list.querySelectorAll(".diag-item").forEach(it=>{
     it.addEventListener("click",function(){
@@ -2147,6 +2176,11 @@ function runDiagnostics(players){
         "<b>Missione \"torna domani\"</b> assegnata a fine prima sessione, con premio riscattabile solo il giorno dopo.",
         "<b>Chiudi il ciclo della classifica</b>: la classifica si azzera il lunedì, ma se il giocatore non lo sa non torna. Mostra a fine partita la posizione e quanto manca al giocatore davanti."
       ],
+      fatto:[
+        "<b>Notifiche della classifica</b>: domenica alle 20:00 arriva \"la classifica chiude stanotte, sei X°\" con la posizione vera, e lunedì alle 08:00 \"nuova classifica, gioca per le ricompense\".",
+        "<b>Popup \"ti hanno superato\"</b> alla riapertura della home, col nome di chi ti è passato davanti e il tasto per rigiocare subito.",
+        "Restano da fare: ricompensa giornaliera a scalare e qualcosa che matura mentre il giocatore è via.",
+      ],
       impatto:"portare D1 da "+(d1===null?"—":pct(d1))+" al 40% significa circa "
         +fmtInt(Math.round(N*Math.max(0,(40-(d1||0))/100)))+" giocatori in più che tornano, a parità di installazioni"
     });
@@ -2171,6 +2205,13 @@ function runDiagnostics(players){
         "<b>Primo premio entro 60 secondi</b>: una ricompensa visibile (monete, un cubo del deck) già a fine prima partita, con l'animazione di apertura.",
         "<b>Mostra subito dove si va</b>: dopo la prima partita fai vedere la scalata delle griglie con la prossima soglia vicina, così esiste un obiettivo.",
         "<b>Controlla il tutorial sui device lenti</b>: guarda quanti si fermano a 0 partite pur avendo aperto l'app — se il tutorial è lungo o si blocca, li perdi lì."
+      ],
+      fatto:[
+        "<b>Trovato il vero colpevole</b>: su ogni build di test il gioco regalava alla prima apertura tutte le bombe, la seconda freccia, le missioni complete e il pass a livello 30. Disattivato.",
+        "<b>Tutorial ridotto a quello che possiedi</b>: appena installato si impara solo la freccia verticale, le bombe si scoprono salendo le griglie.",
+        "<b>Prima partita \"vetrina\"</b>: nessun muro per 3:20, punti ×16, si chiude al milione con la schermata \"COMPLIMENTI, tutorial concluso\" invece della sconfitta.",
+        "<b>7.500 monete</b> di benvenuto e <b>3 premi</b> già da riscattare in home al primo ritorno.",
+        "<b>Niente pubblicità</b> durante il tutorial.",
       ],
       impatto:"recuperare metà di questi giocatori vale ~"+fmtInt(Math.round(oneGame*0.5))+" utenti attivi in più"
     });
@@ -2224,6 +2265,10 @@ function runDiagnostics(players){
         "<b>Evento a tempo nel weekend</b>: doppie coppe, oppure una griglia speciale giocabile solo sabato e domenica.",
         "<b>Notifica \"ti hanno superato\"</b> quando qualcuno ti passa in classifica: è il richiamo più efficace che hai già a disposizione con i dati che raccogli."
       ],
+      fatto:[
+        "<b>Ritmo settimanale</b>: le due notifiche della classifica (domenica sera e lunedì mattina) danno l'appuntamento fisso che mancava.",
+        "Restano da fare: missioni giornaliere a scadenza e un evento nel weekend.",
+      ],
       impatto:"passare al 15% significa circa "+fmtInt(Math.round(mau*0.15-dau))+" giocatori attivi in più ogni giorno"
     });
   }
@@ -2249,6 +2294,11 @@ function runDiagnostics(players){
         "<b>Missioni dedicate</b>: almeno una delle missioni giornaliere deve essere in Speedrun, così la si prova senza doverlo decidere.",
         "<b>Rivedi i primi 30 secondi</b>: se il timer iniziale è corto la prima partita finisce prima che uno capisca le regole. Prova a partire con più tempo e a stringerlo nelle partite successive.",
         "<b>Mettile la sua classifica in vista</b>: oggi la classifica Speedrun esiste ma è nascosta dietro una scheda. In home mostra le due classifiche affiancate."
+      ],
+      fatto:[
+        "<b>Da modalità offerta a premio da sbloccare</b>: arriva alla prima base di PIXEL PRATERIA. Prima era lì dal primo minuto, senza contesto, e infatti la provavano in pochi e una volta sola.",
+        "<b>Due missioni giornaliere dedicate</b> (gioca / fai punti / rompi cubi in Speedrun) che pagano 30 monete invece di 20, e compaiono solo a chi l'ha sbloccata.",
+        "Di conseguenza <b>CUBO NERO e TNT</b> slittano più avanti: non sono più regalati a chi la Speedrun non ce l'ha.",
       ],
       impatto:"portare Speedrun al 45% di penetrazione vale ~"+fmtInt(Math.round(N*0.45-spPlayers.length))+" giocatori in più su una modalità già fatta"
     });
@@ -2283,6 +2333,11 @@ function runDiagnostics(players){
         "<b>Non far pagare il muro con le vite</b>: se un livello è fallito 3 volte di fila, il quarto tentativo è gratis. Perdere vite su un livello rotto è il motivo numero uno di abbandono.",
         "<b>Controlla i colori sulla griglia di quei livelli</b>: se ci sono 6 colori su una griglia piccola le combo diventano quasi impossibili. Togline uno e rivedi.",
         "<b>Metti una via di fuga</b>: dopo N fallimenti offri di saltare il livello con 1 stella. Meglio un giocatore che avanza imperfetto di uno che disinstalla."
+      ],
+      fatto:[
+        "<b>Il gradino non erano i bersagli</b>: fino al livello 5 non si poteva perdere, dal 6 sparivano di colpo tutte le reti di salvataggio. Ora la valvola anti-blocco resta fino al <b>livello 10</b>: si perde finendo le mosse, non per griglia incastrata.",
+        "<b>Bersagli −20% e mosse +15%</b> da livello 5 in poi, con <b>−30%</b> sul 6 e sul 22 (i due peggiori).",
+        "Alleggerito anche il \"prosciugato\" dei livelli 18/22/27, dove la griglia quasi tutta grigia rendeva le combo un terno al lotto.",
       ],
       impatto:"sistemare i tre livelli peggiori può far arrivare al livello 10 il doppio dei giocatori di adesso ("+fmtInt(reach[9])+")"
     });
@@ -2350,6 +2405,11 @@ function runDiagnostics(players){
         "<b>Allunga la coda</b>: dopo il livello 15 metti livelli infiniti con un premio ripetibile, così chi corre ha ancora un motivo.",
         "<b>Mostra il premio successivo in home</b> con la barra di avanzamento: se il pass non si vede, non esiste."
       ],
+      fatto:[
+        "<b>XP anche dalla scalata</b>: la 2ª e la 5ª base di ogni griglia danno 5 frammenti del pass invece delle monete (le altre basi pagano 1,9× per compensare).",
+        "<b>Stagione allungata</b>: il reset non è più il 1° del mese ma il <b>giorno 10</b>.",
+        "Resta da fare il pezzo grosso: dare XP <b>per azione</b> (partita finita, missione, livello storia) invece che per punteggio — è quello che oggi spacca la curva ai due estremi.",
+      ],
       impatto:"il pass è la struttura che tiene insieme le sessioni: se funziona, alza sia le partite giornaliere sia le conversioni a pagamento"
     });
   }
@@ -2373,6 +2433,11 @@ function runDiagnostics(players){
         "<b>Metti un primo acquisto davvero a portata</b>: qualcosa da 300-500 monete che si compra nella prima sessione. Serve a far capire che le monete servono.",
         "<b>Rivedi chi ne ha troppe</b>: "+fmtInt(rich)+" giocatori oltre le 100.000 monete vuol dire che da qualche parte c'è un rubinetto aperto (premi ripetibili, missioni ricicabili). Trovalo prima di mettere in vendita cose serie.",
         "<b>Fai vedere il prezzo prima del premio</b>: lo shop va aperto almeno una volta in modo guidato, altrimenti la valuta non ha significato."
+      ],
+      fatto:[
+        "<b>7.500 monete di benvenuto</b> alla prima apertura: lo shop ha un senso dal primo minuto invece di essere una vetrina vuota.",
+        "<b>Riscatto immediato</b>: i premi piccoli non aprono più la schermata premio, le monete volano dal box al contatore in metà tempo.",
+        "<b>Cuori nello shop</b>: contatore in alto a sinistra col tasto + che porta dritto ai pacchetti vite.",
       ],
       impatto:"un'economia che gira è il presupposto per qualunque acquisto reale nello shop"
     });
@@ -2436,6 +2501,11 @@ function checkScoreGap(){
         "<b>Mostra i vicini, non la cima</b>: in home fai vedere le 3 posizioni sopra e sotto la sua, non la top 10 irraggiungibile.",
         "<b>Guarda se i punteggi enormi sono legittimi</b>: partite da ore intere che valgono centinaia di milioni indicano che il moltiplicatore per livello cresce troppo. Valuta un tetto o una crescita meno che lineare."
       ],
+      fatto:[
+        "<b>Moltiplicatore per griglia</b>: x1 in ARCADE, poi x1,8 / x3 / x5 / x8 / x12. Prima nelle prime arene si facevano punteggi PIÙ alti che in quelle dopo (pochi colori = più combo e partite molto più lunghe), quindi il record si faceva all'inizio e non si batteva più. Ora salire alza sempre il tetto.",
+        "<b>Soglie ribilanciate</b> di conseguenza (2,5M / 35M / 170M / 750M / 3.000M) con rimappatura delle coppe: nessun giocatore è retrocesso di griglia.",
+        "Resta da fare: dividere la classifica per arena, così si compete con chi è al proprio livello.",
+      ],
       impatto:"una classifica in cui si può arrivare tra i primi è uno dei motivi più forti per tornare ogni settimana"
     });
   }
@@ -2455,7 +2525,10 @@ function renderArenaDist(players){
    ["speedrun","arenaSpeed","var(--speedrun)","hs_speedrun"]].forEach(([mode,elId,col,hsKey])=>{
     const arr=ARENAS[mode];
     const known=players.filter(p=>arenaIndex(mode,p["arena_"+mode],p["cups_"+mode])>=0);
-    const real=known.length>0;
+    // Il dato VERO si usa solo quando copre una fetta significativa: appena esce
+    // una build nuova lo mandano pochissimi device (a volte solo quelli di test)
+    // e il grafico finirebbe per descrivere quattro persone invece di tutti.
+    const real = known.length >= Math.max(50, players.length * 0.20);
     const pool=real?known:players.filter(p=>p[hsKey]>0);
     if(!pool.length){ emptyState(elId,"Nessun dato."); return; }
     const counts=new Array(arr.length).fill(0);
@@ -2467,8 +2540,10 @@ function renderArenaDist(players){
       lbl:a.n+" · "+a.t, val:counts[i], color: i===0?"var(--faint)":col
     })), {fmt:fmtInt, showPct:true, wide:true});
     document.getElementById(elId).insertAdjacentHTML("beforeend", real
-      ? '<div class="foot">Su '+fmtInt(pool.length)+' giocatori con il dato della scalata.</div>'
-      : '<div class="foot"><b>Stima</b> su '+fmtInt(pool.length)+' giocatori: la griglia vera non &egrave; mai stata inviata '
+      ? '<div class="foot">Dato reale su '+fmtInt(pool.length)+' giocatori con la scalata inviata.</div>'
+      : (known.length>0 ? '<div class="foot">La griglia vera la mandano per ora solo '+fmtInt(known.length)
+          +' giocatori (build nuova appena uscita): troppo pochi per fare un grafico, quindi sotto c\'è la stima su tutti.</div>' : '')
+        + '<div class="foot"><b>Stima</b> su '+fmtInt(pool.length)+' giocatori: la griglia vera non &egrave; mai stata inviata '
         +'da nessuna build, qui ogni giocatore &egrave; messo nella fascia corrispondente al suo <b>record personale</b> '
         +'confrontato con le soglie delle griglie ('+fmtCompact(arr[1].cups)+', '+fmtCompact(arr[2].cups)+'…). '
         +'Le coppe sono punti accumulati, quindi la griglia reale &egrave; uguale o pi&ugrave; avanti di questa. '
