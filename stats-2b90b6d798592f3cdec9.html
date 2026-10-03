@@ -380,19 +380,111 @@
   .more-btn{width:100%;margin-top:10px;text-align:center}
 
 
-  /* regali */
-  .gift-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-  @media (max-width:820px){.gift-grid{grid-template-columns:1fr}}
-  .gift-sel{padding:12px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--panel2);
-    margin-bottom:12px;font-size:13.4px;min-height:48px}
-  .gift-sel b{color:var(--ink)} .gift-sel small{color:var(--faint)}
-  .gift-form{display:grid;grid-template-columns:120px 1fr;gap:10px;align-items:center}
-  .gift-form label{font-size:10.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.11em;font-weight:700}
-  .gift-form input,.gift-form select{width:100%}
-  .gift-presets{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
-  .gift-pick{cursor:pointer}
-  .gift-btn{border:1px solid rgba(255,197,61,.45);color:var(--gold);border-radius:7px;background:var(--panel2);
-    cursor:pointer;font-size:12px;padding:1px 7px;margin-left:8px}
+  /* ================= LAYOUT A PAGINE + MENU LATERALE (03/10/2026) ================= */
+  .side{position:fixed;left:0;top:0;bottom:0;width:232px;z-index:60;overflow-y:auto;
+    background:var(--panel);border-right:1px solid var(--line);padding:18px 12px 24px;
+    transition:transform .22s ease}
+  .side .brand{display:flex;align-items:center;gap:10px;padding:2px 8px 16px;font-family:var(--f-head);
+    font-weight:700;color:var(--ink);font-size:15px}
+  .side .brand img{width:30px;height:30px;border-radius:8px}
+  .side .grp{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);
+    font-weight:700;margin:16px 10px 6px}
+  .side .item{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;background:none;
+    color:var(--dim);font-family:var(--f-body);font-size:13.5px;font-weight:500;padding:9px 10px;
+    border-radius:9px;cursor:pointer}
+  .side .item .ic{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;
+    font-size:11px;font-weight:700;background:var(--raise);color:var(--dim);flex:none}
+  .side .item:hover{background:var(--raise);color:var(--ink)}
+  .side .item.on{background:rgba(61,155,255,.16);color:var(--ink)}
+  .side .item.on .ic{background:linear-gradient(145deg,#ffd45f,var(--gold-d));color:#2a1d02}
+  .side .foot2{margin-top:18px;padding:0 6px;display:flex;gap:8px}
+  .app.has-side{max-width:none;margin:0;padding-left:252px;padding-right:24px}
+  .app.has-side>.inner{max-width:1240px}
+  .view{display:none}
+  .view.on{display:block;animation:vfade .18s ease}
+  .view>.section-h:first-child{margin-top:6px}
+  @keyframes vfade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  .burger{display:none}
+  .side-dim{display:none}
+  @media(max-width:900px){
+    .app.has-side{padding-left:14px;padding-right:14px}
+    .side{transform:translateX(-102%)}
+    .side.open{transform:none;box-shadow:0 0 40px rgba(0,0,0,.6)}
+    .side-dim.on{display:block;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:55}
+    .burger{display:inline-flex}
+  }
+  .theme-btn{min-width:38px}
+
+  /* ================= GIOCATORI / LINK / ADMIN ================= */
+  .adm-grid{display:grid;grid-template-columns:340px 1fr;gap:18px;align-items:start}
+  @media(max-width:1000px){.adm-grid{grid-template-columns:1fr}}
+  .adm-list{max-height:70vh;overflow-y:auto;margin:0 -6px}
+  .adm-row{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;cursor:pointer;margin:0 6px 2px}
+  .adm-row:hover{background:var(--raise)}
+  .adm-row.on{background:rgba(61,155,255,.16)}
+  .adm-row .nm{flex:1;min-width:0}
+  .adm-row .nm b{display:block;color:var(--ink);font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .adm-row .nm small{color:var(--faint);font-size:11.5px}
+  .adm-av{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+    font-family:var(--f-head);font-weight:700;color:#fff;flex:none;font-size:13px}
+  .adm-head{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+  .adm-head .adm-av{width:56px;height:56px;font-size:20px;border-radius:14px}
+  .adm-head h3{font-size:19px;margin:0}
+  .adm-head small{color:var(--faint);font-size:12px;word-break:break-all}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+  .chip2{background:var(--raise);border:1px solid var(--line);border-radius:10px;padding:7px 11px;font-size:12px;color:var(--dim)}
+  .chip2 b{display:block;color:var(--ink);font-size:14px;font-family:var(--f-head)}
+  .act-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  @media(max-width:700px){.act-grid{grid-template-columns:1fr}}
+  .act{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px}
+  .act h4{margin:0 0 9px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}
+  .act .row2{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .act .row2 select,.act .row2 input{flex:1;min-width:110px}
+  .btn-go{background:linear-gradient(180deg,#4fd885,#2fae60);color:#04210f;border:0;border-radius:9px;
+    font-weight:700;font-family:var(--f-body);font-size:13px;padding:8px 13px;cursor:pointer}
+  .btn-go:hover{filter:brightness(1.08)}
+  .btn-red{background:linear-gradient(180deg,#ff7a86,#e0485a);color:#2b0409;border:0;border-radius:9px;
+    font-weight:700;font-family:var(--f-body);font-size:13px;padding:8px 13px;cursor:pointer}
+  .btn-gold{background:linear-gradient(180deg,#ffd45f,#e3a51c);color:#2a1d02;border:0;border-radius:9px;
+    font-weight:700;font-family:var(--f-body);font-size:13px;padding:8px 13px;cursor:pointer}
+  .adm-status{min-height:22px;font-size:13px;margin:10px 0 0;color:var(--dim)}
+  .adm-table{width:100%;border-collapse:collapse;font-size:13px}
+  .adm-table th{text-align:left;color:var(--faint);font-weight:600;font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:8px 8px;border-bottom:1px solid var(--line)}
+  .adm-table td{padding:9px 8px;border-bottom:1px solid var(--line-soft);color:var(--dim);vertical-align:middle}
+  .adm-table td b{color:var(--ink)}
+  .code-pill{font-family:ui-monospace,Menlo,monospace;background:var(--raise);border:1px solid var(--line);
+    border-radius:7px;padding:3px 8px;color:var(--gold);font-weight:700;letter-spacing:.05em}
+  .tag-prev{font-family:var(--f-head);font-weight:700}
+  pre.rules{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:12px;font-size:12px;
+    color:var(--dim);overflow-x:auto;white-space:pre}
+
+  /* ================= MODALITÀ GIORNO ================= */
+  html[data-theme="light"]{
+    --bg:#f3f6fb; --bg2:#e9eef7; --panel:#ffffff; --panel2:#f6f8fc; --raise:#eef2f9;
+    --ink:#121a2c; --dim:#3d4a63; --faint:#6b7891; --line:#dbe2ee; --line-soft:#e8edf5;
+    --border:#dbe2ee; --border-lo:#e8edf5;
+    --shadow:0 10px 30px -18px rgba(20,40,80,.25);
+  }
+  html[data-theme="light"] body{background:linear-gradient(180deg,#f7f9fd,#eef2f8);color:var(--ink)}
+  html[data-theme="light"] .topbar{background:rgba(255,255,255,.88)}
+  html[data-theme="light"] .panel{background:#fff}
+  html[data-theme="light"] select,html[data-theme="light"] input[type=text],html[data-theme="light"] input[type=number],
+  html[data-theme="light"] input[type=email],html[data-theme="light"] input[type=password],html[data-theme="light"] input[type=date]{
+    background:#fff;color:var(--ink)}
+  html[data-theme="light"] .hero-num{background:linear-gradient(180deg,#1b2a4a,#3d5a94);-webkit-background-clip:text;background-clip:text}
+  html[data-theme="light"] .notice{color:#6b4b00}
+  html[data-theme="light"] .notice.bad{color:#8a1f2c}
+  html[data-theme="light"] .btn-ghost.on,html[data-theme="light"] .tab.active{color:var(--ink)}
+  html[data-theme="light"] .login-card{background:#fff}
+  html[data-theme="light"] .side .item.on{background:rgba(61,155,255,.12)}
+  html[data-theme="light"] .kpi,html[data-theme="light"] .reccard{background:linear-gradient(180deg,#ffffff,#f3f6fb)}
+  html[data-theme="light"] .btn-ghost{background:#fff;color:var(--dim);border-color:var(--line)}
+  html[data-theme="light"] .btn-ghost:hover{background:var(--raise);color:var(--ink)}
+  html[data-theme="light"] .recmeta div,html[data-theme="light"] .hbar .htrack,html[data-theme="light"] .frow .ft{background:#e9eef6}
+  html[data-theme="light"] .login-card input{background:#fff}
+  html[data-theme="light"] table tr:hover td{background:rgba(61,155,255,.06)}
+  input[type=date]{background:rgba(7,14,31,.75);color:var(--ink);border:1px solid var(--line);border-radius:9px;
+    font-family:var(--f-body);font-size:13.5px;padding:6px 10px}
   .footer{margin-top:44px;text-align:center;color:var(--faint);font-size:12.3px;line-height:1.8}
   .editrow{display:flex;gap:9px;flex-wrap:wrap;align-items:center;justify-content:center;margin-top:16px}
   .editrow input{width:118px;text-align:right}
@@ -801,53 +893,86 @@
   </div>
 
 
-  <!-- ===== L. REGALI AI GIOCATORI ===== -->
-  <div class="section-h" id="sec-l"><span class="tag">L</span><h2>Regali ai giocatori</h2><div class="line"></div></div>
+  <!-- ===== M. GIOCATORI (gestione: regali, pass, skin, badge) ===== -->
+  <div class="section-h" id="sec-m"><span class="tag">M</span><h2>Giocatori</h2><div class="line"></div></div>
+  <div id="admNoKey" class="notice hidden">Per mandare regali serve il <b>secret del database</b>: inseriscilo in <a href="#" data-goview="sec-p">Impostazioni admin</a>.</div>
+  <div class="adm-grid">
+    <div class="panel">
+      <h3>Cerca un giocatore</h3>
+      <p class="desc">Per nome o id. Puoi anche incollare un id completo (u…).</p>
+      <input id="admSearch" type="text" placeholder="🔎 Nome o id…" style="width:100%;margin-bottom:10px">
+      <div id="admCount" class="foot" style="margin:0 0 8px"></div>
+      <div id="admList" class="adm-list"><div class="supp-empty">Caricamento giocatori…</div></div>
+    </div>
+    <div class="panel" id="admSheet"><div class="supp-empty">Scegli un giocatore dalla lista.</div></div>
+  </div>
+
+  <!-- ===== N. LINK REGALO (codici stile Supercell) ===== -->
+  <div class="section-h" id="sec-n"><span class="tag">N</span><h2>Link regalo</h2><div class="line"></div></div>
+  <div class="grid-2">
+    <div class="panel">
+      <h3>Crea un link regalo</h3>
+      <p class="desc">Chi apre il link (o scrive il codice in <b>Impostazioni › Riscatta codice</b>) riceve il regalo.
+        Vale una volta per account. Su iPhone il link apre direttamente il gioco.</p>
+      <div class="act" style="background:none;border:0;padding:0">
+        <div class="row2" style="margin-bottom:9px"><select id="lnkType"></select></div>
+        <div class="row2" style="margin-bottom:9px" id="lnkAmtRow"><input id="lnkAmt" type="number" min="1" placeholder="Quantità"></div>
+        <div class="row2" style="margin-bottom:9px" id="lnkIdRow"><select id="lnkId"></select></div>
+        <div class="row2" style="margin-bottom:9px">
+          <input id="lnkMax" type="number" min="0" placeholder="Usi massimi (0 = illimitati)">
+          <input id="lnkExp" type="date" title="Scadenza (vuoto = mai)">
+        </div>
+        <div class="row2" style="margin-bottom:9px">
+          <input id="lnkCode" type="text" maxlength="16" placeholder="Codice (vuoto = casuale)">
+          <input id="lnkMsg" type="text" maxlength="80" placeholder="Messaggio (facoltativo)">
+        </div>
+        <button class="btn-gold" id="lnkCreate">✨ Crea link</button>
+        <div id="lnkStatus" class="adm-status"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>Come funziona</h3>
+      <p class="desc">Il link porta a una pagina regalo di Cube Crash con il codice e il tasto <b>APRI CUBE CRASH</b>.
+        Su Android (e se il gioco non si apre) il codice si scrive a mano in Impostazioni › Riscatta codice.
+        Serve la versione del gioco con i codici regalo.</p>
+      <p class="desc">Idee: un link con <b>usi illimitati</b> e scadenza per un evento sui social, oppure
+        <b>1 uso</b> per regalare il pass a un creator.</p>
+    </div>
+  </div>
   <div class="panel">
-    <h3>Manda monete, Season Pass, livelli del pass, skin o vite</h3>
-    <p class="desc">Il regalo finisce nella casella del giocatore (<code>gifts/{uid}</code>): il gioco lo ritira da solo
-      all'avvio o al ritorno nell'app e mostra la schermata premio con il tuo messaggio. Serve la versione del gioco
-      con la casella regali. Funziona per chi ha un id che inizia con <b>u</b> (account Firebase, anche ospite).</p>
-    <div id="giftKeyBox" class="supp-toolbar">
-      <input id="giftKey" type="password" placeholder="Secret del database Firebase (resta salvato solo in questo browser)">
-      <button id="giftKeySave" class="btn-ghost">Salva secret</button>
-    </div>
-    <div id="giftKeyOk" class="foot hidden" style="margin-top:0;margin-bottom:12px">🔑 Secret salvato in questo browser · <a href="#" id="giftKeyForget">dimentica</a></div>
-    <div class="gift-grid">
-      <div>
-        <div class="supp-toolbar"><input id="giftSearch" type="text" placeholder="🔎 Cerca per nome o id…"></div>
-        <div id="giftResults"></div>
+    <h3>Link creati</h3>
+    <div id="lnkList"><div class="supp-empty">—</div></div>
+  </div>
+
+  <!-- ===== O. STORICO REGALI ===== -->
+  <div class="section-h" id="sec-o"><span class="tag">O</span><h2>Storico regali</h2><div class="line"></div></div>
+  <div class="panel">
+    <h3>Ultimi regali inviati</h3>
+    <div id="admLog"><div class="supp-empty">—</div></div>
+  </div>
+
+  <!-- ===== P. IMPOSTAZIONI ADMIN ===== -->
+  <div class="section-h" id="sec-p"><span class="tag">P</span><h2>Impostazioni admin</h2><div class="line"></div></div>
+  <div class="grid-2">
+    <div class="panel">
+      <h3>Secret del database</h3>
+      <p class="desc">Serve per regali, link e regole. Resta salvato <b>solo in questo browser</b>.
+        Console Firebase › Impostazioni progetto › Account di servizio › Secret del database.</p>
+      <div id="keyBox" class="supp-toolbar">
+        <input id="keyIn" type="password" placeholder="Incolla il secret">
+        <button class="btn-gold" id="keySave">Salva</button>
       </div>
-      <div>
-        <div id="giftSel" class="gift-sel"><small>Scegli un giocatore dalla lista (o col tasto 🎁 nella scheda giocatori).</small></div>
-        <div class="gift-form">
-          <label for="giftType">Regalo</label>
-          <select id="giftType">
-            <option value="coins">Monete</option>
-            <option value="pass">Season Pass (attiva la colonna PRO)</option>
-            <option value="pass_levels">Livelli del pass</option>
-            <option value="pass_max">Completa il pass (livello 60)</option>
-            <option value="skin">Skin</option>
-            <option value="lives">Vite</option>
-          </select>
-          <label for="giftAmount" id="giftAmountLbl">Quantità</label>
-          <input id="giftAmount" type="number" min="1" value="1000">
-          <label for="giftSkin" id="giftSkinLbl" class="hidden">Skin</label>
-          <select id="giftSkin" class="hidden"></select>
-          <label for="giftMsg">Messaggio</label>
-          <input id="giftMsg" type="text" maxlength="80" placeholder="facoltativo, es. Grazie per il supporto!">
-        </div>
-        <div class="gift-presets">
-          <button class="btn-ghost" id="giftFullPass">⭐ Pass completo + PRO</button>
-          <button class="btn-ghost" id="giftSend" style="border-color:rgba(70,209,127,.5);color:var(--green)">🎁 Invia regalo</button>
-        </div>
-        <div id="giftStatus" class="foot" style="min-height:20px;margin-top:0"></div>
-        <h3 style="margin-top:14px">In attesa di ritiro</h3>
-        <div id="giftPending"><div class="supp-empty">—</div></div>
-      </div>
+      <div id="keyOk" class="foot hidden" style="margin-top:0">🔑 Secret salvato · <a href="#" id="keyForget">dimentica</a></div>
+      <div id="keyStatus" class="adm-status"></div>
     </div>
-    <h3 style="margin-top:18px">Ultimi regali inviati</h3>
-    <div id="giftLog"><div class="supp-empty">—</div></div>
+    <div class="panel">
+      <h3>Regole Firebase per regali e link</h3>
+      <p class="desc">Una volta sola: il gioco deve poter leggere la sua casella regali e i codici.
+        Il tasto aggiunge solo queste regole e lascia intatte le altre.</p>
+      <button class="btn-go" id="rulesInstall">Installa regole</button>
+      <div id="rulesStatus" class="adm-status"></div>
+      <pre class="rules" id="rulesPre"></pre>
+    </div>
   </div>
   <div class="footer">
 Cube Crash · Super Stats — pagina statica, sola lettura sui dati di gioco<br>
@@ -1485,7 +1610,7 @@ async function loadTelemetry(){
     };
   });
   STATS_PLAYERS=players;
-  giftSearch();
+  if(window.admPlayersRefresh) admPlayersRefresh();
   notice.classList.add("hidden");
   renderTelemetry(players);
   renderHero();
@@ -2184,7 +2309,7 @@ function renderDiagIndex(){
   list.querySelectorAll(".diag-item").forEach(it=>{
     it.addEventListener("click",function(){
       const t=document.getElementById(this.dataset.go);
-      if(t) t.scrollIntoView({behavior:"smooth",block:"center"});
+      if(t){ if(window.admReveal) admReveal(t); t.scrollIntoView({behavior:"smooth",block:"center"}); }
     });
   });
 }
@@ -2937,148 +3062,363 @@ async function suppRemoveCok(i){ const pl=suppCok[i];
 /* ==========================================================================
    BOOT
    ========================================================================== */
+
 /* ==========================================================================
-   REGALI (gifts/{uid}) — scrive col SECRET del database, salvato solo nel
-   localStorage di questo browser. Il gioco (gifts.gd) li ritira e li cancella.
-   Storico in gifts_log. L'id dei giocatori e' "u"+uid Firebase.
+   ADMIN (03/10/2026): menu laterale a pagine, modalità giorno/notte, gestione
+   GIOCATORI (regali: monete, pass, livelli, skin, badge, avatar, vite), LINK
+   REGALO (codici stile Supercell), STORICO e IMPOSTAZIONI (secret + regole).
+   Le scritture usano il SECRET del database, salvato SOLO in questo browser.
+   Il gioco ritira i regali da gifts/{uid} (gifts.gd) e i codici da codes/{CODE}.
+   L'id dei giocatori in dashboard è "u" + uid Firebase.
    ========================================================================== */
-const GIFT_SKINS=[["sk_red","Rossa"],["sk_blue","Blu"],["sk_green","Verde"],["sk_yellow","Gialla"],
+const ADM_SKINS=[["sk_red","Rossa"],["sk_blue","Blu"],["sk_green","Verde"],["sk_yellow","Gialla"],
   ["sk_orange","Arancione"],["sk_purple","Viola"],["sk_pink","Rosa"],["sk_red_fruit","Fragola (frutta)"],
   ["sk_blue_fruit","Mirtillo (frutta)"],["sk_orange_fruit","Arancia (frutta)"],["sk_pink_fruit","Pesca (frutta)"],
   ["sk_purple_fruit","Uva (frutta)"],["sk_red_anguria","Anguria (pack)"],["sk_red_fragola","Fragola (pack)"],
-  ["sk_yellow_limone","Limone (pack)"],["sk_green_kiwi","Kiwi (pack)"]];
-const GIFT_LABEL={coins:"monete",pass:"Season Pass",pass_levels:"livelli pass",pass_max:"pass completo",skin:"skin",lives:"vite"};
-let GIFT_TO=null;   // {id,name}
-function giftKey(){ try{ return localStorage.getItem("cc_fb_secret")||""; }catch(e){ return ""; } }
-function giftUid(id){ return (id||"").charAt(0)==="u" ? id.slice(1) : ""; }
-async function giftReq(method,path,body,key){
-  const r=await fetch(BASE+"/"+path+".json?auth="+encodeURIComponent(key||giftKey()),
+  ["sk_yellow_limone","Limone (pack)"],["sk_green_kiwi","Kiwi (pack)"],["sk_cheese","Cheese (pass S1)"]];
+const ADM_AVATARS=[["av_bomb","Bomba (shop)"],["av_mushroom","Fungo (shop)"],["av_penguin","Pinguino (shop)"],
+  ["av_fish","Pesce (shop)"],["av_skull","Teschio (shop)"],["av_pig","Maialino (shop)"],["fire","Fuoco"],
+  ["trophy","Trofeo"],["cupgold","Coppa d'oro"],["cupgreen","Coppa verde"],["creator","Creator"],["beta","Beta"],
+  ["og","OG"],["global","Global"],["vulkano","Vulkano"],["hotdog","Hot dog (pass)"],["cheese","Cheese (pass)"],
+  ["banana","Banana (pass)"],["t_arcade","Trofeo Arcade"],["t_prateria","Trofeo Prateria"],["t_medioevo","Trofeo Cubeval"],
+  ["t_space","Trofeo Space"],["t_skull","Trofeo Speed Arcade"],["t_lava","Trofeo Inferno"],["t_speed","Trofeo Glitchrun"],
+  ["t_candy","Trofeo Candy"]];
+const ADM_TAGS=[["pizza", "[PIZZA]", "#ff8c33"], ["sushi", "[SUSHI]", "#ff728c"], ["hotdog", "[HOTDOG]", "#f2cc3f"], ["taco", "[TACO]", "#8ce559"], ["gelato", "[GELATO]", "#bfd8ff"], ["pasta", "[PASTA]", "#ffe57f"], ["gatto", "[GATTO]", "#ffb259"], ["panda", "[PANDA]", "#e5e5e5"], ["rana", "[RANA]", "#72f272"], ["pinguino", "[PINGU]", "#8cbfff"], ["mucca", "[MUCCA]", "#ffccd8"], ["lupo", "[LUPO]", "#bfbfd8"], ["boh", "[BOH]", "#d8d8d8"], ["lag", "[LAG]", "#ff5959"], ["noob", "[NOOB]", "#99ff99"], ["err404", "[404]", "#ffd84c"], ["nonna", "[NONNA]", "#ffb2e5"], ["sbadiglio", "[SBADIGLIO]", "#b2ccf2"], ["zen", "[ZEN]", "#99f2d8"], ["hype", "[HYPE]", "#ff72cc"], ["sonno", "[SONNO]", "#a5a5f2"], ["caos", "[CAOS]", "#ff7f3f"], ["chill", "[CHILL]", "#8cd8ff"], ["tilt", "[TILT]", "#ff4c4c"], ["nerd", "[NERD]", "#8ce58c"], ["genio", "[GENIO]", "#ffe566"], ["prof", "[PROF]", "#ccb2ff"], ["ripetente", "[RIPETENTE]", "#f29966"], ["secchione", "[SECCHIONE]", "#7fbfff"], ["bocciato", "[BOCCIATO]", "#ff6666"], ["alien", "[ALIEN]", "#72ff8c"], ["ufo", "[UFO]", "#b299ff"], ["rocket", "[ROCKET]", "#ff7f4c"], ["moon", "[MOON]", "#f2f2bf"], ["nova", "[NOVA]", "#66d8ff"], ["orbita", "[ORBITA]", "#99ccff"], ["bit8", "[8-BIT]", "#ff4c99"], ["oneup", "[1UP]", "#59ff59"], ["combo", "[COMBO]", "#ffd833"], ["boss", "[BOSS]", "#ff6666"], ["coin", "[INSERT COIN]", "#99e5ff"], ["gameover", "[GAME OVER]", "#e55959"], ["fulmine", "[FULMINE]", "#fff24c"], ["tempesta", "[TEMPESTA]", "#8c99cc"], ["nebbia", "[NEBBIA]", "#ccccd8"], ["sole", "[SOLE]", "#ffbf33"], ["neve", "[NEVE]", "#d8f2ff"], ["tornado", "[TORNADO]", "#99bfb2"], ["squalo", "[SQUALO]", "#a5bfd8"], ["polpo", "[POLPO]", "#f28cd8"], ["pirata", "[PIRATA]", "#e5b266"], ["sirena", "[SIRENA]", "#72f2d8"], ["kraken", "[KRAKEN]", "#668ccc"], ["onda", "[ONDA]", "#59b2ff"], ["dj", "[DJ]", "#f272ff"], ["rock", "[ROCK]", "#ff724c"], ["bass", "[BASS]", "#7f99ff"], ["metal", "[METAL]", "#cccccc"], ["jazz", "[JAZZ]", "#ffcc72"], ["rap", "[RAP]", "#f2f272"], ["drago", "[DRAGO]", "#ff593f"], ["fenice", "[FENICE]", "#ff9926"], ["titano", "[TITANO]", "#bfcce5"], ["grifone", "[GRIFONE]", "#f2cc72"], ["idra", "[IDRA]", "#72e58c"], ["sfinge", "[SFINGE]", "#e5bf8c"], ["hacker", "[HACKER]", "#4cff72"], ["glitch", "[GLITCH]", "#ff4ce5"], ["neon", "[NEON]", "#59ffff"], ["bot", "[BOT]", "#bfcce5"], ["matrix", "[MATRIX]", "#66f266"], ["pixel", "[PIXEL]", "#ffb2f2"], ["pro", "[PRO]", "#ffd83f"], ["mvp", "[MVP]", "#72e5ff"], ["ace", "[ACE]", "#ff7272"], ["clutch", "[CLUTCH]", "#f299ff"], ["tryhard", "[TRYHARD]", "#ff8c3f"], ["goat", "[GOAT]", "#fff299"], ["re", "[RE]", "#ffd633"], ["imperatore", "[IMPERATORE]", "#e57fff"], ["divino", "[DIVINO]", "#ffffcc"], ["immortale", "[IMMORTALE]", "#8cffe5"], ["eterno", "[ETERNO]", "#cce5ff"], ["mito", "[MITO]", "#ff9966"], ["s1", "[S1]", "#d8a5ff"], ["fan", "[FAN]", "#ff99d8"], ["vip", "[VIP]", "#ffd633"], ["premium", "[PREMIUM]", "#f27fff"], ["gold", "[GOLD]", "#ffbf19"], ["pass", "[PASS]", "#b272ff"], ["s2", "[S2]", "#8cd8ff"], ["fan_s2", "[FAN S2]", "#ff99d8"], ["vip_s2", "[VIP S2]", "#ffd633"], ["premium_s2", "[PREMIUM S2]", "#f27fff"], ["gold_s2", "[GOLD S2]", "#ffbf19"], ["pass_s2", "[PASS S2]", "#b272ff"], ["recluta", "[RECLUTA]", "#cce599"], ["esploratore", "[ESPLORATORE]", "#8ce5bf"], ["artificiere", "[ARTIFICIERE]", "#ff8c3f"], ["veterano", "[VETERANO]", "#bfbfe5"], ["maestro", "[MAESTRO]", "#ffd859"], ["eroe", "[EROE]", "#ff7272"], ["campione", "[CAMPIONE]", "#ffd633"], ["argento", "[ARGENTO]", "#d8e0f2"], ["bronzo", "[BRONZO]", "#d88c4c"]];
+const ADM_TYPES=[["coins","Monete"],["pass","Season Pass (attiva)"],["pass_off","Togli Season Pass"],
+  ["pass_levels","Livelli del pass"],["pass_max","Pass completo (liv. 60)"],["skin","Skin"],["nametag","Badge / nametag"],
+  ["avatar","Avatar"],["lives","Vite"]];
+const ADM_LINK_BASE="https://giorgiokirry.github.io/cubecrash-docs/gift.html?c=";
+let ADM_SEL=null;   // {id,name,...} giocatore aperto
+
+function admKey(){ try{ return localStorage.getItem("cc_fb_secret")||""; }catch(e){ return ""; } }
+function admUid(id){ return (id||"").charAt(0)==="u" ? id.slice(1) : ""; }
+async function admReq(method,path,body,key,query){
+  const r=await fetch(BASE+"/"+path+".json?auth="+encodeURIComponent(key||admKey())+(query||""),
     {method, headers:{"Content-Type":"application/json"}, body:body===undefined?undefined:JSON.stringify(body)});
-  if(!r.ok) throw new Error(r.status===401?"secret non valido":"errore "+r.status);
+  if(!r.ok) throw new Error(r.status===401?"secret non valido o mancante":"errore "+r.status);
   return r.json();
 }
-function giftDesc(g){
+function admLabel(list,id){ const x=list.find(v=>v[0]===id); return x?x[1]:id; }
+function admDesc(g){
   const n=Number(g.amount)||0;
-  if(g.type==="skin"){ const s=GIFT_SKINS.find(x=>x[0]===g.id); return "skin "+(s?s[1]:g.id); }
-  if(g.type==="pass"||g.type==="pass_max") return GIFT_LABEL[g.type];
-  return fmtInt(n)+" "+(GIFT_LABEL[g.type]||g.type);
-}
-function giftKeyUi(){
-  const has=!!giftKey();
-  document.getElementById("giftKeyBox").classList.toggle("hidden",has);
-  document.getElementById("giftKeyOk").classList.toggle("hidden",!has);
-}
-function giftTypeUi(){
-  const t=document.getElementById("giftType").value;
-  const amt=(t==="coins"||t==="pass_levels"||t==="lives");
-  ["giftAmount","giftAmountLbl"].forEach(id=>document.getElementById(id).classList.toggle("hidden",!amt));
-  ["giftSkin","giftSkinLbl"].forEach(id=>document.getElementById(id).classList.toggle("hidden",t!=="skin"));
-  if(amt){ document.getElementById("giftAmount").value = t==="coins"?1000:(t==="pass_levels"?5:3); }
-}
-function giftSearch(){
-  const raw=document.getElementById("giftSearch").value.trim();
-  const q=raw.toLowerCase();
-  const all=(STATS_PLAYERS||[]);
-  const list=(q? all.filter(p=>p.name.toLowerCase().includes(q)||p.id.toLowerCase().includes(q))
-               : all.slice().sort((a,b)=>b.updated-a.updated)).slice(0,12);
-  let html=list.map(p=>'<div class="supp-row gift-pick" data-id="'+esc(p.id)+'" data-name="'+esc(p.name)+'">'
-      +'<div class="nm"><b>'+esc(p.name)+'</b><br><small>'+esc(p.id)+' · '+esc(p.platform)+(p.updated?' · visto il '+fmtDate(p.updated):'')+'</small></div>'
-      +(giftUid(p.id)?'':'<small style="color:var(--red)">senza account</small>')+'</div>').join("");
-  if(!list.length){
-    html = /^u[A-Za-z0-9]{20,}$/.test(raw)
-      ? '<div class="supp-row gift-pick" data-id="'+esc(raw)+'" data-name="(id incollato)"><div class="nm"><b>Usa questo id</b><br><small>'+esc(raw)+'</small></div></div>'
-      : '<div class="supp-empty">'+(STATS_PLAYERS?'Nessun giocatore trovato. Puoi incollare un id completo (u…).':'Caricamento giocatori…')+'</div>';
+  switch(g.type){
+    case "coins": return fmtInt(n)+" monete";
+    case "lives": return n+" vite";
+    case "pass_levels": return n+" livelli pass";
+    case "pass": return "Season Pass";
+    case "pass_off": return "Pass tolto";
+    case "pass_max": return "Pass completo";
+    case "skin": return "Skin "+admLabel(ADM_SKINS,g.id);
+    case "avatar": return "Avatar "+admLabel(ADM_AVATARS,g.id);
+    case "nametag": { const t=ADM_TAGS.find(v=>v[0]===g.id); return "Badge "+(t?t[1]:g.id); }
   }
-  setHtml("giftResults",html);
-  document.querySelectorAll("#giftResults .gift-pick").forEach(el=>el.addEventListener("click",()=>giftSelect(el.dataset.id,el.dataset.name)));
+  return g.type;
 }
-function giftSelect(id,name){
-  GIFT_TO={id,name};
-  const uid=giftUid(id);
-  setHtml("giftSel",'<b>'+esc(name)+'</b><br><small>'+esc(id)+'</small>'
-    +(uid?'':'<br><small style="color:var(--red)">Questo id non è legato a un account Firebase: non può ricevere regali.</small>'));
-  document.getElementById("sec-l").scrollIntoView({behavior:"smooth"});
-  giftLoadPending();
+function admOpts(list){ return list.map(v=>'<option value="'+esc(v[0])+'">'+esc(v[1])+'</option>').join(""); }
+function admTagOpts(){ return ADM_TAGS.map(t=>'<option value="'+esc(t[0])+'" style="color:'+t[2]+'">'+esc(t[1])+'</option>').join(""); }
+
+/* ---------------- TEMA giorno/notte ---------------- */
+function admTheme(t){
+  if(!t){ try{ t=localStorage.getItem("cc_theme")||"dark"; }catch(e){ t="dark"; } }
+  document.documentElement.setAttribute("data-theme",t);
+  try{ localStorage.setItem("cc_theme",t); }catch(e){}
+  document.querySelectorAll(".theme-btn").forEach(b=>b.textContent=t==="light"?"🌙":"☀️");
 }
-async function giftSendList(list){
-  const st=document.getElementById("giftStatus");
-  if(!giftKey()){ st.textContent="⚠️ Prima salva il secret del database."; return; }
-  if(!GIFT_TO){ st.textContent="⚠️ Scegli un giocatore."; return; }
-  const uid=giftUid(GIFT_TO.id);
-  if(!uid){ st.textContent="⚠️ Questo giocatore non ha un account Firebase."; return; }
-  const msg=document.getElementById("giftMsg").value.trim().slice(0,80);
-  try{
-    for(const g of list){
-      const gift=Object.assign({msg, at:{".sv":"timestamp"}}, g);
-      await giftReq("POST","gifts/"+uid,gift);
-      await giftReq("POST","gifts_log",Object.assign({to:GIFT_TO.id, name:GIFT_TO.name}, gift));
+function admToggleTheme(){ admTheme(document.documentElement.getAttribute("data-theme")==="light"?"dark":"light"); }
+
+/* ---------------- PAGINE + MENU LATERALE ---------------- */
+const ADM_VIEWS=[];   // {id,label,tag,grp,el}
+function admBuildViews(){
+  const dash=document.getElementById("dashboard");
+  if(!dash || dash.dataset.views) return;
+  dash.dataset.views="1";
+  dash.classList.add("has-side");
+  const kids=[...dash.children];
+  const top=kids.find(k=>k.classList.contains("topbar"));
+  const foot=kids.find(k=>k.classList.contains("footer"));
+  let cur=document.createElement("div");
+  cur.className="view"; cur.id="view-overview";
+  ADM_VIEWS.push({id:"overview",label:"Home",tag:"★",grp:"Statistiche",el:cur});
+  const holder=document.createElement("div");
+  for(const k of kids){
+    if(k===top || k===foot || k.tagName==="SCRIPT") continue;
+    if(k.classList.contains("section-h")){
+      holder.appendChild(cur);
+      cur=document.createElement("div"); cur.className="view"; cur.id="view-"+k.id;
+      const h=k.querySelector("h2"), tg=k.querySelector(".tag");
+      ADM_VIEWS.push({id:k.id,label:h?h.textContent:k.id,tag:tg?tg.textContent:"•",
+        grp:["sec-m","sec-n","sec-o","sec-p"].includes(k.id)?"Gestione":"Statistiche",el:cur});
     }
-    st.textContent="✅ Inviato a "+GIFT_TO.name+": "+list.map(giftDesc).join(" + ")+". Arriva alla prossima apertura dell'app.";
-    giftLoadPending(); giftLoadLog();
+    cur.appendChild(k);
+  }
+  holder.appendChild(cur);
+  [...holder.children].forEach(v=>dash.insertBefore(v,foot||null));
+  // menu laterale
+  const side=document.createElement("aside");
+  side.className="side"; side.id="admSide";
+  let html='<div class="brand"><img src="cc_logo.jpg" alt=""><span>Cube Crash</span></div>';
+  let grp="";
+  for(const v of ADM_VIEWS){
+    if(v.grp!==grp){ grp=v.grp; html+='<div class="grp">'+esc(grp)+'</div>'; }
+    html+='<button class="item" data-view="'+v.id+'"><span class="ic">'+esc(v.tag)+'</span>'+esc(v.label)+'</button>';
+  }
+  html+='<div class="foot2"><button class="btn-ghost theme-btn" title="Giorno / notte">☀️</button></div>';
+  side.innerHTML=html;
+  document.body.appendChild(side);
+  const dim=document.createElement("div"); dim.className="side-dim"; document.body.appendChild(dim);
+  dim.addEventListener("click",()=>{ side.classList.remove("open"); dim.classList.remove("on"); });
+  side.querySelectorAll(".item").forEach(b=>b.addEventListener("click",()=>{ admShow(b.dataset.view); side.classList.remove("open"); dim.classList.remove("on"); }));
+  // topbar: hamburger (telefono) + giorno/notte
+  if(top){
+    const bg=document.createElement("button"); bg.className="btn-ghost burger"; bg.textContent="☰";
+    bg.addEventListener("click",()=>{ side.classList.add("open"); dim.classList.add("on"); });
+    top.insertBefore(bg, top.firstChild);
+    const tb=document.createElement("button"); tb.className="btn-ghost theme-btn"; tb.title="Giorno / notte";
+    const lo=document.getElementById("logoutBtn"); top.insertBefore(tb, lo||null);
+  }
+  document.querySelectorAll(".theme-btn").forEach(b=>b.addEventListener("click",admToggleTheme));
+  document.addEventListener("click",e=>{ const a=e.target.closest("[data-goview]"); if(a){ e.preventDefault(); admShow(a.dataset.goview); } });
+  admTheme();
+  admShow((location.hash||"").replace("#","")||"overview", true);
+}
+function admShow(id, noHash){
+  if(!ADM_VIEWS.find(v=>v.id===id)) id="overview";
+  for(const v of ADM_VIEWS) v.el.classList.toggle("on", v.id===id);
+  document.querySelectorAll("#admSide .item").forEach(b=>b.classList.toggle("on", b.dataset.view===id));
+  if(!noHash) history.replaceState(null,"","#"+id);
+  window.scrollTo(0,0);
+  if(id==="sec-n") admLoadLinks();
+  if(id==="sec-o") admLoadLog();
+  if(id==="sec-m") admPlayersRefresh();
+}
+// i link "vai →" della diagnosi: apre la pagina giusta prima di scorrere
+window.admReveal=function(el){ const v=el.closest(".view"); if(v){ const id=v.id.replace("view-",""); admShow(id); } };
+
+/* ---------------- GIOCATORI ---------------- */
+window.admPlayersRefresh=function(){
+  const box=document.getElementById("admList"); if(!box) return;
+  document.getElementById("admNoKey").classList.toggle("hidden", !!admKey());
+  const raw=(document.getElementById("admSearch").value||"").trim(), q=raw.toLowerCase();
+  const all=(STATS_PLAYERS||[]);
+  let list=q? all.filter(p=>p.name.toLowerCase().includes(q)||p.id.toLowerCase().includes(q))
+            : all.slice().sort((a,b)=>b.updated-a.updated);
+  setTxt("admCount", STATS_PLAYERS? (fmtInt(list.length)+" giocatori"+(q?" trovati":"")) : "");
+  list=list.slice(0,80);
+  let html=list.map(p=>'<div class="adm-row'+(ADM_SEL&&ADM_SEL.id===p.id?' on':'')+'" data-id="'+esc(p.id)+'">'
+    +'<div class="adm-av" style="background:'+iconColor(p.icon)+'">'+esc((p.name||"?").charAt(0).toUpperCase())+'</div>'
+    +'<div class="nm"><b>'+esc(p.name)+'</b><small>'+esc(p.platform)+(p.updated?' · '+fmtDate(p.updated):'')+(admUid(p.id)?'':' · senza account')+'</small></div></div>').join("");
+  if(!list.length) html = /^u[A-Za-z0-9]{20,}$/.test(raw)
+    ? '<div class="adm-row" data-id="'+esc(raw)+'"><div class="adm-av" style="background:#555">?</div><div class="nm"><b>Usa questo id</b><small>'+esc(raw)+'</small></div></div>'
+    : '<div class="supp-empty">'+(STATS_PLAYERS?'Nessun giocatore trovato.':'Caricamento giocatori…')+'</div>';
+  box.innerHTML=html;
+  box.querySelectorAll(".adm-row").forEach(r=>r.addEventListener("click",()=>admOpen(r.dataset.id)));
+};
+function admOpen(id){
+  const p=(STATS_PLAYERS||[]).find(x=>x.id===id) || {id, name:"(id incollato)", platform:"—"};
+  ADM_SEL=p;
+  admPlayersRefresh();
+  const uid=admUid(id);
+  const chip=(l,v)=>'<div class="chip2">'+esc(l)+'<b>'+v+'</b></div>';
+  let h='<div class="adm-head"><div class="adm-av" style="background:'+iconColor(p.icon||0)+'">'+esc((p.name||"?").charAt(0).toUpperCase())+'</div>'
+    +'<div><h3>'+esc(p.name)+'</h3><small>'+esc(id)+'</small></div></div>';
+  if(p.updated!==undefined){
+    h+='<div class="chips">'+chip("Monete",fmtInt(p.coins))+chip("Livello pass",p.pass_level)
+      +chip("Record Classic",fmtInt(p.hs_classic))+chip("Record Speedrun",fmtInt(p.hs_speedrun))
+      +chip("Partite",fmtInt(p.g_total))+chip("Coppe Classic",p.cups_classic<0?"—":fmtInt(p.cups_classic))
+      +chip("Piattaforma",esc(p.platform))+chip("Versione",esc(p.ver||"—"))+chip("Ultimo accesso",p.updated?fmtDate(p.updated):"—")+'</div>';
+  }
+  if(!uid){ h+='<div class="notice bad">Questo id non è legato a un account Firebase: non può ricevere regali.</div>'; setHtml("admSheet",h); return; }
+  h+='<div class="row2" style="display:flex;gap:8px;margin-bottom:12px"><input id="admMsg" type="text" maxlength="80" placeholder="Messaggio per il giocatore (facoltativo)" style="flex:1"></div>'
+    +'<div class="act-grid">'
+    +'<div class="act"><h4>Monete</h4><div class="row2"><input id="aCoins" type="number" min="1" value="1000">'
+    +'<button class="btn-go" data-send="coins">Regala</button></div>'
+    +'<div class="row2" style="margin-top:8px"><button class="btn-ghost" data-quick="500">+500</button><button class="btn-ghost" data-quick="1000">+1.000</button><button class="btn-ghost" data-quick="5000">+5.000</button><button class="btn-ghost" data-quick="15000">+15.000</button></div></div>'
+    +'<div class="act"><h4>Season Pass</h4><div class="row2"><button class="btn-go" data-send="pass">Attiva pass</button><button class="btn-red" data-send="pass_off">Togli pass</button></div>'
+    +'<div class="row2" style="margin-top:8px"><input id="aLv" type="number" min="1" max="60" value="5"><button class="btn-ghost" data-send="pass_levels">+ livelli</button><button class="btn-gold" data-send="pass_max">Pass completo</button></div></div>'
+    +'<div class="act"><h4>Skin</h4><div class="row2"><select id="aSkin">'+admOpts(ADM_SKINS)+'</select><button class="btn-go" data-send="skin">Regala</button></div></div>'
+    +'<div class="act"><h4>Badge / nametag</h4><div class="row2"><select id="aTag">'+admTagOpts()+'</select><button class="btn-go" data-send="nametag">Regala</button></div></div>'
+    +'<div class="act"><h4>Avatar</h4><div class="row2"><select id="aAv">'+admOpts(ADM_AVATARS)+'</select><button class="btn-go" data-send="avatar">Regala</button></div></div>'
+    +'<div class="act"><h4>Vite (Storia)</h4><div class="row2"><input id="aLives" type="number" min="1" value="3"><button class="btn-go" data-send="lives">Regala</button></div></div>'
+    +'</div><div id="admSt" class="adm-status"></div>'
+    +'<h3 style="margin-top:16px">In attesa di ritiro</h3><div id="admPend"><div class="supp-empty">—</div></div>'
+    +'<h3 style="margin-top:16px">Regali ricevuti</h3><div id="admHist"><div class="supp-empty">—</div></div>';
+  setHtml("admSheet",h);
+  const sheet=document.getElementById("admSheet");
+  sheet.querySelectorAll("[data-quick]").forEach(b=>b.addEventListener("click",()=>admSend({type:"coins",amount:Number(b.dataset.quick)})));
+  sheet.querySelectorAll("[data-send]").forEach(b=>b.addEventListener("click",()=>{
+    const t=b.dataset.send, g={type:t};
+    if(t==="coins"){ g.amount=Math.floor(Number(document.getElementById("aCoins").value)||0); if(g.amount<=0||g.amount>1000000) return setTxt("admSt","⚠️ Monete: da 1 a 1.000.000"); }
+    if(t==="pass_levels"){ g.amount=Math.min(60,Math.floor(Number(document.getElementById("aLv").value)||0)); if(g.amount<=0) return setTxt("admSt","⚠️ Livelli non validi"); }
+    if(t==="lives"){ g.amount=Math.floor(Number(document.getElementById("aLives").value)||0); if(g.amount<=0||g.amount>50) return setTxt("admSt","⚠️ Vite: da 1 a 50"); }
+    if(t==="skin") g.id=document.getElementById("aSkin").value;
+    if(t==="nametag") g.id=document.getElementById("aTag").value;
+    if(t==="avatar") g.id=document.getElementById("aAv").value;
+    admSend(g);
+  }));
+  admLoadPending(); admLoadHist();
+}
+async function admSend(g){
+  if(!ADM_SEL) return;
+  const uid=admUid(ADM_SEL.id);
+  if(!admKey()) return setTxt("admSt","⚠️ Prima salva il secret in Impostazioni admin.");
+  const msg=((document.getElementById("admMsg")||{}).value||"").trim().slice(0,80);
+  const gift=Object.assign({msg, at:{".sv":"timestamp"}}, g);
+  try{
+    await admReq("POST","gifts/"+uid,gift);
+    await admReq("POST","gifts_log",Object.assign({to:ADM_SEL.id, name:ADM_SEL.name}, gift));
+    setTxt("admSt","✅ "+admDesc(g)+" inviato a "+ADM_SEL.name+": lo riceve alla prossima apertura del gioco.");
+    admLoadPending(); admLoadHist();
+  }catch(e){ setTxt("admSt","❌ "+e.message); }
+}
+async function admLoadPending(){
+  const el=document.getElementById("admPend"); if(!el||!ADM_SEL) return;
+  if(!admKey()){ el.innerHTML='<div class="supp-empty">Serve il secret.</div>'; return; }
+  try{
+    const uid=admUid(ADM_SEL.id), d=await admReq("GET","gifts/"+uid)||{}, ks=Object.keys(d);
+    el.innerHTML=ks.length? ks.map(k=>'<div class="supp-row"><div class="nm"><b>'+esc(admDesc(d[k]))+'</b>'
+      +(d[k].msg?'<br><small>“'+esc(d[k].msg)+'”</small>':'')+'</div><button class="supp-btn supp-no" data-k="'+esc(k)+'">Annulla</button></div>').join("")
+      : '<div class="supp-empty">Niente in attesa: tutto ritirato.</div>';
+    el.querySelectorAll("[data-k]").forEach(b=>b.addEventListener("click",async()=>{ await admReq("PUT","gifts/"+uid+"/"+b.dataset.k,null); admLoadPending(); }));
+  }catch(e){ el.innerHTML='<div class="supp-empty">❌ '+esc(e.message)+'</div>'; }
+}
+let ADM_LOG_CACHE=null;
+async function admGetLog(force){
+  if(ADM_LOG_CACHE && !force) return ADM_LOG_CACHE;
+  const d=await admReq("GET","gifts_log")||{};
+  ADM_LOG_CACHE=Object.values(d).sort((a,b)=>(b.at||0)-(a.at||0));
+  return ADM_LOG_CACHE;
+}
+async function admLoadHist(){
+  const el=document.getElementById("admHist"); if(!el||!ADM_SEL||!admKey()) return;
+  try{
+    const rows=(await admGetLog(true)).filter(g=>g.to===ADM_SEL.id).slice(0,30);
+    el.innerHTML=rows.length? '<table class="adm-table"><tr><th>Regalo</th><th>Messaggio</th><th>Quando</th></tr>'
+      +rows.map(g=>'<tr><td><b>'+esc(admDesc(g))+'</b></td><td>'+esc(g.msg||"")+'</td><td>'+(g.at?fmtDate(g.at):"")+'</td></tr>').join("")+'</table>'
+      : '<div class="supp-empty">Nessun regalo finora.</div>';
+  }catch(e){ el.innerHTML='<div class="supp-empty">❌ '+esc(e.message)+'</div>'; }
+}
+async function admLoadLog(){
+  const el=document.getElementById("admLog"); if(!el) return;
+  if(!admKey()){ el.innerHTML='<div class="supp-empty">Serve il secret (Impostazioni admin).</div>'; return; }
+  try{
+    const rows=(await admGetLog(true)).slice(0,100);
+    el.innerHTML=rows.length? '<div class="table-wrap"><table class="adm-table"><tr><th>Giocatore</th><th>Regalo</th><th>Messaggio</th><th>Quando</th></tr>'
+      +rows.map(g=>'<tr><td><b>'+esc(g.name||g.to)+'</b><br><small>'+esc(g.to||(g.code?"link "+g.code:""))+'</small></td><td>'+esc(admDesc(g))+'</td><td>'+esc(g.msg||"")+'</td><td>'+(g.at?fmtDate(g.at):"")+'</td></tr>').join("")+'</table></div>'
+      : '<div class="supp-empty">Nessun regalo inviato finora.</div>';
+  }catch(e){ el.innerHTML='<div class="supp-empty">❌ '+esc(e.message)+'</div>'; }
+}
+
+/* ---------------- LINK REGALO ---------------- */
+function admLinkTypeUi(){
+  const t=document.getElementById("lnkType").value;
+  const amt=["coins","pass_levels","lives"].includes(t), idt=["skin","nametag","avatar"].includes(t);
+  document.getElementById("lnkAmtRow").classList.toggle("hidden",!amt);
+  document.getElementById("lnkIdRow").classList.toggle("hidden",!idt);
+  if(amt) document.getElementById("lnkAmt").value = t==="coins"?1000:(t==="lives"?3:5);
+  if(idt) document.getElementById("lnkId").innerHTML = t==="skin"?admOpts(ADM_SKINS):(t==="nametag"?admTagOpts():admOpts(ADM_AVATARS));
+}
+function admRandCode(){ const a="ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; let s=""; for(let i=0;i<8;i++) s+=a[Math.floor(Math.random()*a.length)]; return s; }
+async function admCreateLink(){
+  const st=document.getElementById("lnkStatus");
+  if(!admKey()) return st.textContent="⚠️ Prima salva il secret in Impostazioni admin.";
+  const t=document.getElementById("lnkType").value, g={type:t, active:true, created:{".sv":"timestamp"}};
+  if(["coins","pass_levels","lives"].includes(t)){ g.amount=Math.floor(Number(document.getElementById("lnkAmt").value)||0); if(g.amount<=0) return st.textContent="⚠️ Quantità non valida"; }
+  if(["skin","nametag","avatar"].includes(t)) g.id=document.getElementById("lnkId").value;
+  g.max=Math.max(0,Math.floor(Number(document.getElementById("lnkMax").value)||0));
+  const ex=document.getElementById("lnkExp").value;
+  g.expires= ex ? new Date(ex+"T23:59:59").getTime() : 0;
+  g.msg=(document.getElementById("lnkMsg").value||"").trim().slice(0,80);
+  let code=(document.getElementById("lnkCode").value||"").trim().toUpperCase().replace(/[^A-Z0-9-]/g,"");
+  if(!code) code=admRandCode();
+  if(code.length<4) return st.textContent="⚠️ Codice troppo corto (almeno 4)";
+  try{
+    const ex2=await admReq("GET","codes/"+code);
+    if(ex2) return st.textContent="⚠️ Il codice "+code+" esiste già";
+    await admReq("PUT","codes/"+code,g);
+    st.innerHTML='✅ Creato: <span class="code-pill">'+esc(code)+'</span> · <a href="#" id="lnkCopyNew">copia link</a>';
+    document.getElementById("lnkCopyNew").addEventListener("click",e=>{ e.preventDefault(); admCopy(ADM_LINK_BASE+code); });
+    document.getElementById("lnkCode").value="";
+    admLoadLinks();
   }catch(e){ st.textContent="❌ "+e.message; }
 }
-function giftFromForm(){
-  const t=document.getElementById("giftType").value;
-  const g={type:t};
-  if(t==="coins"||t==="pass_levels"||t==="lives"){
-    let n=Math.floor(Number(document.getElementById("giftAmount").value)||0);
-    if(n<=0){ setTxt("giftStatus","⚠️ Quantità non valida."); return null; }
-    if(t==="pass_levels") n=Math.min(n,60);
-    if(t==="coins" && n>1000000){ setTxt("giftStatus","⚠️ Massimo 1.000.000 monete per regalo."); return null; }
-    g.amount=n;
-  }
-  if(t==="skin") g.id=document.getElementById("giftSkin").value;
-  return g;
-}
-async function giftLoadPending(){
-  const uid=GIFT_TO&&giftUid(GIFT_TO.id);
-  if(!uid||!giftKey()){ setHtml("giftPending",'<div class="supp-empty">—</div>'); return; }
+function admCopy(t){ (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>setTxt("lnkStatus","📋 Copiato: "+t)).catch(()=>prompt("Copia il link:",t)); }
+async function admLoadLinks(){
+  const el=document.getElementById("lnkList"); if(!el) return;
+  if(!admKey()){ el.innerHTML='<div class="supp-empty">Serve il secret (Impostazioni admin).</div>'; return; }
   try{
-    const d=await giftReq("GET","gifts/"+uid)||{};
-    const ids=Object.keys(d);
-    setHtml("giftPending", ids.length? ids.map(k=>'<div class="supp-row"><div class="nm">'+esc(giftDesc(d[k]))
-        +(d[k].msg?'<br><small>“'+esc(d[k].msg)+'”</small>':'')+'<br><small>'+(d[k].at?fmtDate(d[k].at):"")+'</small></div>'
-        +'<button class="supp-btn supp-no" data-k="'+esc(k)+'">Annulla</button></div>').join("")
-      : '<div class="supp-empty">Niente in attesa: tutto ritirato.</div>');
-    document.querySelectorAll("#giftPending .supp-no").forEach(b=>b.addEventListener("click",async()=>{
-      try{ await giftReq("PUT","gifts/"+uid+"/"+b.dataset.k,null); giftLoadPending(); }catch(e){ setTxt("giftStatus","❌ "+e.message); }
-    }));
-  }catch(e){ setHtml("giftPending",'<div class="supp-empty">❌ '+esc(e.message)+'</div>'); }
+    const d=await admReq("GET","codes")||{}, ks=Object.keys(d).sort((a,b)=>(d[b].created||0)-(d[a].created||0));
+    if(!ks.length){ el.innerHTML='<div class="supp-empty">Nessun link creato.</div>'; return; }
+    const used={};
+    await Promise.all(ks.map(async k=>{ try{ const u=await admReq("GET","codes_used/"+k,undefined,undefined,"&shallow=true"); used[k]=u?Object.keys(u).length:0; }catch(e){ used[k]="?"; } }));
+    el.innerHTML='<div class="table-wrap"><table class="adm-table"><tr><th>Codice</th><th>Regalo</th><th>Usi</th><th>Scadenza</th><th>Stato</th><th></th></tr>'
+      +ks.map(k=>{ const c=d[k], scad=c.expires?new Date(c.expires).toLocaleDateString("it-IT"):"mai";
+        const scaduto=c.expires && Date.now()>c.expires, attivo=c.active!==false && !scaduto;
+        return '<tr><td><span class="code-pill">'+esc(k)+'</span></td><td><b>'+esc(admDesc(c))+'</b>'+(c.msg?'<br><small>“'+esc(c.msg)+'”</small>':'')+'</td>'
+          +'<td>'+used[k]+(c.max?' / '+c.max:'')+'</td><td>'+scad+'</td><td>'+(attivo?'🟢 attivo':(scaduto?'⏰ scaduto':'⚪ spento'))+'</td>'
+          +'<td style="white-space:nowrap"><button class="supp-btn" data-copy="'+esc(k)+'">Copia link</button> '
+          +'<button class="supp-btn '+(c.active!==false?'supp-rm':'supp-ok')+'" data-tog="'+esc(k)+'">'+(c.active!==false?'Spegni':'Accendi')+'</button> '
+          +'<button class="supp-btn supp-no" data-del="'+esc(k)+'">Elimina</button></td></tr>'; }).join("")+'</table></div>';
+    el.querySelectorAll("[data-copy]").forEach(b=>b.addEventListener("click",()=>admCopy(ADM_LINK_BASE+b.dataset.copy)));
+    el.querySelectorAll("[data-tog]").forEach(b=>b.addEventListener("click",async()=>{ const k=b.dataset.tog; await admReq("PATCH","codes/"+k,{active:d[k].active===false}); admLoadLinks(); }));
+    el.querySelectorAll("[data-del]").forEach(b=>b.addEventListener("click",async()=>{ const k=b.dataset.del; if(!confirm("Eliminare il link "+k+"?")) return; await admReq("PUT","codes/"+k,null); admLoadLinks(); }));
+  }catch(e){ el.innerHTML='<div class="supp-empty">❌ '+esc(e.message)+'</div>'; }
 }
-async function giftLoadLog(){
-  if(!giftKey()){ setHtml("giftLog",'<div class="supp-empty">Salva il secret per vedere lo storico.</div>'); return; }
+
+/* ---------------- IMPOSTAZIONI: secret + regole ---------------- */
+const ADM_RULES={
+  "gifts":{"$uid":{".read":"auth != null && auth.uid === $uid","$gift":{".write":"auth != null && auth.uid === $uid && !newData.exists()"}}},
+  "codes":{"$code":{".read":"auth != null"}},
+  "codes_used":{"$code":{".read":"auth != null","$uid":{".write":"auth != null && auth.uid === $uid && !data.exists()"}}}
+};
+function admKeyUi(){
+  const has=!!admKey();
+  document.getElementById("keyBox").classList.toggle("hidden",has);
+  document.getElementById("keyOk").classList.toggle("hidden",!has);
+  const nk=document.getElementById("admNoKey"); if(nk) nk.classList.toggle("hidden",has);
+}
+async function admInstallRules(){
+  const st=document.getElementById("rulesStatus");
+  if(!admKey()) return st.textContent="⚠️ Prima salva il secret.";
   try{
-    const d=await giftReq("GET","gifts_log")||{};
-    const rows=Object.values(d).sort((a,b)=>(b.at||0)-(a.at||0)).slice(0,25);
-    setHtml("giftLog", rows.length? rows.map(g=>'<div class="supp-row"><div class="nm"><b>'+esc(g.name||g.to)+'</b> · '+esc(giftDesc(g))
-        +(g.msg?' · <small>“'+esc(g.msg)+'”</small>':'')+'<br><small>'+esc(g.to)+' · '+(g.at?fmtDate(g.at):"")+'</small></div></div>').join("")
-      : '<div class="supp-empty">Nessun regalo inviato finora.</div>');
-  }catch(e){ setHtml("giftLog",'<div class="supp-empty">❌ '+esc(e.message)+'</div>'); }
+    st.textContent="Leggo le regole attuali…";
+    const r=await fetch(BASE+"/.settings/rules.json?auth="+encodeURIComponent(admKey()));
+    if(!r.ok) throw new Error("lettura regole: errore "+r.status);
+    const txt=await r.text();
+    let cur; try{ cur=JSON.parse(txt); }catch(e){ throw new Error("le regole attuali contengono commenti: incolla a mano lo schema qui sotto nella console Firebase"); }
+    if(!cur.rules) cur.rules={};
+    let added=[];
+    for(const k of Object.keys(ADM_RULES)){ if(!cur.rules[k]){ cur.rules[k]=ADM_RULES[k]; added.push(k); } }
+    if(!added.length) return st.textContent="✅ Le regole ci sono già.";
+    const w=await fetch(BASE+"/.settings/rules.json?auth="+encodeURIComponent(admKey()),{method:"PUT",body:JSON.stringify(cur,null,2)});
+    if(!w.ok) throw new Error("scrittura regole: errore "+w.status);
+    st.textContent="✅ Regole installate: "+added.join(", ");
+  }catch(e){ st.textContent="❌ "+e.message; }
 }
-(function giftInit(){
-  document.getElementById("giftSkin").innerHTML=GIFT_SKINS.map(s=>'<option value="'+s[0]+'">'+esc(s[1])+'</option>').join("");
-  document.getElementById("giftType").addEventListener("change",giftTypeUi);
-  document.getElementById("giftSearch").addEventListener("input",giftSearch);
-  document.getElementById("giftKeySave").addEventListener("click",async()=>{
-    const v=document.getElementById("giftKey").value.trim();
-    if(!v) return;
-    // verifica: una lettura protetta deve rispondere 200 col secret
-    try{ await giftReq("GET","gifts_log",undefined,v); }
-    catch(e){ setTxt("giftStatus","❌ "+e.message); return; }
+
+(function admInit(){
+  document.getElementById("rulesPre").textContent=JSON.stringify(ADM_RULES,null,2);
+  document.getElementById("lnkType").innerHTML=admOpts(ADM_TYPES);
+  document.getElementById("lnkType").addEventListener("change",admLinkTypeUi);
+  admLinkTypeUi();
+  document.getElementById("lnkCreate").addEventListener("click",admCreateLink);
+  document.getElementById("admSearch").addEventListener("input",admPlayersRefresh);
+  document.getElementById("rulesInstall").addEventListener("click",admInstallRules);
+  document.getElementById("keySave").addEventListener("click",async()=>{
+    const v=document.getElementById("keyIn").value.trim(); if(!v) return;
+    try{ await admReq("GET","gifts_log",undefined,v,"&shallow=true"); }
+    catch(e){ return setTxt("keyStatus","❌ "+e.message); }
     try{ localStorage.setItem("cc_fb_secret",v); }catch(e){}
-    document.getElementById("giftKey").value=""; setTxt("giftStatus","🔑 Secret valido e salvato.");
-    giftKeyUi(); giftLoadPending(); giftLoadLog();
+    document.getElementById("keyIn").value=""; setTxt("keyStatus","🔑 Secret valido e salvato.");
+    admKeyUi();
   });
-  document.getElementById("giftKeyForget").addEventListener("click",e=>{
-    e.preventDefault(); try{ localStorage.removeItem("cc_fb_secret"); }catch(_){}
-    giftKeyUi(); giftLoadPending(); giftLoadLog();
-  });
-  document.getElementById("giftSend").addEventListener("click",()=>{ const g=giftFromForm(); if(g) giftSendList([g]); });
-  document.getElementById("giftFullPass").addEventListener("click",()=>giftSendList([{type:"pass"},{type:"pass_max"}]));
+  document.getElementById("keyForget").addEventListener("click",e=>{ e.preventDefault(); try{ localStorage.removeItem("cc_fb_secret"); }catch(_){} admKeyUi(); });
+  // tasto 🎁 nella scheda giocatori: apre la pagina GIOCATORI su quel giocatore
   document.getElementById("plTable").addEventListener("click",e=>{
-    const b=e.target.closest(".gift-btn"); if(b) giftSelect(b.dataset.id,b.dataset.name);
+    const b=e.target.closest(".gift-btn"); if(!b) return;
+    admShow("sec-m"); admOpen(b.dataset.id);
   });
-  giftKeyUi(); giftTypeUi(); giftLoadLog();
+  admKeyUi();
+  admBuildViews();
 })();
 (function(){ if(getSavedEmail()){ showDashboard(); } })();
 </script>

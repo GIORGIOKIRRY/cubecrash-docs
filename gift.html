@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<!--
+  CUBE CRASH — pagina dei LINK REGALO (03/10/2026).
+  Il link creato dalla dashboard (sezione "Link regalo") è gift.html?c=CODICE.
+  Il tasto APRI CUBE CRASH prova ad aprire il gioco con cubecrash://gift?c=CODICE
+  (iOS: il gioco riscatta da solo); altrimenti il codice si scrive in
+  Impostazioni > Riscatta codice.
+-->
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>Cube Crash · Regalo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0b1640;--card:#1a6fe0;--card2:#0f4fb3;--gold:#ffc53d;--ink:#fff}
+  *{box-sizing:border-box}
+  html,body{overflow-x:hidden}
+  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px;
+    font-family:Inter,system-ui,sans-serif;color:var(--ink);
+    background:repeating-conic-gradient(#14256b 0 25%, #0f1d58 0 50%) 0 0/48px 48px}
+  .card{width:calc(100% - 20px);max-width:400px;background:linear-gradient(180deg,var(--card),var(--card2));
+    border:4px solid #08245e;border-radius:6px;box-shadow:0 8px 0 #061a45,0 20px 40px rgba(0,0,0,.45);
+    padding:56px 22px 26px;position:relative;text-align:center}
+  .banner{position:absolute;left:-10px;right:-10px;top:-26px;
+    background:linear-gradient(180deg,#ffd45f,#f0a51c);border:4px solid #6b3d00;border-radius:4px;
+    padding:12px 8px;font-family:"Press Start 2P",monospace;font-size:15px;color:#fff;
+    text-shadow:2px 2px 0 #000,-1px -1px 0 #000;box-shadow:0 4px 0 #a86a00}
+  img.logo{width:84px;height:84px;border-radius:16px;border:3px solid #08245e;margin:4px auto 14px;display:block}
+  p{margin:0 0 14px;line-height:1.5;font-size:15px}
+  .code{font-family:"Press Start 2P",monospace;font-size:22px;letter-spacing:3px;color:var(--gold);
+    background:#0b1640;border:3px solid #08245e;border-radius:4px;padding:16px 10px;margin:6px 0 18px;
+    text-shadow:2px 2px 0 #000;word-break:break-all}
+  .btn{display:block;width:100%;border:4px solid #000;border-radius:4px;padding:16px;margin:0 0 12px;
+    font-family:"Press Start 2P",monospace;font-size:13px;color:#fff;text-decoration:none;cursor:pointer;
+    text-shadow:2px 2px 0 #000}
+  .green{background:linear-gradient(180deg,#8be04a,#4caf1d);box-shadow:0 5px 0 #2c6e0c}
+  .blue{background:linear-gradient(180deg,#3fa0ff,#1d6fd6);box-shadow:0 5px 0 #0d468f}
+  .btn:active{transform:translateY(4px);box-shadow:none}
+  .how{font-size:13px;opacity:.9;margin-top:6px}
+  .how b{color:var(--gold)}
+  .stores{display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+  .stores a{color:#fff;font-size:13px;font-weight:700;background:#0b1640;border:2px solid #08245e;border-radius:4px;padding:8px 12px;text-decoration:none}
+  .err{color:#ffb3b3}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="banner">REGALO!</div>
+  <img class="logo" src="cc_logo.jpg" alt="Cube Crash">
+  <p id="intro">Hai ricevuto un regalo in <b>Cube Crash</b>!</p>
+  <div class="code" id="code">—</div>
+  <a class="btn green" id="open" href="#">APRI CUBE CRASH</a>
+  <button class="btn blue" id="copy">COPIA CODICE</button>
+  <p class="how" id="how">Se il gioco non si apre: entra in Cube Crash › <b>Impostazioni</b> › <b>Riscatta codice</b> e incolla il codice.<br>
+    Il regalo vale una volta per account. Serve l'ultima versione del gioco.</p>
+  <div class="stores">
+    <a href="https://play.google.com/store/apps/details?id=com.rossellini.cubecrash">Google Play</a>
+    <a href="https://apps.apple.com/search?term=cube%20crash">App Store</a>
+  </div>
+</div>
+<script>
+  const m=location.search.match(/[?&]c=([A-Za-z0-9-]{4,20})/);
+  const code=m?m[1].toUpperCase():"";
+  const el=document.getElementById("code");
+  if(!code){
+    el.textContent="?";
+    document.getElementById("intro").innerHTML='<span class="err">Link non valido: manca il codice.</span>';
+    document.getElementById("open").style.display="none";
+    document.getElementById("copy").style.display="none";
+  }else{
+    el.textContent=code;
+    const deep="cubecrash://gift?c="+encodeURIComponent(code);
+    document.getElementById("open").href=deep;
+  }
+  document.getElementById("copy").addEventListener("click",function(){
+    const b=this;
+    (navigator.clipboard?navigator.clipboard.writeText(code):Promise.reject()).then(function(){
+      b.textContent="COPIATO!"; setTimeout(function(){ b.textContent="COPIA CODICE"; },1600);
+    }).catch(function(){ prompt("Copia il codice:",code); });
+  });
+</script>
+</body>
+</html>
